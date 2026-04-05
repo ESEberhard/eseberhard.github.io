@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="ESE icon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="180" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#101726"/>
+      <stop offset="1" stop-color="#172033"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="10" y1="10" x2="170" y2="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#60a5fa"/>
+      <stop offset="0.55" stop-color="#8b9cf8"/>
+      <stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="180" height="180" rx="44" fill="url(#bg)"/>
+  <rect x="2.5" y="2.5" width="175" height="175" rx="41.5" fill="none" stroke="url(#ring)" stroke-width="5" stroke-opacity="0.95"/>
+
+  <text
+    x="90"
+    y="111"
+    text-anchor="middle"
+    font-family="'Avenir Next', 'Helvetica Neue', Arial, sans-serif"
+    font-size="62"
+    font-weight="700"
+    letter-spacing="2"
+    fill="#f8fbff"
+  >ESE</text>
+</svg>

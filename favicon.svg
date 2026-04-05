@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="ESE favicon">
   <defs>
-    <linearGradient id="bg" x1="20" y1="16" x2="108" y2="112" gradientUnits="userSpaceOnUse">
+    <linearGradient id="bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#0b1220"/>
       <stop offset="1" stop-color="#111827"/>
     </linearGradient>
-    <linearGradient id="stroke" x1="18" y1="18" x2="110" y2="110" gradientUnits="userSpaceOnUse">
+    <linearGradient id="stroke" x1="6" y1="6" x2="122" y2="122" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#60a5fa"/>
       <stop offset="1" stop-color="#a78bfa"/>
     </linearGradient>
@@ -13,17 +13,17 @@
     </filter>
   </defs>
 
-  <rect x="10" y="10" width="108" height="108" rx="26" fill="url(#bg)"/>
-  <rect x="10.75" y="10.75" width="106.5" height="106.5" rx="25.25" fill="none" stroke="url(#stroke)" stroke-opacity="0.55" stroke-width="1.5"/>
+  <rect x="0" y="0" width="128" height="128" rx="31" fill="url(#bg)"/>
+  <rect x="2" y="2" width="124" height="124" rx="29" fill="none" stroke="url(#stroke)" stroke-opacity="0.78" stroke-width="4"/>
 
   <text
     x="64"
-    y="77"
+    y="81"
     text-anchor="middle"
     font-family="'Avenir Next', 'Helvetica Neue', Arial, sans-serif"
-    font-size="31"
+    font-size="40"
     font-weight="700"
-    letter-spacing="3"
+    letter-spacing="1.5"
     fill="#f8fbff"
     filter="url(#textGlow)"
   >ESE</text>
