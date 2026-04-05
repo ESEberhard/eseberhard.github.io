@@ -811,14 +811,24 @@ footer .footer-links a:hover { color: var(--accent); }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
 
+.hero-headshot--mobile { display: none; }
+
 @media (max-width: 900px) {
   .hero {
     grid-template-columns: 1fr;
     gap: 2rem;
+    padding-top: 5rem;
   }
-  .hero-headshot {
-    width: 238px;
-    justify-self: start;
+  .hero > .hero-headshot {
+    display: none;
+  }
+  .hero-headshot--mobile {
+    display: block;
+    width: 300px;
+    margin: 1.4rem auto 2rem;
+    justify-self: unset;
+    opacity: 1;
+    animation: none;
   }
 }
 @media (max-width: 768px) {
@@ -826,9 +836,6 @@ footer .footer-links a:hover { color: var(--accent); }
   .nav-links a { font-size: 0.7rem; padding: 0.4rem 0.6rem; }
   .hero { padding: 0 5vw; }
   section { padding: 5rem 5vw; }
-  .hero-headshot {
-    width: 208px;
-  }
   .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
   .cv-grid { grid-template-columns: 1fr; }
   .cv-item { grid-template-columns: 1fr; gap: 0.45rem; }
@@ -837,9 +844,13 @@ footer .footer-links a:hover { color: var(--accent); }
   footer { padding: 2rem 5vw; }
   .section-divider { margin: 0 5vw; }
 }
-@media (max-width: 480px) {
+.nav-logo-short { display: none; }
+
+@media (max-width: 550px) {
   .nav-links a { font-size: 0.65rem; }
   .hero-links { flex-direction: column; }
+  .nav-logo-full { display: none; }
+  .nav-logo-short { display: inline; }
 }
 </style>
 </head>
@@ -851,7 +862,7 @@ footer .footer-links a:hover { color: var(--accent); }
 <canvas id="orbital-canvas"></canvas>
 
 <nav>
-  <a href="#" class="nav-logo">Eike S<span class="dot">.</span> Eberhard</a>
+  <a href="#" class="nav-logo"><span class="nav-logo-full">Eike S<span class="dot">.</span> Eberhard</span><span class="nav-logo-short">E<span class="dot">.</span>S<span class="dot">.</span>E</span></a>
   <div class="nav-links">
     <a href="#about">About</a>
     <a href="#research">Research</a>
@@ -864,6 +875,9 @@ footer .footer-links a:hover { color: var(--accent); }
 <div class="hero">
   <div class="hero-content">
     <div class="hero-overline">Eike Eberhard &middot; PhD Candidate &middot; TUM &middot; MDSI &middot; MCML</div>
+    <div class="hero-headshot hero-headshot--mobile">
+      <img src="profile_image.jpeg" alt="Portrait of Eike Eberhard" class="hero-portrait">
+    </div>
     <h1>Machine Learning for <span class="gradient-text">Electronic Structure</span></h1>
     <p class="hero-desc">
       Neural network exchange-correlation functionals, differentiable SCF solvers, and equivariant architectures to accelerate quantum chemistry from first principles.
