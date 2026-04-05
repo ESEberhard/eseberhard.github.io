@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markdown Counter &amp; Compressor | Eike S. Eberhard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+  :root {
+    --bg: #06080d;
+    --bg-card: #0c1018;
+    --bg-card-hover: #111822;
+    --bg-input: #080c12;
+    --text: #c8d4e6;
+    --text-dim: #5a6a82;
+    --text-bright: #e8f0fa;
+    --accent: #4fc3f7;
+    --accent2: #ab47bc;
+    --accent3: #66bb6a;
+    --border: #1a2438;
+    --border-focus: #4fc3f7;
+    --glow: rgba(79, 195, 247, 0.08);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+
+  /* === NAV === */
+  nav {
+    padding: 1.2rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    background: rgba(6, 8, 13, 0.92);
+    flex-shrink: 0;
+  }
+
+  .nav-logo {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--text-bright);
+    text-decoration: none;
+  }
+
+  .nav-logo .dot { color: var(--accent); }
+
+  .nav-links { display: flex; gap: 2rem; }
+
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-family: 'DM Mono', monospace;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    transition: color 0.3s;
+  }
+
+  .nav-links a:hover { color: var(--accent); }
+
+  /* === HEADER === */
+  .page-header {
+    padding: 2.5rem 2.5rem 0;
+    flex-shrink: 0;
+  }
+
+  .page-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent2);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-tag::before { content: '▸ '; color: var(--accent); }
+
+  .page-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    color: var(--text-bright);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.8rem;
+  }
+
+  .page-desc {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    max-width: 700px;
+    line-height: 1.6;
+    margin-bottom: 0.6rem;
+  }
+
+  .page-desc a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .limits-row {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    margin-top: 0.8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .limit-chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    padding: 0.35rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-dim);
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.03em;
+  }
+
+  .limit-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .limit-chip.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--glow);
+  }
+
+  /* === STATS === */
+  .stats {
+    display: flex;
+    gap: 1rem;
+    padding: 0 2.5rem;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    flex: 1;
+    min-width: 100px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+    text-align: center;
+    transition: border-color 0.3s;
+  }
+
+  .stat .value {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--text-bright);
+  }
+
+  .stat .label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.2rem;
+  }
+
+  .stat.highlight {
+    border-color: rgba(79, 195, 247, 0.3);
+    background: linear-gradient(135deg, rgba(79,195,247,0.06), rgba(171,71,188,0.03));
+  }
+
+  .stat.highlight .value { color: var(--accent); }
+
+  .stat.over .value { color: #ef5350; }
+  .stat.over { border-color: rgba(239,83,80,0.4); background: rgba(239,83,80,0.06); }
+
+  /* === PANES === */
+  .panes {
+    display: flex;
+    gap: 0;
+    flex: 1;
+    min-height: 0;
+    padding: 0 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .pane-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    margin-bottom: 0.4rem;
+  }
+
+  textarea {
+    flex: 1;
+    width: 100%;
+    border: 1px solid var(--border);
+    border-right: none;
+    border-radius: 6px 0 0 6px;
+    padding: 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    resize: none;
+    color: var(--text);
+    background: var(--bg-input);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus { border-color: var(--border-focus); }
+  textarea::placeholder { color: var(--text-dim); opacity: 0.4; }
+
+  .preview {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 0 6px 6px 0;
+    padding: 1rem 1.2rem;
+    overflow-y: auto;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg-card);
+  }
+
+  .preview h1, .preview h2, .preview h3 { margin: 0.8em 0 0.4em; color: var(--text-bright); font-family: 'Instrument Serif', serif; font-weight: 400; }
+  .preview h1 { font-size: 1.4rem; }
+  .preview h2 { font-size: 1.2rem; }
+  .preview h3 { font-size: 1.05rem; }
+  .preview p { margin-bottom: 0.8em; }
+  .preview table { border-collapse: collapse; width: 100%; margin-bottom: 1em; font-size: 0.82rem; }
+  .preview th, .preview td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+  .preview th { background: var(--bg-card-hover); font-weight: 500; color: var(--text-bright); }
+  .preview tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  .preview code { background: rgba(79,195,247,0.08); border-radius: 3px; padding: 1px 5px; font-family: 'DM Mono', monospace; font-size: 0.85em; color: var(--accent); }
+  .preview pre { background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px; padding: 0.8rem; overflow-x: auto; margin-bottom: 0.8em; }
+  .preview pre code { background: none; padding: 0; color: var(--text); }
+  .preview blockquote { border-left: 2px solid var(--accent2); padding-left: 12px; color: var(--text-dim); margin: 0 0 0.8em; }
+  .preview ul, .preview ol { padding-left: 1.4em; margin-bottom: 0.8em; }
+  .preview strong { font-weight: 600; color: var(--text-bright); }
+  .preview a { color: var(--accent); }
+
+  /* === BUTTONS === */
+  .btn-row {
+    padding: 0 2.5rem 1.5rem;
+    display: flex;
+    gap: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  button {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.55rem 1.2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    cursor: pointer;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    transition: all 0.2s;
+  }
+
+  button:hover {
+    border-color: rgba(79,195,247,0.3);
+    color: var(--text);
+    background: var(--bg-card-hover);
+  }
+
+  .compress-btn {
+    border-color: rgba(79,195,247,0.3);
+    color: var(--accent);
+    background: var(--glow);
+  }
+
+  .compress-btn:hover {
+    border-color: var(--accent);
+    background: rgba(79,195,247,0.12);
+  }
+
+  /* === MOBILE === */
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .page-header { padding: 1.5rem 1.5rem 0; }
+    .stats { padding: 0 1.5rem; }
+    .panes { padding: 0 1.5rem; flex-direction: column; }
+    textarea { border-right: 1px solid var(--border); border-radius: 6px 6px 0 0; border-bottom: none; min-height: 200px; }
+    .preview { border-radius: 0 0 6px 6px; min-height: 200px; }
+    .btn-row { padding: 0 1.5rem 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Eike S<span class="dot">.</span> Eberhard</a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="index.html#tools">Tools</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="page-tag">Tool</div>
+  <h1 class="page-title">Markdown Counter &amp; Compressor</h1>
+  <p class="page-desc">
+    ML conference rebuttals (ICML, NeurIPS, ICLR) impose strict character limits on author responses. 
+    This tool helps you draft, preview, and compress your rebuttal markdown to fit within those limits. 
+    The compressor strips unnecessary whitespace, joins paragraph lines, and tightens table formatting 
+    while preserving your content.
+  </p>
+  <div class="limits-row">
+    <span class="limit-chip" data-limit="5000" onclick="setLimit(this)">ICML · 5,000</span>
+    <span class="limit-chip" data-limit="6000" onclick="setLimit(this)">NeurIPS · 6,000</span>
+    <span class="limit-chip" data-limit="12000" onclick="setLimit(this)">ICLR · 12,000</span>
+    <span class="limit-chip" data-limit="0" onclick="setLimit(this)">No limit</span>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat highlight" id="stat-chars">
+    <div class="value" id="chars">0</div>
+    <div class="label">Characters</div>
+  </div>
+  <div class="stat">
+    <div class="value" id="chars-no-spaces">0</div>
+    <div class="label">No spaces</div>
+  </div>
+  <div class="stat">
+    <div class="value" id="words">0</div>
+    <div class="label">Words</div>
+  </div>
+  <div class="stat">
+    <div class="value" id="lines">0</div>
+    <div class="label">Lines</div>
+  </div>
+  <div class="stat" id="stat-remaining" style="display:none;">
+    <div class="value" id="remaining">0</div>
+    <div class="label">Remaining</div>
+  </div>
+</div>
+
+<div class="panes">
+  <div class="pane">
+    <div class="pane-label">Markdown</div>
+    <textarea id="input" placeholder="Paste your rebuttal markdown here..."></textarea>
+  </div>
+  <div class="pane">
+    <div class="pane-label">Preview</div>
+    <div class="preview" id="preview"></div>
+  </div>
+</div>
+
+<div class="btn-row">
+  <button class="compress-btn" onclick="compress()">Compress</button>
+  <button onclick="document.getElementById('input').value=''; update()">Clear</button>
+</div>
+
+<script>
+  const input = document.getElementById('input');
+  const preview = document.getElementById('preview');
+  let charLimit = 0;
+
+  function setLimit(el) {
+    document.querySelectorAll('.limit-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    charLimit = parseInt(el.dataset.limit);
+    const remStat = document.getElementById('stat-remaining');
+    remStat.style.display = charLimit > 0 ? '' : 'none';
+    update();
+  }
+
+  function update() {
+    const text = input.value;
+    const len = text.length;
+    document.getElementById('chars').textContent = len.toLocaleString();
+    document.getElementById('chars-no-spaces').textContent = text.replace(/\s/g, '').length.toLocaleString();
+    document.getElementById('words').textContent = (text.match(/\S+/g) || []).length.toLocaleString();
+    document.getElementById('lines').textContent = text === '' ? 0 : text.split('\n').length.toLocaleString();
+
+    const statChars = document.getElementById('stat-chars');
+    const statRem = document.getElementById('stat-remaining');
+
+    if (charLimit > 0) {
+      const rem = charLimit - len;
+      document.getElementById('remaining').textContent = rem.toLocaleString();
+      const over = len > charLimit;
+      statChars.classList.toggle('over', over);
+      statChars.classList.toggle('highlight', !over);
+      statRem.classList.toggle('over', over);
+    } else {
+      statChars.classList.remove('over');
+      statChars.classList.add('highlight');
+    }
+
+    preview.innerHTML = marked.parse(text);
+    renderMathInElement(preview, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$',  right: '$',  display: false },
+        { left: '\\(', right: '\\)', display: false },
+        { left: '\\[', right: '\\]', display: true }
+      ],
+      throwOnError: false
+    });
+  }
+
+  function compress() {
+    let text = input.value;
+    text = text.split('\n').map(line => {
+      if (/^\s*\|[\s\-:|]+\|[\s\-:|]*$/.test(line)) {
+        return line.replace(/([|])\s*/g, '$1')
+                   .replace(/\s*([|])/g, '$1')
+                   .replace(/(:?)-{2,}(:?)/g, (_, l, r) => l + '-' + r);
+      }
+      if (/^\s*\|/.test(line)) {
+        return line.replace(/\s*\|\s*/g, '|').trim();
+      }
+      return line.replace(/ {2,}/g, ' ').trimEnd();
+    }).join('\n');
+    text = text.replace(/\n{3,}/g, '\n\n');
+    text = text.split(/\n\n/).map(block => {
+      const lines = block.split('\n');
+      const isSpecial = lines.some(l =>
+        /^\s*[|#>]/.test(l) || /^\s*```/.test(l) ||
+        /^\s*[-*+] /.test(l) || /^\s*\d+\. /.test(l)
+      );
+      if (isSpecial) return block;
+      return lines.map(l => l.trim()).filter(l => l.length > 0).join(' ');
+    }).join('\n\n');
+    text = text.replace(/(^#{1,6} .+)\n\n/gm, '$1\n');
+    text = text.replace(/\n\n(>)/gm, '\n$1');
+    text = text.trimEnd();
+    input.value = text;
+    update();
+  }
+
+  input.addEventListener('input', update);
+</script>
+</body>
+</html>

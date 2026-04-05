@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QChem Unit Converter | Eike S. Eberhard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #06080d;
+    --bg-card: #0c1018;
+    --bg-card-hover: #111822;
+    --bg-input: #080c12;
+    --text: #c8d4e6;
+    --text-dim: #5a6a82;
+    --text-bright: #e8f0fa;
+    --accent: #4fc3f7;
+    --accent2: #ab47bc;
+    --accent3: #66bb6a;
+    --border: #1a2438;
+    --border-focus: #4fc3f7;
+    --glow: rgba(79, 195, 247, 0.08);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+  }
+
+  /* === NAV === */
+  nav {
+    width: 100%;
+    padding: 1.2rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    background: rgba(6, 8, 13, 0.92);
+    flex-shrink: 0;
+  }
+
+  .nav-logo {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--text-bright);
+    text-decoration: none;
+  }
+
+  .nav-logo .dot { color: var(--accent); }
+
+  .nav-links { display: flex; gap: 2rem; }
+
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-family: 'DM Mono', monospace;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    transition: color 0.3s;
+  }
+
+  .nav-links a:hover { color: var(--accent); }
+
+  /* === HEADER === */
+  .page-header {
+    width: 100%;
+    max-width: 960px;
+    padding: 2.5rem 2.5rem 1.5rem;
+  }
+
+  .page-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent2);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-tag::before { content: '▸ '; color: var(--accent); }
+
+  .page-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    color: var(--text-bright);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  /* === CONVERTER GRID === */
+  .converter-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 960px;
+    padding: 0 2.5rem;
+  }
+
+  @media (max-width: 700px) {
+    .converter-grid { grid-template-columns: 1fr; }
+    nav { padding: 1rem 1.5rem; }
+    .page-header { padding: 1.5rem; }
+    .converter-grid { padding: 0 1.5rem; }
+    .constants-strip { margin: 1.5rem 1.5rem 2rem; }
+  }
+
+  /* === PANEL === */
+  .panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .panel.energy::before {
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  .panel.force::before {
+    background: linear-gradient(90deg, transparent, var(--accent2), transparent);
+  }
+
+  .panel-header {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .panel-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .energy .panel-dot {
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(79, 195, 247, 0.3);
+  }
+
+  .force .panel-dot {
+    background: var(--accent2);
+    box-shadow: 0 0 10px rgba(171, 71, 188, 0.3);
+  }
+
+  .panel-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .panel-body {
+    padding: 1rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  /* === FIELD === */
+  .field {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-input);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .field:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(79,195,247,0.2), 0 0 12px rgba(79,195,247,0.08);
+  }
+
+  .force .field:focus-within {
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 1px rgba(171,71,188,0.2), 0 0 12px rgba(171,71,188,0.08);
+  }
+
+  .field input {
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.88rem;
+    font-weight: 400;
+    color: var(--text-bright);
+    padding: 0.65rem 0.8rem;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .field input::placeholder { color: var(--text-dim); opacity: 0.35; }
+
+  .field-unit {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    padding: 0 0.8rem;
+    white-space: nowrap;
+    border-left: 1px solid var(--border);
+    height: 100%;
+    display: flex;
+    align-items: center;
+    min-width: 100px;
+    justify-content: flex-end;
+    letter-spacing: 0.02em;
+  }
+
+  .energy .field-unit { color: rgba(79,195,247,0.55); }
+  .force .field-unit { color: rgba(171,71,188,0.55); }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0.2rem 0;
+  }
+
+  /* === CONSTANTS === */
+  .constants-strip {
+    width: 100%;
+    max-width: 960px;
+    margin: 1.5rem 2.5rem 3rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.5rem;
+  }
+
+  .constants-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.8rem;
+  }
+
+  .constants-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 2rem;
+  }
+
+  .const-item {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .const-item b {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .const-item .eq { color: var(--text-dim); margin: 0 3px; opacity: 0.5; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Eike S<span class="dot">.</span> Eberhard</a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="index.html#tools">Tools</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="page-tag">Tool</div>
+  <h1 class="page-title">Quantum Chemistry Unit Converter</h1>
+  <div class="page-subtitle">energy &middot; force &middot; atomic units</div>
+</div>
+
+<div class="converter-grid">
+
+  <!-- ENERGY PANEL -->
+  <div class="panel energy">
+    <div class="panel-header">
+      <div class="panel-dot"></div>
+      <div class="panel-title">Energy</div>
+    </div>
+    <div class="panel-body" id="energy-fields">
+      <div class="field">
+        <input type="number" id="ev" placeholder="0" step="any" data-unit="ev">
+        <div class="field-unit">eV</div>
+      </div>
+      <div class="field">
+        <input type="number" id="mha" placeholder="0" step="any" data-unit="mha">
+        <div class="field-unit">mHa / mE<sub style="font-size:9px">h</sub></div>
+      </div>
+      <div class="field">
+        <input type="number" id="kcal" placeholder="0" step="any" data-unit="kcal">
+        <div class="field-unit">kcal/mol</div>
+      </div>
+      <div class="divider"></div>
+      <div class="field">
+        <input type="number" id="ha" placeholder="0" step="any" data-unit="ha">
+        <div class="field-unit">Ha / E<sub style="font-size:9px">h</sub></div>
+      </div>
+      <div class="field">
+        <input type="number" id="cm1" placeholder="0" step="any" data-unit="cm1">
+        <div class="field-unit">cm&sup1;</div>
+      </div>
+      <div class="field">
+        <input type="number" id="kjmol" placeholder="0" step="any" data-unit="kjmol">
+        <div class="field-unit">kJ/mol</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORCE PANEL -->
+  <div class="panel force">
+    <div class="panel-header">
+      <div class="panel-dot"></div>
+      <div class="panel-title">Force / Gradient</div>
+    </div>
+    <div class="panel-body" id="force-fields">
+      <div class="field">
+        <input type="number" id="ev_ang" placeholder="0" step="any" data-unit="ev_ang">
+        <div class="field-unit">eV/&#8491;</div>
+      </div>
+      <div class="field">
+        <input type="number" id="ev_bohr" placeholder="0" step="any" data-unit="ev_bohr">
+        <div class="field-unit">eV/Bohr</div>
+      </div>
+      <div class="divider"></div>
+      <div class="field">
+        <input type="number" id="mha_ang" placeholder="0" step="any" data-unit="mha_ang">
+        <div class="field-unit">mHa/&#8491;</div>
+      </div>
+      <div class="field">
+        <input type="number" id="mha_bohr" placeholder="0" step="any" data-unit="mha_bohr">
+        <div class="field-unit">mHa/Bohr</div>
+      </div>
+      <div class="divider"></div>
+      <div class="field">
+        <input type="number" id="kcal_ang" placeholder="0" step="any" data-unit="kcal_ang">
+        <div class="field-unit">kcal/mol/&#8491;</div>
+      </div>
+      <div class="field">
+        <input type="number" id="kcal_bohr" placeholder="0" step="any" data-unit="kcal_bohr">
+        <div class="field-unit">kcal/mol/Bohr</div>
+      </div>
+      <div class="divider"></div>
+      <div class="field">
+        <input type="number" id="ha_bohr" placeholder="0" step="any" data-unit="ha_bohr">
+        <div class="field-unit">Ha/Bohr</div>
+      </div>
+      <div class="field">
+        <input type="number" id="ha_ang" placeholder="0" step="any" data-unit="ha_ang">
+        <div class="field-unit">Ha/&#8491;</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CONSTANTS STRIP -->
+<div class="constants-strip">
+  <div class="constants-title">Conversion constants (NIST 2018 CODATA)</div>
+  <div class="constants-row">
+    <div class="const-item"><b>1 Ha</b><span class="eq">=</span>27.211 386 eV</div>
+    <div class="const-item"><b>1 Ha</b><span class="eq">=</span>627.509 kcal/mol</div>
+    <div class="const-item"><b>1 Ha</b><span class="eq">=</span>2625.50 kJ/mol</div>
+    <div class="const-item"><b>1 Ha</b><span class="eq">=</span>219 474.6 cm&sup1;</div>
+    <div class="const-item"><b>1 Bohr</b><span class="eq">=</span>0.529 177 &#8491;</div>
+  </div>
+</div>
+
+<script>
+const HA_TO_EV    = 27.211386245988;
+const HA_TO_KCAL  = 627.5094740631;
+const HA_TO_KJ    = 2625.4996394799;
+const HA_TO_CM1   = 219474.6313632;
+const BOHR_TO_ANG = 0.529177210903;
+
+function toHa(val, unit) {
+  switch(unit) {
+    case 'ev':    return val / HA_TO_EV;
+    case 'mha':   return val / 1000;
+    case 'ha':    return val;
+    case 'kcal':  return val / HA_TO_KCAL;
+    case 'kjmol': return val / HA_TO_KJ;
+    case 'cm1':   return val / HA_TO_CM1;
+  }
+}
+
+function fromHa(ha, unit) {
+  switch(unit) {
+    case 'ev':    return ha * HA_TO_EV;
+    case 'mha':   return ha * 1000;
+    case 'ha':    return ha;
+    case 'kcal':  return ha * HA_TO_KCAL;
+    case 'kjmol': return ha * HA_TO_KJ;
+    case 'cm1':   return ha * HA_TO_CM1;
+  }
+}
+
+function toHaBohr(val, unit) {
+  const HB_EV_ANG = HA_TO_EV / BOHR_TO_ANG;
+  switch(unit) {
+    case 'ev_ang':    return val / HB_EV_ANG;
+    case 'ev_bohr':   return val / HA_TO_EV;
+    case 'mha_ang':   return val / 1000 / BOHR_TO_ANG;
+    case 'mha_bohr':  return val / 1000;
+    case 'kcal_ang':  return val / HA_TO_KCAL / BOHR_TO_ANG;
+    case 'kcal_bohr': return val / HA_TO_KCAL;
+    case 'ha_bohr':   return val;
+    case 'ha_ang':    return val * BOHR_TO_ANG;
+  }
+}
+
+function fromHaBohr(hb, unit) {
+  const HB_EV_ANG = HA_TO_EV / BOHR_TO_ANG;
+  switch(unit) {
+    case 'ev_ang':    return hb * HB_EV_ANG;
+    case 'ev_bohr':   return hb * HA_TO_EV;
+    case 'mha_ang':   return hb * 1000 * BOHR_TO_ANG;
+    case 'mha_bohr':  return hb * 1000;
+    case 'kcal_ang':  return hb * HA_TO_KCAL * BOHR_TO_ANG;
+    case 'kcal_bohr': return hb * HA_TO_KCAL;
+    case 'ha_bohr':   return hb;
+    case 'ha_ang':    return hb / BOHR_TO_ANG;
+  }
+}
+
+const ENERGY_UNITS = ['ev','mha','ha','kcal','kjmol','cm1'];
+const FORCE_UNITS  = ['ev_ang','ev_bohr','mha_ang','mha_bohr','kcal_ang','kcal_bohr','ha_bohr','ha_ang'];
+
+function fmt(v) {
+  if (v === 0) return '0';
+  const abs = Math.abs(v);
+  if (abs >= 1e-3 && abs < 1e7) return parseFloat(v.toPrecision(8)).toString();
+  return v.toExponential(6);
+}
+
+let updating = false;
+
+function makeHandler(units, toInternal, fromInternal) {
+  return function(e) {
+    if (updating) return;
+    const src = e.target;
+    const unit = src.dataset.unit;
+    const raw = src.value;
+    if (raw === '' || raw === '-') {
+      updating = true;
+      units.forEach(u => { if (u !== unit) { const el = document.getElementById(u); if(el) el.value = ''; } });
+      updating = false;
+      return;
+    }
+    const val = parseFloat(raw);
+    if (isNaN(val)) return;
+    const internal = toInternal(val, unit);
+    updating = true;
+    units.forEach(u => {
+      if (u !== unit) {
+        const el = document.getElementById(u);
+        if (el) el.value = fmt(fromInternal(internal, u));
+      }
+    });
+    updating = false;
+  };
+}
+
+const energyHandler = makeHandler(ENERGY_UNITS, toHa, fromHa);
+const forceHandler  = makeHandler(FORCE_UNITS,  toHaBohr, fromHaBohr);
+
+ENERGY_UNITS.forEach(u => {
+  const el = document.getElementById(u);
+  if (el) el.addEventListener('input', energyHandler);
+});
+FORCE_UNITS.forEach(u => {
+  const el = document.getElementById(u);
+  if (el) el.addEventListener('input', forceHandler);
+});
+</script>
+</body>
+</html>

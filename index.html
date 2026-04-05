@@ -470,6 +470,101 @@ section {
   line-height: 1.65;
 }
 
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+  max-width: 1100px;
+}
+
+.tool-card {
+  padding: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.tool-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(96,165,250,0), rgba(167,139,250,0));
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  transition: background 0.4s ease;
+  pointer-events: none;
+}
+
+.tool-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%),
+    rgba(96,165,250,0.06) 0%, transparent 50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.tool-card:hover::before {
+  background: linear-gradient(135deg, rgba(96,165,250,0.25), rgba(167,139,250,0.15));
+}
+
+.tool-card:hover::after { opacity: 1; }
+
+.tool-card:hover {
+  background: var(--bg-card-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+
+.tool-type {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.tool-card h3 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.25rem;
+  color: var(--text-bright);
+  font-weight: 400;
+  margin-bottom: 0.7rem;
+}
+
+.tool-card p {
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  line-height: 1.65;
+  margin-bottom: 1.2rem;
+}
+
+.tool-link {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+}
+
 .pub-list {
   display: flex;
   flex-direction: column;
@@ -605,6 +700,7 @@ footer .footer-links a:hover { color: var(--accent); }
   section { padding: 5rem 5vw; }
   .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
   .research-areas { grid-template-columns: 1fr; }
+  .tool-grid { grid-template-columns: 1fr; }
   footer { padding: 2rem 5vw; }
   .section-divider { margin: 0 5vw; }
 }
@@ -626,6 +722,7 @@ footer .footer-links a:hover { color: var(--accent); }
   <div class="nav-links">
     <a href="#about">About</a>
     <a href="#research">Research</a>
+    <a href="#tools">Tools</a>
     <a href="#publications">Papers</a>
   </div>
 </nav>
@@ -720,8 +817,35 @@ footer .footer-links a:hover { color: var(--accent); }
 
 <div class="section-divider"></div>
 
+<section id="tools">
+  <div class="section-label fade-in">03 &middot; Tools</div>
+  <h2 class="section-title fade-in">Interactive Utilities</h2>
+  <div class="tool-grid">
+    <a href="markdown-counter.html" class="tool-card fade-in">
+      <div class="tool-type">Markdown Utility</div>
+      <h3>Markdown Counter &amp; Compressor</h3>
+      <p>Count words, characters, and tokens while compacting markdown-heavy text for tighter prompts and cleaner sharing.</p>
+      <div class="tool-link">Open Tool &rarr;</div>
+    </a>
+    <a href="molecule-viewer.html" class="tool-card fade-in">
+      <div class="tool-type">Visualization</div>
+      <h3>Molecule Viewer</h3>
+      <p>Inspect molecular structures in an interactive viewer with alternate representations for geometry, graphs, and related views.</p>
+      <div class="tool-link">Open Tool &rarr;</div>
+    </a>
+    <a href="qchem-units.html" class="tool-card fade-in">
+      <div class="tool-type">Quantum Chemistry</div>
+      <h3>QChem Unit Converter</h3>
+      <p>Convert between common quantum chemistry units quickly without leaving the browser or rebuilding your workflow.</p>
+      <div class="tool-link">Open Tool &rarr;</div>
+    </a>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
 <section id="publications">
-  <div class="section-label fade-in">03 &middot; Selected Papers</div>
+  <div class="section-label fade-in">04 &middot; Selected Papers</div>
   <h2 class="section-title fade-in">Publications</h2>
   <div class="pub-list">
     <div class="pub-item fade-in">

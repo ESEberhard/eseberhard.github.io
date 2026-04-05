@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Molecule Viewer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #f8f7f4; font-family: 'DM Mono', monospace; overflow: hidden; height: 100vh; width: 100vw; }
+  #canvas-container { width: 100vw; height: 100vh; position: relative; }
+  canvas { display: block; }
+  .top-left { position: absolute; top: 24px; left: 28px; z-index: 20; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+  .top-left-buttons { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .label-overlay { color: #2a2a2a; pointer-events: none; text-align: right; }
+  .label-overlay h1 { font-size: 13px; font-weight: 400; letter-spacing: 3px; text-transform: uppercase; color: #555; margin-bottom: 4px; }
+  .label-overlay .formula { font-size: 22px; font-weight: 300; color: #222; letter-spacing: 1px; }
+  .label-overlay .formula sub { font-size: 15px; vertical-align: -2px; }
+  .controls-hint { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #aaa; letter-spacing: 1.5px; text-transform: uppercase; pointer-events: none; z-index: 10; }
+  .top-right { position: absolute; top: 24px; right: 28px; z-index: 10; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; pointer-events: none; }
+  .legend { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #777; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.08); }
+  .btn { background: #222; color: #f8f7f4; border: none; padding: 8px 18px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: background 0.2s; }
+  .btn:hover { background: #444; }
+  .view-toggle { display: flex; background: #e0dfdc; border-radius: 4px; overflow: hidden; }
+  .view-toggle button { background: transparent; color: #888; border: none; padding: 8px 14px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+  .view-toggle button.active { background: #222; color: #f8f7f4; }
+  .view-toggle button:not(.active):hover { background: #d0cfcc; }
+  .bottom-bar { position: absolute; bottom: 20px; right: 28px; z-index: 10; display: flex; gap: 8px; }
+  .side-panel { position: absolute; top: 0; left: 0; width: 420px; max-width: 90vw; height: 100vh; background: rgba(34,34,34,0.96); color: #ddd; z-index: 15; transform: translateX(-100%); transition: transform 0.3s ease; display: flex; flex-direction: column; padding: 24px; overflow-y: auto; }
+  .side-panel.open { transform: translateX(0); }
+  .side-panel h2 { font-size: 11px; font-weight: 400; letter-spacing: 3px; text-transform: uppercase; color: #999; margin-bottom: 16px; }
+  .side-panel label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #888; margin-bottom: 6px; display: block; }
+  .side-panel textarea { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #ccc; font-family: 'DM Mono', monospace; font-size: 12px; padding: 12px; border-radius: 4px; resize: vertical; margin-bottom: 16px; line-height: 1.6; }
+  .side-panel textarea:focus { outline: none; border-color: rgba(255,255,255,0.3); }
+  .side-panel .text-input { width: 120px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #ccc; font-family: 'DM Mono', monospace; font-size: 12px; padding: 8px 12px; border-radius: 4px; margin-bottom: 8px; display: block; }
+  .side-panel .text-input:focus { outline: none; border-color: rgba(255,255,255,0.3); }
+  .side-panel .hint { font-size: 10px; color: #666; margin-bottom: 16px; line-height: 1.5; }
+  .panel-actions { display: flex; gap: 8px; margin-top: 4px; }
+  .panel-actions .btn { flex: 1; text-align: center; }
+  .btn-light { background: rgba(255,255,255,0.1); color: #ccc; }
+  .btn-light:hover { background: rgba(255,255,255,0.18); }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .toggle-row span { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #888; }
+  .toggle-switch { position: relative; width: 44px; height: 24px; cursor: pointer; }
+  .toggle-switch input { display: none; }
+  .toggle-track { position: absolute; inset: 0; background: rgba(255,255,255,0.1); border-radius: 12px; transition: background 0.2s; }
+  .toggle-switch input:checked + .toggle-track { background: rgba(255,255,255,0.35); }
+  .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: #f8f7f4; border-radius: 50%; transition: transform 0.2s; }
+  .toggle-switch input:checked ~ .toggle-thumb { transform: translateX(20px); }
+  .divider { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 8px 0 20px; }
+  .error-msg { font-size: 11px; color: #e55; margin-bottom: 12px; display: none; }
+  .error-msg.visible { display: block; }
+  .section-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #666; margin-bottom: 12px; margin-top: 4px; }
+  .color-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .color-row label { margin-bottom: 0; }
+  .color-swatch { width: 32px; height: 24px; border: 1px solid rgba(255,255,255,0.2); border-radius: 3px; cursor: pointer; padding: 0; background: none; }
+  .color-swatch::-webkit-color-swatch-wrapper { padding: 0; }
+  .color-swatch::-webkit-color-swatch { border: none; border-radius: 2px; }
+  .range-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .range-row label { margin-bottom: 0; flex-shrink: 0; }
+  .range-row input[type=range] { flex: 1; accent-color: #888; height: 4px; }
+  .range-val { font-size: 11px; color: #aaa; min-width: 32px; text-align: right; }
+</style>
+</head>
+<body>
+<div id="canvas-container">
+  <div class="top-left">
+    <div class="top-left-buttons">
+      <button class="btn" id="panelBtn">Edit Molecule</button>
+      <div class="view-toggle">
+        <button id="viewMol" class="active">Molecule</button>
+        <button id="viewGNN">GNN</button>
+        <button id="viewMatrix">Matrix</button>
+        <button id="viewSH">Harmonics</button>
+      </div>
+    </div>
+  </div>
+  <div class="top-right">
+    <div class="label-overlay">
+      <h1 id="mol-label">Ethanol</h1>
+      <div class="formula" id="mol-formula">C<sub>2</sub>H<sub>5</sub>OH</div>
+    </div>
+    <div id="legend" class="legend"></div>
+  </div>
+  <div class="controls-hint">drag to rotate · scroll to zoom</div>
+  <div class="bottom-bar">
+    <button class="btn" id="exportBtn">Export All PNGs</button>
+  </div>
+  <div class="side-panel" id="sidePanel">
+    <h2>Molecule Input</h2>
+    <div class="toggle-row"><span>Show Bonds</span><label class="toggle-switch"><input type="checkbox" id="bondsToggle" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+    <div class="toggle-row"><span>Floor Shadow</span><label class="toggle-switch"><input type="checkbox" id="shadowToggle" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+    <hr class="divider">
+    <label for="atomZInput">atom_z (atomic numbers)</label>
+    <textarea id="atomZInput" rows="3" spellcheck="false">np.array([6, 6, 8, 1, 1, 1, 1, 1, 1])</textarea>
+    <div class="hint">Accepts: np.array([6, 6, 8, ...]) or just [6, 6, 8, ...] or 6, 6, 8, ...</div>
+    <label for="nucPosInput">nuc_pos (positions)</label>
+    <textarea id="nucPosInput" rows="14" spellcheck="false">np.array([
+  [-0.14365933, -0.11813374, -0.56843375],
+  [-0.17613, 1.28513285, -0.00859315],
+  [0.21953989, -1.07718569, 0.51279995],
+  [-1.17635944, -0.44982293, -1.02836848],
+  [0.49325929, -0.34332167, -1.39655428],
+  [-0.82220941, 1.53936818, 0.84187767],
+  [0.86485323, 1.37019756, 0.45488715],
+  [-0.22079702, 2.03512503, -0.80257909],
+  [1.18606471, -0.96054634, 0.66677837],
+])</textarea>
+    <div class="hint">Accepts numpy-style or plain nested arrays. One [x, y, z] per atom.</div>
+    <hr class="divider">
+    <div class="section-label">GNN Options</div>
+    <div class="range-row"><label>Cutoff (Å)</label><input type="range" id="cutoffRange" min="0.5" max="6.0" step="0.1" value="2.0"><span class="range-val" id="cutoffVal">2.0</span></div>
+    <div class="hint">Atoms within this distance are connected by edges.</div>
+    <div class="toggle-row"><span>Show Features</span><label class="toggle-switch"><input type="checkbox" id="featuresToggle"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+    <div class="toggle-row"><span>Curved Arrows</span><label class="toggle-switch"><input type="checkbox" id="curvedToggle"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+    <div class="toggle-row"><span>Monochrome Nodes</span><label class="toggle-switch"><input type="checkbox" id="monoToggle"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+    <div class="range-row"><label>Edge Thickness</label><input type="range" id="thicknessRange" min="0.005" max="0.08" step="0.005" value="0.03"><span class="range-val" id="thicknessVal">0.03</span></div>
+    <div class="range-row"><label>Edge Opacity</label><input type="range" id="opacityRange" min="0.05" max="1.0" step="0.05" value="0.5"><span class="range-val" id="opacityVal">0.50</span></div>
+    <div class="color-row"><label>Arrow Color</label><input type="color" id="arrowColorPicker" class="color-swatch" value="#222222"></div>
+    <hr class="divider">
+    <div class="section-label">Harmonics Options</div>
+    <div class="range-row"><label>Isovalue</label><input type="range" id="shIsoRange" min="0.01" max="0.60" step="0.01" value="0.15"><span class="range-val" id="shIsoVal">0.15</span></div>
+    <div class="hint">Isosurface threshold. Lower values reveal more of the SH lobes, higher values isolate dominant features.</div>
+    <div class="range-row"><label>Lobe Scale</label><input type="range" id="shScaleRange" min="0.1" max="1.5" step="0.05" value="0.55"><span class="range-val" id="shScaleVal">0.55</span></div>
+    <div class="range-row"><label>Opacity</label><input type="range" id="shOpacityRange" min="0.1" max="1.0" step="0.05" value="0.82"><span class="range-val" id="shOpacityVal">0.82</span></div>
+    <div id="errorMsg" class="error-msg"></div>
+    <div class="panel-actions">
+      <button class="btn btn-light" id="closePanel">Cancel</button>
+      <button class="btn" id="loadMolecule">Load Molecule</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ═══════════════════════════════════════════
+// Elements
+// ═══════════════════════════════════════════
+const ELEMENTS={1:{symbol:'H',name:'Hydrogen',color:0xe8e8e8,radius:0.25,covalent:0.31,nBasis:1},2:{symbol:'He',name:'Helium',color:0xd9ffff,radius:0.20,covalent:0.28,nBasis:1},6:{symbol:'C',name:'Carbon',color:0x404040,radius:0.38,covalent:0.76,nBasis:5},7:{symbol:'N',name:'Nitrogen',color:0x3050f8,radius:0.34,covalent:0.71,nBasis:5},8:{symbol:'O',name:'Oxygen',color:0xcc3333,radius:0.35,covalent:0.66,nBasis:5},9:{symbol:'F',name:'Fluorine',color:0x90e050,radius:0.30,covalent:0.57,nBasis:5},15:{symbol:'P',name:'Phosphorus',color:0xff8000,radius:0.36,covalent:1.07,nBasis:9},16:{symbol:'S',name:'Sulfur',color:0xffff30,radius:0.36,covalent:1.05,nBasis:9},17:{symbol:'Cl',name:'Chlorine',color:0x1ff01f,radius:0.34,covalent:1.02,nBasis:9}};
+function getElement(z){return ELEMENTS[z]||{symbol:`Z${z}`,name:`Element ${z}`,color:0x999999,radius:0.32,covalent:1.5,nBasis:5};}
+
+const BOND_RADIUS=0.08, BOND_COLOR=0x888888, BOND_TOLERANCE=0.35, BG_COLOR=0xf8f7f4;
+let GNN_CUTOFF=2.0;
+const GNN_NODE_RADIUS=0.22;
+let GNN_EDGE_RADIUS=0.03;
+let GNN_EDGE_COLOR=0x222222;
+const SCALAR_COLOR=0x4a90d9, VECTOR_COLOR=0x50b86c;
+const NUM_SCALAR_CHANNELS=4, NUM_VECTOR_CHANNELS=4;
+const GNN_MONO_COLOR=0x777777; // uniform grey for monochrome mode
+const SH_LMAX=3; // max angular momentum for spherical harmonics
+const SH_POS_COLOR=0x4a90d9; // blue for positive lobes
+const SH_NEG_COLOR=0xd94a4a; // red for negative lobes
+const SH_RADIAL_ALPHA=3.0; // Gaussian radial decay rate
+let SH_SCALE=0.55; // overall lobe size scaling
+
+// Matrix block colors
+const MATRIX_DIAG_COLOR=0x4a90d9;
+const MATRIX_OFFDIAG_COLOR=0xaaaacc;
+const MATRIX_LINE_COLOR=0x333333;
+
+// ═══════════════════════════════════════════
+// Scene
+// ═══════════════════════════════════════════
+const container=document.getElementById('canvas-container');
+let W=container.clientWidth, H=container.clientHeight;
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});
+renderer.setSize(W,H); renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setClearColor(BG_COLOR,1); renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap; renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.1; container.appendChild(renderer.domElement);
+const scene=new THREE.Scene(); scene.background=new THREE.Color(BG_COLOR);
+const camera=new THREE.PerspectiveCamera(32,W/H,0.1,100);
+
+scene.add(new THREE.AmbientLight(0xffffff,0.55));
+const keyLight=new THREE.DirectionalLight(0xffffff,0.85);
+keyLight.position.set(5,8,6); keyLight.castShadow=true;
+keyLight.shadow.mapSize.set(2048,2048); keyLight.shadow.camera.near=1; keyLight.shadow.camera.far=30;
+keyLight.shadow.camera.left=-5; keyLight.shadow.camera.right=5;
+keyLight.shadow.camera.top=5; keyLight.shadow.camera.bottom=-5; keyLight.shadow.bias=-0.001;
+scene.add(keyLight);
+scene.add(new THREE.DirectionalLight(0xc8d8f0,0.35).translateX(-4).translateY(2).translateZ(-3));
+scene.add(new THREE.DirectionalLight(0xffeedd,0.25).translateX(-1).translateY(-2).translateZ(5));
+
+const floorMat=new THREE.ShadowMaterial({opacity:0.08});
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),floorMat);
+floor.rotation.x=-Math.PI/2; floor.position.y=-2; floor.receiveShadow=true; scene.add(floor);
+
+const sphereGeo=new THREE.SphereGeometry(1,64,48);
+const cylGeo=new THREE.CylinderGeometry(1,1,1,16,1,true);
+const boxGeo=new THREE.BoxGeometry(1,1,1);
+const coneGeo=new THREE.ConeGeometry(1,1,12);
+
+// ═══════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════
+let molGroup=new THREE.Group(); scene.add(molGroup);
+let gnnGroup=new THREE.Group(); scene.add(gnnGroup); gnnGroup.visible=false;
+let gnnFeatGroup=new THREE.Group(); scene.add(gnnFeatGroup); gnnFeatGroup.visible=false;
+let matGroup=new THREE.Group(); scene.add(matGroup); matGroup.visible=false;
+let shGroup=new THREE.Group(); scene.add(shGroup); shGroup.visible=false;
+
+let atomMeshes=[], bondMeshes=[], showBonds=true;
+let currentAtomZ=[], currentPositions=[], currentCenter=[0,0,0];
+let viewMode='molecule'; // 'molecule'|'gnn'|'matrix'
+let showFeatures=false, useCurvedArrows=false, monoNodes=false;
+let edgeOpacity=0.5;
+
+// GNN
+let gnnNodes=[], gnnEdges=[], gnnFeatSubs=[];
+let gnnStraightEdgeGroup, gnnCurvedEdgeGroup;
+
+// Matrix
+let matFeatSubs=[];
+
+// Spherical Harmonics
+let shCoeffs=[]; // per-atom coefficient arrays
+let shPosMeshes=[]; // positive isosurface meshes
+let shNegMeshes=[]; // negative isosurface meshes
+let shAtomPositions=[]; // centered atom positions for SH
+let shIsovalue=0.15; // isosurface threshold
+
+// ═══════════════════════════════════════════
+// Utilities
+// ═══════════════════════════════════════════
+function seededRand(s){let x=Math.sin(s*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+
+function detectBonds(az,pos){const b=[];for(let i=0;i<az.length;i++)for(let j=i+1;j<az.length;j++){const d=Math.hypot(pos[i][0]-pos[j][0],pos[i][1]-pos[j][1],pos[i][2]-pos[j][2]);if(d<getElement(az[i]).covalent+getElement(az[j]).covalent+BOND_TOLERANCE&&d>0.4)b.push([i,j]);}return b;}
+
+function detectGNNEdges(pos,cut){const e=[];for(let i=0;i<pos.length;i++)for(let j=0;j<pos.length;j++){if(i===j)continue;const d=Math.hypot(pos[i][0]-pos[j][0],pos[i][1]-pos[j][1],pos[i][2]-pos[j][2]);if(d<cut)e.push([i,j,d]);}return e;}
+
+function makeCylinder(from,to,radius,mat,parent){
+  const d=new THREE.Vector3().subVectors(to,from);
+  const len=d.length(); const mid=new THREE.Vector3().addVectors(from,to).multiplyScalar(0.5);
+  const c=new THREE.Mesh(cylGeo,mat);
+  c.scale.set(radius,len,radius); c.position.copy(mid);
+  c.setRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),d.clone().normalize()));
+  parent.add(c); return c;
+}
+
+function makeCurvedArrow(from,to,color,opacity,parent,edgeRadius){
+  // Shorten start and end to stay outside nuclei
+  const d=new THREE.Vector3().subVectors(to,from);
+  const len=d.length();
+  const dn=d.clone().normalize();
+  const margin=GNN_NODE_RADIUS+0.05;
+  const actualFrom=from.clone().add(dn.clone().multiplyScalar(margin));
+  const actualTo=to.clone().sub(dn.clone().multiplyScalar(margin));
+
+  const mid=new THREE.Vector3().addVectors(actualFrom,actualTo).multiplyScalar(0.5);
+  const ad=new THREE.Vector3().subVectors(actualTo,actualFrom);
+  const up=new THREE.Vector3(0,1,0);
+  let perp=new THREE.Vector3().crossVectors(ad,up);
+  if(perp.length()<0.01) perp.set(1,0,0);
+  perp.normalize().multiplyScalar(ad.length()*0.25);
+  const ctrl=mid.clone().add(perp);
+  const curve=new THREE.QuadraticBezierCurve3(actualFrom,ctrl,actualTo);
+
+  // Tube geometry for configurable thickness
+  const tubePts=curve.getPoints(32);
+  const tubePath=new THREE.CatmullRomCurve3(tubePts);
+  const tubeGeo=new THREE.TubeGeometry(tubePath,24,edgeRadius*0.6,8,false);
+  const tubeMat=new THREE.MeshStandardMaterial({color,transparent:true,opacity,roughness:0.5});
+  const tube=new THREE.Mesh(tubeGeo,tubeMat);
+  parent.add(tube);
+
+  // Arrowhead near end
+  const tipPos=curve.getPoint(0.92);
+  const tipDir=curve.getTangent(0.92).normalize();
+  const headScale=Math.max(edgeRadius*2.5,0.03);
+  const arrow=new THREE.Mesh(coneGeo,new THREE.MeshStandardMaterial({color,transparent:true,opacity:opacity+0.15,roughness:0.4}));
+  arrow.scale.set(headScale,headScale*2.5,headScale);
+  arrow.position.copy(tipPos);
+  arrow.setRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),tipDir));
+  parent.add(arrow);
+  return {tube,arrow};
+}
+
+// ═══════════════════════════════════════════
+// Build Molecule
+// ═══════════════════════════════════════════
+function buildMolecule(az,pos){
+  scene.remove(molGroup); molGroup=new THREE.Group();
+  atomMeshes=[]; bondMeshes=[]; currentAtomZ=az; currentPositions=pos;
+  let cx=0,cy=0,cz=0;
+  pos.forEach(p=>{cx+=p[0];cy+=p[1];cz+=p[2];}); cx/=pos.length;cy/=pos.length;cz/=pos.length;
+  currentCenter=[cx,cy,cz];
+
+  az.forEach((z,i)=>{
+    const e=getElement(z);
+    const m=new THREE.Mesh(sphereGeo,new THREE.MeshStandardMaterial({color:e.color,roughness:z===1?0.25:0.3,metalness:z===1?0.05:0.08}));
+    m.scale.setScalar(e.radius); m.position.set(pos[i][0]-cx,pos[i][1]-cy,pos[i][2]-cz);
+    m.castShadow=true; m.receiveShadow=true; molGroup.add(m); atomMeshes.push(m);
+  });
+  detectBonds(az,pos).forEach(([i,j])=>{
+    const c=makeCylinder(atomMeshes[i].position,atomMeshes[j].position,BOND_RADIUS,
+      new THREE.MeshStandardMaterial({color:BOND_COLOR,roughness:0.4,metalness:0.05}),molGroup);
+    c.castShadow=true; c.receiveShadow=true; bondMeshes.push(c);
+  });
+  setBondVisibility(showBonds); scene.add(molGroup);
+  buildGNN(az,pos,cx,cy,cz);
+  buildMatrix(az,pos,cx,cy,cz);
+  buildSH(az,pos,cx,cy,cz);
+  setView(viewMode);
+  updateLegend(); updateLabel(az); fitCamera();
+}
+function setBondVisibility(v){bondMeshes.forEach(m=>{m.visible=v;});}
+
+// ═══════════════════════════════════════════
+// Build GNN
+// ═══════════════════════════════════════════
+function buildGNN(az,pos,cx,cy,cz){
+  scene.remove(gnnGroup); scene.remove(gnnFeatGroup);
+  gnnGroup=new THREE.Group(); gnnFeatGroup=new THREE.Group();
+  gnnNodes=[]; gnnEdges=[]; gnnFeatSubs=[];
+  gnnStraightEdgeGroup=new THREE.Group(); gnnGroup.add(gnnStraightEdgeGroup);
+  gnnCurvedEdgeGroup=new THREE.Group(); gnnGroup.add(gnnCurvedEdgeGroup);
+  gnnCurvedEdgeGroup.visible=useCurvedArrows;
+  gnnStraightEdgeGroup.visible=!useCurvedArrows;
+
+  const npos=pos.map(p=>new THREE.Vector3(p[0]-cx,p[1]-cy,p[2]-cz));
+
+  // Nodes
+  npos.forEach((p,i)=>{
+    const e=getElement(az[i]);
+    const col=monoNodes?GNN_MONO_COLOR:e.color;
+    const n=new THREE.Mesh(sphereGeo,new THREE.MeshStandardMaterial({color:col,roughness:monoNodes?0.4:(az[i]===1?0.25:0.3),metalness:monoNodes?0.05:(az[i]===1?0.05:0.08)}));
+    n.scale.setScalar(GNN_NODE_RADIUS); n.position.copy(p); n.castShadow=true; n.receiveShadow=true;
+    gnnGroup.add(n); gnnNodes.push({mesh:n,pos:p});
+  });
+
+  // Edges
+  const edges=detectGNNEdges(pos,GNN_CUTOFF);
+  const eMat=new THREE.MeshStandardMaterial({color:GNN_EDGE_COLOR,roughness:0.5,transparent:true,opacity:edgeOpacity});
+  const aMat=new THREE.MeshStandardMaterial({color:GNN_EDGE_COLOR,roughness:0.4,transparent:true,opacity:Math.min(edgeOpacity+0.15,1.0)});
+  const headScale=Math.max(GNN_EDGE_RADIUS*2.5,0.03);
+
+  edges.forEach(([i,j])=>{
+    const from=npos[i], to=npos[j];
+    // Straight
+    makeCylinder(from,to,GNN_EDGE_RADIUS,eMat,gnnStraightEdgeGroup);
+    const ap=new THREE.Vector3().lerpVectors(from,to,0.72);
+    const ad=new THREE.Vector3().subVectors(to,from).normalize();
+    const ar=new THREE.Mesh(coneGeo,aMat);
+    ar.scale.set(headScale,headScale*2.5,headScale); ar.position.copy(ap);
+    ar.setRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),ad));
+    gnnStraightEdgeGroup.add(ar);
+    // Curved
+    makeCurvedArrow(from,to,GNN_EDGE_COLOR,edgeOpacity,gnnCurvedEdgeGroup,GNN_EDGE_RADIUS);
+  });
+
+  // Features (inside gnnFeatGroup, which rotates with gnnGroup)
+  npos.forEach((p,i)=>{
+    const sub=new THREE.Group();
+    const barW=0.04,barD=0.04,barSp=0.06,maxH=0.25;
+    // l=0 scalar bars
+    for(let c=0;c<NUM_SCALAR_CHANNELS;c++){
+      const v=0.3+0.7*seededRand(i*17+c*7+az[i]);
+      const col=new THREE.Color().setHSL(0.58,0.65,0.35+0.35*v);
+      const bar=new THREE.Mesh(boxGeo,new THREE.MeshStandardMaterial({color:col,roughness:0.4,metalness:0.05}));
+      bar.scale.set(barW,maxH*v,barD);
+      bar.position.set((c-(NUM_SCALAR_CHANNELS-1)/2)*barSp, maxH*v/2, 0);
+      bar.castShadow=false; bar.receiveShadow=false; sub.add(bar);
+    }
+    // baseline
+    const tw=(NUM_SCALAR_CHANNELS-1)*barSp+barW;
+    const bb=new THREE.Mesh(boxGeo,new THREE.MeshStandardMaterial({color:SCALAR_COLOR,roughness:0.4,transparent:true,opacity:0.4}));
+    bb.scale.set(tw+0.02,0.008,barD); bb.castShadow=false; bb.receiveShadow=false; sub.add(bb);
+    // l=1 vector arrows
+    const aBase=maxH+0.1, aLen=0.18, aSR=0.012, aHR=0.03, aHL=0.06;
+    for(let c=0;c<NUM_VECTOR_CHANNELS;c++){
+      const th=seededRand(i*31+c*13+5)*Math.PI;
+      const ph=seededRand(i*23+c*19+11)*2*Math.PI;
+      const mg=0.5+0.5*seededRand(i*41+c*3+7);
+      const dir=new THREE.Vector3(Math.sin(th)*Math.cos(ph),Math.sin(th)*Math.sin(ph),Math.cos(th)*0.15).normalize();
+      const len=aLen*mg;
+      const qd=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
+      const ac=new THREE.Color().setHSL(0.38,0.55+0.3*mg,0.4+0.2*mg);
+      const sh=new THREE.Mesh(cylGeo,new THREE.MeshStandardMaterial({color:ac,roughness:0.35,metalness:0.05}));
+      sh.scale.set(aSR,len,aSR);
+      const bp=new THREE.Vector3((c-(NUM_VECTOR_CHANNELS-1)/2)*0.08,aBase,0);
+      sh.position.copy(bp).add(dir.clone().multiplyScalar(len/2));
+      sh.setRotationFromQuaternion(qd); sh.castShadow=false; sh.receiveShadow=false; sub.add(sh);
+      const hd=new THREE.Mesh(coneGeo,new THREE.MeshStandardMaterial({color:ac,roughness:0.35,metalness:0.05}));
+      hd.scale.set(aHR,aHL,aHR); hd.position.copy(bp).add(dir.clone().multiplyScalar(len));
+      hd.setRotationFromQuaternion(qd); hd.castShadow=false; hd.receiveShadow=false; sub.add(hd);
+    }
+    // Position sub-group at bottom-right of atom in local space
+    sub.position.copy(p).add(new THREE.Vector3(0.35,-0.25,0));
+    gnnFeatGroup.add(sub);
+    gnnFeatSubs.push({group:sub,atomIndex:i});
+  });
+
+  scene.add(gnnGroup); scene.add(gnnFeatGroup);
+}
+
+// ═══════════════════════════════════════════
+// Build Matrix view
+// ═══════════════════════════════════════════
+function buildMatrix(az,pos,cx,cy,cz){
+  scene.remove(matGroup); matGroup=new THREE.Group(); matFeatSubs=[];
+  const npos=pos.map(p=>new THREE.Vector3(p[0]-cx,p[1]-cy,p[2]-cz));
+
+  // Nodes (element-colored)
+  npos.forEach((p,i)=>{
+    const e=getElement(az[i]);
+    const n=new THREE.Mesh(sphereGeo,new THREE.MeshStandardMaterial({color:e.color,roughness:az[i]===1?0.25:0.3,metalness:az[i]===1?0.05:0.08}));
+    n.scale.setScalar(GNN_NODE_RADIUS*0.8); n.position.copy(p); n.castShadow=true; n.receiveShadow=true;
+    matGroup.add(n);
+  });
+
+  // Bonds (thin)
+  detectBonds(az,pos).forEach(([i,j])=>{
+    const c=makeCylinder(npos[i],npos[j],0.03,
+      new THREE.MeshStandardMaterial({color:0xbbbbbb,roughness:0.5,transparent:true,opacity:0.4}),matGroup);
+  });
+
+  // Build matrix block billboard per atom
+  // Compute total basis dimension
+  const basisSizes=az.map(z=>getElement(z).nBasis);
+  const totalBasis=basisSizes.reduce((a,b)=>a+b,0);
+
+  npos.forEach((p,i)=>{
+    const sub=new THREE.Group();
+    const nB=basisSizes[i];
+    const cellSize=0.04;
+    const blockW=nB*cellSize;
+    const totalW=totalBasis*cellSize;
+    const totalH=nB*cellSize;
+
+    // Compute where this atom's block starts
+    let blockStart=0;
+    for(let k=0;k<i;k++) blockStart+=basisSizes[k];
+
+    // Draw the row strip: one row of blocks for this atom
+    // Each column-block corresponds to another atom
+    let colStart=0;
+    for(let j=0;j<az.length;j++){
+      const nBj=basisSizes[j];
+      const isOnDiag=(i===j);
+      const hasBond=detectBonds(az,pos).some(([a,b])=>(a===i&&b===j)||(a===j&&b===i));
+      const isDiag=isOnDiag;
+      const isConnected=hasBond||isOnDiag;
+
+      // Block rectangle
+      const bw=nBj*cellSize, bh=nB*cellSize;
+      const col=isDiag?MATRIX_DIAG_COLOR:(isConnected?MATRIX_OFFDIAG_COLOR:0xdddddd);
+      const op=isDiag?0.7:(isConnected?0.4:0.1);
+
+      const block=new THREE.Mesh(boxGeo,new THREE.MeshStandardMaterial({
+        color:col, roughness:0.4, metalness:0.05, transparent:true, opacity:op
+      }));
+      block.scale.set(bw,bh,0.006);
+      block.position.set(colStart+bw/2-totalW/2, -bh/2, 0);
+      block.castShadow=false; block.receiveShadow=false;
+      sub.add(block);
+
+      // Grid lines within block if diagonal or connected
+      if(isConnected && (nBj>1||nB>1)){
+        const lineMat=new THREE.LineBasicMaterial({color:MATRIX_LINE_COLOR,transparent:true,opacity:0.15});
+        // Vertical lines
+        for(let c=0;c<=nBj;c++){
+          const x=colStart+c*cellSize-totalW/2;
+          const pts=[new THREE.Vector3(x,0,0.004),new THREE.Vector3(x,-bh,0.004)];
+          sub.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lineMat));
+        }
+        // Horizontal lines
+        for(let r=0;r<=nB;r++){
+          const y=-r*cellSize;
+          const pts=[new THREE.Vector3(colStart-totalW/2,y,0.004),new THREE.Vector3(colStart+bw-totalW/2,y,0.004)];
+          sub.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lineMat));
+        }
+      }
+
+      // Block separator
+      const sepMat=new THREE.LineBasicMaterial({color:MATRIX_LINE_COLOR,transparent:true,opacity:0.3});
+      const sepX=colStart+bw-totalW/2;
+      if(j<az.length-1){
+        sub.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(sepX,0.005,0.005),new THREE.Vector3(sepX,-bh-0.005,0.005)
+        ]),sepMat));
+      }
+
+      colStart+=nBj*cellSize;
+    }
+
+    // Outer border
+    const borderMat=new THREE.LineBasicMaterial({color:MATRIX_LINE_COLOR,transparent:true,opacity:0.5});
+    const bh=nB*cellSize;
+    const pts=[
+      new THREE.Vector3(-totalW/2,0,0.005), new THREE.Vector3(totalW/2,0,0.005),
+      new THREE.Vector3(totalW/2,-bh,0.005), new THREE.Vector3(-totalW/2,-bh,0.005),
+      new THREE.Vector3(-totalW/2,0,0.005)
+    ];
+    sub.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),borderMat));
+
+    // Position: offset from atom
+    sub.position.copy(p).add(new THREE.Vector3(0.35,-0.15,0));
+    matGroup.add(sub);
+    matFeatSubs.push({group:sub,atomIndex:i,nodePos:p});
+  });
+
+  scene.add(matGroup);
+}
+
+// ═══════════════════════════════════════════
+// Spherical Harmonics
+// ═══════════════════════════════════════════
+// Real spherical harmonics Y_l^m(theta, phi) up to l=3
+function realSH(l,m,theta,phi){
+  const ct=Math.cos(theta), st=Math.sin(theta);
+  const ct2=ct*ct, st2=st*st;
+  // Normalization included inline for each (l,m)
+  if(l===0) return 0.28209479; // 1/(2*sqrt(pi))
+  if(l===1){
+    if(m===-1) return 0.48860251*st*Math.sin(phi);
+    if(m=== 0) return 0.48860251*ct;
+    if(m=== 1) return 0.48860251*st*Math.cos(phi);
+  }
+  if(l===2){
+    if(m===-2) return 0.54627422*st2*Math.sin(2*phi);
+    if(m===-1) return 1.09254843*st*ct*Math.sin(phi);
+    if(m=== 0) return 0.31539157*(3*ct2-1);
+    if(m=== 1) return 1.09254843*st*ct*Math.cos(phi);
+    if(m=== 2) return 0.54627422*st2*Math.cos(2*phi);
+  }
+  if(l===3){
+    if(m===-3) return 0.59004359*st2*st*Math.sin(3*phi);
+    if(m===-2) return 1.44530572*st2*ct*Math.sin(2*phi);
+    if(m===-1) return 0.45704579*st*(5*ct2-1)*Math.sin(phi);
+    if(m=== 0) return 0.37317633*(5*ct2*ct-3*ct);
+    if(m=== 1) return 0.45704579*st*(5*ct2-1)*Math.cos(phi);
+    if(m=== 2) return 1.44530572*st2*ct*Math.cos(2*phi);
+    if(m=== 3) return 0.59004359*st2*st*Math.cos(3*phi);
+  }
+  return 0;
+}
+
+function buildSH(az,pos,cx,cy,cz){
+  scene.remove(shGroup); shGroup=new THREE.Group();
+  shCoeffs=[]; shPosMeshes=[]; shNegMeshes=[]; shAtomPositions=[];
+  const npos=pos.map(p=>new THREE.Vector3(p[0]-cx,p[1]-cy,p[2]-cz));
+  shAtomPositions=npos;
+
+  // Draw thin bonds
+  detectBonds(az,pos).forEach(([i,j])=>{
+    makeCylinder(npos[i],npos[j],0.03,
+      new THREE.MeshStandardMaterial({color:0xbbbbbb,roughness:0.5,transparent:true,opacity:0.3}),shGroup);
+  });
+
+  const shRes=64;
+
+  // Precompute a unit sphere template (directions + angles)
+  const templateGeo=new THREE.SphereGeometry(1,shRes,shRes);
+  const tPos=templateGeo.attributes.position;
+  const dirs=[]; // {nx,ny,nz,theta,phi} per vertex
+  for(let vi=0;vi<tPos.count;vi++){
+    const x=tPos.getX(vi), y=tPos.getY(vi), z=tPos.getZ(vi);
+    const r0=Math.sqrt(x*x+y*y+z*z)||1e-10;
+    const nx=x/r0, ny=y/r0, nz=z/r0;
+    const theta=Math.acos(Math.max(-1,Math.min(1,nz)));
+    const phi=Math.atan2(ny,nx);
+    dirs.push({nx,ny,nz,theta,phi});
+  }
+  templateGeo.dispose();
+
+  npos.forEach((atomPos,ai)=>{
+    // Generate random coefficients
+    const coeffs=[];
+    for(let l=0;l<=SH_LMAX;l++){
+      for(let m=-l;m<=l;m++){
+        let c=seededRand(ai*137+l*53+m*31+az[ai]*7+17)*2-1;
+        if(l===0) c*=0.3;
+        coeffs.push({l,m,c});
+      }
+    }
+    shCoeffs.push(coeffs);
+
+    // Precompute SH values at each vertex direction
+    const shVals=dirs.map(({theta,phi})=>{
+      let val=0;
+      for(const {l,m,c} of coeffs) val+=c*realSH(l,m,theta,phi);
+      return val;
+    });
+
+    // Create positive isosurface mesh
+    const posGeo=new THREE.SphereGeometry(1,shRes,shRes);
+    setSHVertices(posGeo,dirs,shVals,shIsovalue,true);
+    const posMesh=new THREE.Mesh(posGeo,new THREE.MeshStandardMaterial({
+      color:SH_POS_COLOR, roughness:0.25, metalness:0.08,
+      transparent:true, opacity:0.82, side:THREE.DoubleSide
+    }));
+    posMesh.position.copy(atomPos);
+    posMesh.castShadow=true; posMesh.receiveShadow=true;
+    posMesh.userData={shVals,dirs};
+    shGroup.add(posMesh);
+    shPosMeshes.push(posMesh);
+
+    // Create negative isosurface mesh
+    const negGeo=new THREE.SphereGeometry(1,shRes,shRes);
+    setSHVertices(negGeo,dirs,shVals,shIsovalue,false);
+    const negMesh=new THREE.Mesh(negGeo,new THREE.MeshStandardMaterial({
+      color:SH_NEG_COLOR, roughness:0.25, metalness:0.08,
+      transparent:true, opacity:0.82, side:THREE.DoubleSide
+    }));
+    negMesh.position.copy(atomPos);
+    negMesh.castShadow=true; negMesh.receiveShadow=true;
+    negMesh.userData={shVals,dirs};
+    shGroup.add(negMesh);
+    shNegMeshes.push(negMesh);
+
+    // Small core sphere showing the element
+    const e=getElement(az[ai]);
+    const core=new THREE.Mesh(sphereGeo,new THREE.MeshStandardMaterial({
+      color:e.color, roughness:0.25, metalness:0.05
+    }));
+    core.scale.setScalar(0.10);
+    core.position.copy(atomPos);
+    core.castShadow=false;
+    shGroup.add(core);
+  });
+
+  scene.add(shGroup);
+}
+
+// Set vertex positions for an SH isosurface lobe
+// F(r,theta,phi) = f(theta,phi) * exp(-alpha * r^2)
+// Isosurface at F = +iso (positive=true) or F = -iso (positive=false)
+// => r(theta,phi) = sqrt( ln(|f| / iso) / alpha ) when |f| > iso and sign matches
+function setSHVertices(geo,dirs,shVals,iso,positive){
+  const posAttr=geo.attributes.position;
+  for(let vi=0;vi<posAttr.count;vi++){
+    const {nx,ny,nz}=dirs[vi];
+    const val=shVals[vi];
+    const relevant=positive?val:-val;
+    let rNew=0;
+    if(relevant>iso && iso>0){
+      rNew=SH_SCALE*Math.sqrt(Math.log(relevant/iso)/SH_RADIAL_ALPHA);
+    }
+    posAttr.setXYZ(vi, nx*rNew, ny*rNew, nz*rNew);
+  }
+  posAttr.needsUpdate=true;
+  geo.computeVertexNormals();
+}
+
+// Live-update all SH isosurface meshes (called when slider changes)
+function updateSHIsosurfaces(){
+  shPosMeshes.forEach(mesh=>{
+    const {shVals,dirs}=mesh.userData;
+    setSHVertices(mesh.geometry,dirs,shVals,shIsovalue,true);
+  });
+  shNegMeshes.forEach(mesh=>{
+    const {shVals,dirs}=mesh.userData;
+    setSHVertices(mesh.geometry,dirs,shVals,shIsovalue,false);
+  });
+}
+
+// ═══════════════════════════════════════════
+// View management
+// ═══════════════════════════════════════════
+function setView(mode){
+  viewMode=mode;
+  molGroup.visible=(mode==='molecule');
+  gnnGroup.visible=(mode==='gnn');
+  gnnFeatGroup.visible=(mode==='gnn'&&showFeatures);
+  matGroup.visible=(mode==='matrix');
+  shGroup.visible=(mode==='sh');
+  document.getElementById('viewMol').classList.toggle('active',mode==='molecule');
+  document.getElementById('viewGNN').classList.toggle('active',mode==='gnn');
+  document.getElementById('viewMatrix').classList.toggle('active',mode==='matrix');
+  document.getElementById('viewSH').classList.toggle('active',mode==='sh');
+  updateLegend(); fitCamera();
+}
+
+// ═══════════════════════════════════════════
+// Legend
+// ═══════════════════════════════════════════
+function updateLegend(){
+  const el=document.getElementById('legend');
+  const unique=[...new Set(currentAtomZ)].sort((a,b)=>a-b);
+  const elemItems=unique.map(z=>{
+    const e=getElement(z);const hex='#'+e.color.toString(16).padStart(6,'0');
+    return `<div class="legend-item"><div class="legend-dot" style="background:${hex};"></div>${e.name}</div>`;
+  }).join('');
+
+  if(viewMode==='molecule'){
+    el.innerHTML=elemItems;
+  } else if(viewMode==='gnn'){
+    el.innerHTML=elemItems+
+      `<div class="legend-item" style="margin-top:8px;"><div class="legend-dot" style="background:#4a90d9;border-radius:2px;"></div>\u2113=0 scalars</div>`+
+      `<div class="legend-item"><div class="legend-dot" style="background:#50b86c;border-radius:2px;"></div>\u2113=1 vectors</div>`;
+  } else if(viewMode==='matrix'){
+    el.innerHTML=elemItems+
+      `<div class="legend-item" style="margin-top:8px;"><div class="legend-dot" style="background:#4a90d9;border-radius:2px;"></div>Diagonal block</div>`+
+      `<div class="legend-item"><div class="legend-dot" style="background:#aaaacc;border-radius:2px;"></div>Off-diagonal (bonded)</div>`+
+      `<div class="legend-item"><div class="legend-dot" style="background:#dddddd;border-radius:2px;"></div>Off-diagonal (sparse)</div>`;
+  } else if(viewMode==='sh'){
+    el.innerHTML=elemItems+
+      `<div class="legend-item" style="margin-top:8px;"><div class="legend-dot" style="background:#4a90d9;border-radius:2px;"></div>f(θ,φ) = +c</div>`+
+      `<div class="legend-item"><div class="legend-dot" style="background:#d94a4a;border-radius:2px;"></div>f(θ,φ) = −c</div>`+
+      `<div class="legend-item" style="color:#999;font-size:10px;">\u2113\u2098\u2090\u2093 = ${SH_LMAX}, c = ${shIsovalue.toFixed(2)}</div>`;
+  }
+}
+
+function updateLabel(az){
+  const c={};az.forEach(z=>{const s=getElement(z).symbol;c[s]=(c[s]||0)+1;});
+  const o=Object.keys(c).sort((a,b)=>{if(a==='C')return-1;if(b==='C')return 1;if(a==='H')return-1;if(b==='H')return 1;return a.localeCompare(b);});
+  document.getElementById('mol-formula').innerHTML=o.map(s=>s+(c[s]>1?`<sub>${c[s]}</sub>`:'')).join('');
+  document.getElementById('mol-label').textContent='Molecule';
+}
+
+// ═══════════════════════════════════════════
+// Camera
+// ═══════════════════════════════════════════
+let camBaseDist=8.5;
+function fitCamera(){
+  let meshes;
+  if(viewMode==='molecule') meshes=atomMeshes;
+  else if(viewMode==='gnn') meshes=gnnNodes.map(n=>n.mesh);
+  else meshes=matGroup.children.filter(c=>c.type==='Mesh');
+  if(viewMode==='sh') meshes=shGroup.children.filter(c=>c.type==='Mesh');
+  let maxR=0;
+  meshes.forEach(m=>{const d=m.position.length();if(d>maxR)maxR=d;});
+  camBaseDist=Math.max(maxR*3.5,5);
+  targetZoom=1; zoom=1;
+}
+
+// ═══════════════════════════════════════════
+// Parsing
+// ═══════════════════════════════════════════
+function parseAtomZ(t){let s=t.replace(/np\.array\s*\(/g,'').replace(/\)/g,'').replace(/\[/g,'').replace(/\]/g,'');
+  const n=s.split(/[\s,]+/).filter(Boolean).map(Number);if(n.some(isNaN)||!n.length)throw new Error('Cannot parse atom_z');return n;}
+function parsePositions(t){let s=t.replace(/np\.array\s*\(/g,'').replace(/\)/g,'');
+  const rx=/\[\s*([^\[\]]+?)\s*\]/g;const rows=[];let m;
+  while((m=rx.exec(s))!==null){const n=m[1].split(/[\s,]+/).filter(Boolean).map(Number);
+    if(n.length===3&&n.every(x=>!isNaN(x)))rows.push(n);}
+  if(!rows.length)throw new Error('Cannot parse positions');return rows;}
+
+// ═══════════════════════════════════════════
+// Orbit controls
+// ═══════════════════════════════════════════
+let isDragging=false, prevMouse={x:0,y:0};
+let rotX=0.25, rotY=-0.3, targetRotX=rotX, targetRotY=rotY;
+let zoom=1, targetZoom=1, autoRotate=true;
+
+renderer.domElement.addEventListener('mousedown',e=>{isDragging=true;autoRotate=false;prevMouse={x:e.clientX,y:e.clientY};});
+renderer.domElement.addEventListener('mousemove',e=>{if(!isDragging)return;targetRotY+=(e.clientX-prevMouse.x)*0.008;targetRotX+=(e.clientY-prevMouse.y)*0.008;targetRotX=Math.max(-Math.PI/2,Math.min(Math.PI/2,targetRotX));prevMouse={x:e.clientX,y:e.clientY};});
+renderer.domElement.addEventListener('mouseup',()=>{isDragging=false;});
+renderer.domElement.addEventListener('mouseleave',()=>{isDragging=false;});
+renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();targetZoom*=e.deltaY>0?1.08:0.92;targetZoom=Math.max(0.3,Math.min(3,targetZoom));},{passive:false});
+renderer.domElement.addEventListener('touchstart',e=>{if(e.touches.length===1){isDragging=true;autoRotate=false;prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};}});
+renderer.domElement.addEventListener('touchmove',e=>{e.preventDefault();if(!isDragging||e.touches.length!==1)return;targetRotY+=(e.touches[0].clientX-prevMouse.x)*0.008;targetRotX+=(e.touches[0].clientY-prevMouse.y)*0.008;targetRotX=Math.max(-Math.PI/2,Math.min(Math.PI/2,targetRotX));prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:false});
+renderer.domElement.addEventListener('touchend',()=>{isDragging=false;});
+
+// ═══════════════════════════════════════════
+// Billboard update for matrix sub-groups
+// ═══════════════════════════════════════════
+function updateBillboards(){
+  if(viewMode==='matrix'){
+    const cq=camera.quaternion.clone();
+    matFeatSubs.forEach(({group,nodePos})=>{
+      const wp=nodePos.clone(); matGroup.localToWorld(wp);
+      // Get camera-space offset for bottom-right
+      const cr=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0).normalize();
+      const cu=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1).normalize();
+      group.position.copy(nodePos).add(cr.clone().multiplyScalar(0.35)).sub(cu.clone().multiplyScalar(0.15));
+      group.quaternion.copy(cq);
+    });
+  }
+}
+
+// ═══════════════════════════════════════════
+// Animation
+// ═══════════════════════════════════════════
+let lastTime=performance.now();
+function animate(now){
+  requestAnimationFrame(animate);
+  const dt=Math.min((now-lastTime)/1000,0.05); lastTime=now;
+  if(autoRotate)targetRotY+=0.003;
+  rotX+=(targetRotX-rotX)*0.08; rotY+=(targetRotY-rotY)*0.08;
+  zoom+=(targetZoom-zoom)*0.08;
+
+  // All rotating groups share rotation
+  molGroup.rotation.x=rotX; molGroup.rotation.y=rotY;
+  gnnGroup.rotation.x=rotX; gnnGroup.rotation.y=rotY;
+  gnnFeatGroup.rotation.x=rotX; gnnFeatGroup.rotation.y=rotY;
+  matGroup.rotation.x=rotX; matGroup.rotation.y=rotY;
+  shGroup.rotation.x=rotX; shGroup.rotation.y=rotY;
+
+  const dist=camBaseDist*zoom;
+  camera.position.set(dist*Math.sin(0.3)*Math.cos(0.2),dist*Math.sin(0.35),dist*Math.cos(0.3)*Math.cos(0.2));
+  camera.lookAt(0,0,0);
+  camera.updateMatrixWorld();
+
+  // Billboard only matrix subs (they need to face camera despite matGroup rotating)
+  // We counter-rotate matrix billboard sub-groups
+  if(viewMode==='matrix'){
+    const invQ=matGroup.quaternion.clone().invert();
+    const camQ=camera.quaternion.clone();
+    const billQ=invQ.multiply(camQ);
+    const cr=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0).normalize();
+    const cu=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1).normalize();
+    // Transform camera directions into matGroup local space
+    const invMat=new THREE.Matrix4().copy(matGroup.matrixWorld).invert();
+    const localR=cr.clone().transformDirection(invMat);
+    const localU=cu.clone().transformDirection(invMat);
+
+    matFeatSubs.forEach(({group,nodePos})=>{
+      group.position.copy(nodePos).add(localR.clone().multiplyScalar(0.35)).sub(localU.clone().multiplyScalar(0.15));
+      group.quaternion.copy(billQ);
+    });
+  }
+
+  renderer.render(scene,camera);
+}
+animate(performance.now());
+
+// ═══════════════════════════════════════════
+// Resize
+// ═══════════════════════════════════════════
+window.addEventListener('resize',()=>{W=container.clientWidth;H=container.clientHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);});
+
+// ═══════════════════════════════════════════
+// UI
+// ═══════════════════════════════════════════
+const sidePanel=document.getElementById('sidePanel');
+document.getElementById('panelBtn').addEventListener('click',()=>{sidePanel.classList.toggle('open');});
+document.getElementById('closePanel').addEventListener('click',()=>{sidePanel.classList.remove('open');});
+document.getElementById('bondsToggle').addEventListener('change',e=>{showBonds=e.target.checked;setBondVisibility(showBonds);});
+document.getElementById('shadowToggle').addEventListener('change',e=>{floor.visible=e.target.checked;});
+document.getElementById('featuresToggle').addEventListener('change',e=>{showFeatures=e.target.checked;gnnFeatGroup.visible=(viewMode==='gnn'&&showFeatures);});
+document.getElementById('curvedToggle').addEventListener('change',e=>{
+  useCurvedArrows=e.target.checked;
+  if(gnnStraightEdgeGroup){gnnStraightEdgeGroup.visible=!useCurvedArrows;gnnCurvedEdgeGroup.visible=useCurvedArrows;}
+});
+document.getElementById('monoToggle').addEventListener('change',e=>{
+  monoNodes=e.target.checked;
+  if(currentAtomZ.length) buildMolecule(currentAtomZ,currentPositions);
+});
+document.getElementById('thicknessRange').addEventListener('input',e=>{
+  GNN_EDGE_RADIUS=parseFloat(e.target.value);
+  document.getElementById('thicknessVal').textContent=GNN_EDGE_RADIUS.toFixed(3);
+  if(currentAtomZ.length) buildMolecule(currentAtomZ,currentPositions);
+});
+document.getElementById('opacityRange').addEventListener('input',e=>{
+  edgeOpacity=parseFloat(e.target.value);
+  document.getElementById('opacityVal').textContent=edgeOpacity.toFixed(2);
+  if(currentAtomZ.length) buildMolecule(currentAtomZ,currentPositions);
+});
+document.getElementById('cutoffRange').addEventListener('input',e=>{
+  GNN_CUTOFF=parseFloat(e.target.value);
+  document.getElementById('cutoffVal').textContent=GNN_CUTOFF.toFixed(1);
+  if(currentAtomZ.length) buildMolecule(currentAtomZ,currentPositions);
+});
+document.getElementById('arrowColorPicker').addEventListener('input',e=>{
+  GNN_EDGE_COLOR=parseInt(e.target.value.slice(1),16);
+  if(currentAtomZ.length) buildMolecule(currentAtomZ,currentPositions);
+});
+
+document.getElementById('viewMol').addEventListener('click',()=>setView('molecule'));
+document.getElementById('viewGNN').addEventListener('click',()=>setView('gnn'));
+document.getElementById('viewMatrix').addEventListener('click',()=>setView('matrix'));
+document.getElementById('viewSH').addEventListener('click',()=>setView('sh'));
+
+document.getElementById('shIsoRange').addEventListener('input',e=>{
+  shIsovalue=parseFloat(e.target.value);
+  document.getElementById('shIsoVal').textContent=shIsovalue.toFixed(2);
+  updateSHIsosurfaces();
+  if(viewMode==='sh') updateLegend();
+});
+document.getElementById('shScaleRange').addEventListener('input',e=>{
+  SH_SCALE=parseFloat(e.target.value);
+  document.getElementById('shScaleVal').textContent=SH_SCALE.toFixed(2);
+  updateSHIsosurfaces();
+});
+document.getElementById('shOpacityRange').addEventListener('input',e=>{
+  const op=parseFloat(e.target.value);
+  document.getElementById('shOpacityVal').textContent=op.toFixed(2);
+  shPosMeshes.forEach(m=>{m.material.opacity=op;});
+  shNegMeshes.forEach(m=>{m.material.opacity=op;});
+});
+
+document.getElementById('loadMolecule').addEventListener('click',()=>{
+  const errEl=document.getElementById('errorMsg'); errEl.classList.remove('visible');
+  try{
+    const az=parseAtomZ(document.getElementById('atomZInput').value);
+    const pos=parsePositions(document.getElementById('nucPosInput').value);
+    if(az.length!==pos.length)throw new Error(`Mismatch: ${az.length} atoms vs ${pos.length} positions`);
+    const cv=parseFloat(document.getElementById('cutoffRange').value);
+    if(isNaN(cv)||cv<=0)throw new Error('Cutoff must be positive');
+    GNN_CUTOFF=cv;
+    GNN_EDGE_RADIUS=parseFloat(document.getElementById('thicknessRange').value);
+    edgeOpacity=parseFloat(document.getElementById('opacityRange').value);
+    GNN_EDGE_COLOR=parseInt(document.getElementById('arrowColorPicker').value.slice(1),16);
+    monoNodes=document.getElementById('monoToggle').checked;
+    showFeatures=document.getElementById('featuresToggle').checked;
+    buildMolecule(az,pos);
+    sidePanel.classList.remove('open'); autoRotate=true;
+  }catch(e){errEl.textContent=e.message;errEl.classList.add('visible');}
+});
+
+// ═══════════════════════════════════════════
+// Export all views
+// ═══════════════════════════════════════════
+function renderCroppedDataURL(){
+  const scale=3,pad=40,ew=W*scale,eh=H*scale;
+  renderer.setClearColor(0x000000,0); scene.background=null;
+  renderer.setSize(ew,eh); renderer.setPixelRatio(1);
+  camera.aspect=W/H; camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+
+  // Update matrix billboards at export resolution
+  if(matGroup.visible){
+    const invQ=matGroup.quaternion.clone().invert();
+    const camQ=camera.quaternion.clone();
+    const billQ=invQ.multiply(camQ);
+    const invMat4=new THREE.Matrix4().copy(matGroup.matrixWorld).invert();
+    const cr=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0).normalize().transformDirection(invMat4);
+    const cu=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1).normalize().transformDirection(invMat4);
+    matFeatSubs.forEach(({group,nodePos})=>{
+      group.position.copy(nodePos).add(cr.clone().multiplyScalar(0.35)).sub(cu.clone().multiplyScalar(0.15));
+      group.quaternion.copy(billQ);
+    });
+  }
+
+  renderer.render(scene,camera);
+  const gl=renderer.getContext();
+  const px=new Uint8Array(ew*eh*4);
+  gl.readPixels(0,0,ew,eh,gl.RGBA,gl.UNSIGNED_BYTE,px);
+  let mnX=ew,mnY=eh,mxX=0,mxY=0;
+  for(let y=0;y<eh;y++)for(let x=0;x<ew;x++){if(px[(y*ew+x)*4+3]>0){const fy=eh-1-y;if(x<mnX)mnX=x;if(x>mxX)mxX=x;if(fy<mnY)mnY=fy;if(fy>mxY)mxY=fy;}}
+  mnX=Math.max(0,mnX-pad);mnY=Math.max(0,mnY-pad);mxX=Math.min(ew-1,mxX+pad);mxY=Math.min(eh-1,mxY+pad);
+  const cW=mxX-mnX+1,cH=mxY-mnY+1;
+  const fc=document.createElement('canvas');fc.width=ew;fc.height=eh;fc.getContext('2d').drawImage(renderer.domElement,0,0);
+  const cc=document.createElement('canvas');cc.width=cW;cc.height=cH;
+  cc.getContext('2d').drawImage(fc,mnX,mnY,cW,cH,0,0,cW,cH);
+  return cc.toDataURL('image/png');
+}
+function dlURL(url,fn){const l=document.createElement('a');l.download=fn;l.href=url;l.click();}
+
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  const prev=viewMode;
+  // Molecule
+  molGroup.visible=true;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=false;shGroup.visible=false;
+  const molURL=renderCroppedDataURL();
+  // GNN
+  molGroup.visible=false;gnnGroup.visible=true;gnnFeatGroup.visible=showFeatures;matGroup.visible=false;shGroup.visible=false;
+  const gnnURL=renderCroppedDataURL();
+  // Matrix
+  molGroup.visible=false;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=true;shGroup.visible=false;
+  const matURL=renderCroppedDataURL();
+  // SH
+  molGroup.visible=false;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=false;shGroup.visible=true;
+  const shURL=renderCroppedDataURL();
+  // Restore
+  renderer.setClearColor(BG_COLOR,1);scene.background=new THREE.Color(BG_COLOR);
+  renderer.setSize(W,H);renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  setView(prev);
+  dlURL(molURL,'molecule.png');
+  setTimeout(()=>dlURL(gnnURL,'molecule_gnn.png'),400);
+  setTimeout(()=>dlURL(matURL,'molecule_matrix.png'),800);
+  setTimeout(()=>dlURL(shURL,'molecule_sh.png'),1200);
+});
+
+// ═══════════════════════════════════════════
+// Load default
+// ═══════════════════════════════════════════
+buildMolecule(
+  [6,6,8,1,1,1,1,1,1],
+  [[-0.14365933,-0.11813374,-0.56843375],[-0.17613,1.28513285,-0.00859315],[0.21953989,-1.07718569,0.51279995],[-1.17635944,-0.44982293,-1.02836848],[0.49325929,-0.34332167,-1.39655428],[-0.82220941,1.53936818,0.84187767],[0.86485323,1.37019756,0.45488715],[-0.22079702,2.03512503,-0.80257909],[1.18606471,-0.96054634,0.66677837]]
+);
+document.getElementById('mol-label').textContent='Ethanol';
+</script>
+</body>
+</html>
