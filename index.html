@@ -154,14 +154,14 @@ nav.scrolled {
   display: grid;
   grid-template-columns: minmax(0, 720px) auto;
   align-items: center;
-  gap: clamp(2.5rem, 6vw, 5rem);
+  gap: clamp(2rem, 5vw, 4rem);
   padding: 0 8vw;
 }
 
 .hero-content { max-width: 720px; position: relative; }
 
 .hero-headshot {
-  width: clamp(220px, 24vw, 320px);
+  width: clamp(170px, 18vw, 240px);
   aspect-ratio: 1;
   border-radius: 50%;
   overflow: hidden;
@@ -170,6 +170,7 @@ nav.scrolled {
   box-shadow: 0 18px 48px rgba(0,0,0,0.28);
   opacity: 0;
   animation: fadeIn 1s 0.6s forwards;
+  justify-self: end;
 }
 
 .hero-overline {
@@ -184,6 +185,7 @@ nav.scrolled {
   display: flex;
   align-items: center;
   gap: 0.8rem;
+  flex-wrap: wrap;
 }
 
 .hero-overline::before {
@@ -199,16 +201,19 @@ nav.scrolled {
   font-family: 'Instrument Serif', serif;
   font-size: clamp(3.2rem, 7vw, 6rem);
   font-weight: 400;
-  line-height: 1.02;
+  line-height: 1.04;
   color: var(--text-bright);
   letter-spacing: -0.035em;
   margin-bottom: 2rem;
+  overflow: visible;
   opacity: 0;
   animation: fadeUp 0.7s 0.4s forwards;
 }
 
 .hero h1 .gradient-text {
-  font-style: italic;
+  display: inline-block;
+  white-space: nowrap;
+  padding-right: 0.08em;
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
@@ -726,7 +731,7 @@ footer .footer-links a:hover { color: var(--accent); }
     gap: 2rem;
   }
   .hero-headshot {
-    width: 180px;
+    width: 150px;
     justify-self: start;
   }
 }
@@ -736,7 +741,7 @@ footer .footer-links a:hover { color: var(--accent); }
   .hero { padding: 0 5vw; }
   section { padding: 5rem 5vw; }
   .hero-headshot {
-    width: 156px;
+    width: 132px;
   }
   .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
   .research-areas { grid-template-columns: 1fr; }
@@ -769,8 +774,8 @@ footer .footer-links a:hover { color: var(--accent); }
 
 <div class="hero">
   <div class="hero-content">
-    <div class="hero-overline">PhD Researcher &middot; TU Munich</div>
-    <h1>Machine Learning<br>for <span class="gradient-text">Electronic<br>Structure</span></h1>
+    <div class="hero-overline">Eike Eberhard &middot; PhD Candidate &middot; TUM &middot; MDSI &middot; MCML</div>
+    <h1>ML for <span class="gradient-text">Electronic Structure</span></h1>
     <p class="hero-desc">
       Neural network exchange-correlation functionals, differentiable SCF solvers, and equivariant architectures to accelerate quantum chemistry from first principles.
     </p>
@@ -906,7 +911,7 @@ footer .footer-links a:hover { color: var(--accent); }
         <span class="pub-badge spotlight">Spotlight</span>
         <span class="pub-badge award">ChemAI 2025 &middot; 1st Place</span>
       </div>
-      <h3>EG-XC: An Equivariant Graph Exchange-Correlation Functional</h3>
+      <h3>Learning Equivariant Non-Local Electron Density Functionals</h3>
       <div class="authors"><strong>Eike Eberhard</strong>*, Nicholas Gao*, Stephan G&uuml;nnemann</div>
       <div class="venue">International Conference on Learning Representations &middot; 2025</div>
     </a>
