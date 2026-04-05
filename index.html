@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Eike Eberhard | AI for Electronic Structure</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -102,8 +102,8 @@ nav {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 100;
-  padding: 0 3rem;
-  height: 64px;
+  padding: env(safe-area-inset-top) 3rem 0;
+  height: calc(64px + env(safe-area-inset-top));
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -817,7 +817,7 @@ footer .footer-links a:hover { color: var(--accent); }
   .hero {
     grid-template-columns: 1fr;
     gap: 2rem;
-    padding-top: 5rem;
+    padding-top: calc(5rem + env(safe-area-inset-top));
   }
   .hero > .hero-headshot {
     display: none;
@@ -834,7 +834,7 @@ footer .footer-links a:hover { color: var(--accent); }
 @media (max-width: 768px) {
   nav { padding: 0 1.5rem; }
   .nav-links a { font-size: 0.7rem; padding: 0.4rem 0.6rem; }
-  .hero { padding: 5rem 5vw 0; }
+  .hero { padding: calc(5rem + env(safe-area-inset-top)) 5vw 0; }
   section { padding: 5rem 5vw; }
   .hero-overline { font-size: 0.62rem; letter-spacing: 0.1em; }
   .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
@@ -914,7 +914,7 @@ footer .footer-links a:hover { color: var(--accent); }
     </div>
     <ul class="affiliation-list fade-in">
       <li class="affiliation-item">
-        <a href="https://www.cs.cit.tum.de/daml/home/" target="_blank" style="text-decoration:none;color:inherit;display:block;">
+        <a href="https://cs.cit.tum.de/daml/team/eike-eberhard/" target="_blank" style="text-decoration:none;color:inherit;display:block;">
           <div class="role">PhD Researcher</div>
           <div class="org">DAML Group, TU Munich</div>
           <div class="detail">Prof. Stephan G&uuml;nnemann</div>
