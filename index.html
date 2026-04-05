@@ -277,7 +277,44 @@ nav.scrolled {
   animation: fadeIn 1.5s 0.5s forwards;
 }
 
-#hero-orbital { width: 100%; height: 100%; }
+#hero-orbital {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-portrait-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(24vw, 320px);
+  height: min(24vw, 320px);
+  border-radius: 50%;
+  padding: 10px;
+  background: linear-gradient(135deg, rgba(96,165,250,0.28), rgba(167,139,250,0.18), rgba(52,211,153,0.18));
+  box-shadow: 0 24px 80px rgba(5, 7, 9, 0.45);
+}
+
+.hero-portrait-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -18px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(96,165,250,0.14), rgba(96,165,250,0) 68%);
+  z-index: -1;
+}
+
+.hero-portrait {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 28%;
+  border: 1px solid rgba(255,255,255,0.08);
+}
 
 .section-divider {
   position: relative;
@@ -574,6 +611,7 @@ section {
 }
 
 .pub-item {
+  display: block;
   padding: 2rem 2.2rem;
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -582,6 +620,8 @@ section {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  text-decoration: none;
+  color: inherit;
 }
 
 .pub-item::before {
@@ -606,6 +646,11 @@ section {
   background: var(--bg-card-hover);
   transform: translateY(-2px);
   box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+}
+
+.pub-item:focus-visible {
+  outline: 2px solid rgba(96,165,250,0.65);
+  outline-offset: 4px;
 }
 
 .pub-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
@@ -744,6 +789,9 @@ footer .footer-links a:hover { color: var(--accent); }
   </div>
   <div class="hero-viz">
     <canvas id="hero-orbital"></canvas>
+    <div class="hero-portrait-wrap">
+      <img src="profile_image.png" alt="Portrait of Eike Eberhard" class="hero-portrait">
+    </div>
   </div>
 </div>
 
@@ -849,7 +897,15 @@ footer .footer-links a:hover { color: var(--accent); }
   <div class="section-label fade-in">04 &middot; Selected Papers</div>
   <h2 class="section-title fade-in">Publications</h2>
   <div class="pub-list">
-    <div class="pub-item fade-in">
+    <a href="https://arxiv.org/html/2601.16955v1" class="pub-item fade-in" target="_blank" rel="noopener noreferrer">
+      <div class="pub-badges">
+        <span class="pub-badge spotlight">arXiv &middot; 2026</span>
+      </div>
+      <h3>3D Molecule Generation from Rigid Motifs via SE(3) Flows</h3>
+      <div class="authors">Roman Poletukhin, Marcel Kollovieh, <strong>Eike Eberhard</strong>, Stephan G&uuml;nnemann</div>
+      <div class="venue">Preprint, 2026</div>
+    </a>
+    <a href="https://arxiv.org/abs/2410.07972" class="pub-item fade-in" target="_blank" rel="noopener noreferrer">
       <div class="pub-badges">
         <span class="pub-badge spotlight">ICLR 2024 &middot; Spotlight</span>
         <span class="pub-badge award">ChemAI 2025 &middot; 1st Place</span>
@@ -857,15 +913,15 @@ footer .footer-links a:hover { color: var(--accent); }
       <h3>EG-XC: An Equivariant Graph Exchange-Correlation Functional</h3>
       <div class="authors"><strong>Eike Eberhard</strong>*, Nicholas Gao*, Stephan G&uuml;nnemann</div>
       <div class="venue">International Conference on Learning Representations, 2024</div>
-    </div>
-    <div class="pub-item fade-in">
+    </a>
+    <a href="https://pubs.acs.org/doi/10.1021/acs.nanolett.5c00306" class="pub-item fade-in" target="_blank" rel="noopener noreferrer">
       <div class="pub-badges">
         <span class="pub-badge spotlight">Nano Letters &middot; 2025</span>
       </div>
       <h3>Force Generation by Enhanced Diffusion in Enzyme-Loaded Vesicles</h3>
       <div class="authors"><strong>Eike Eberhard</strong>*, Ludwig Burger*, C&eacute;sar L. Pastrana*, Hamid Seyed-Allaei, Giovanni Giunta, Ulrich Gerland</div>
       <div class="venue">Nano Letters, 2025, 25(14), 5754&ndash;5761</div>
-    </div>
+    </a>
   </div>
 </section>
 
