@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eike Eberhard | AI for Electronic Structure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&family=Manrope:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #050709;
+  --bg-card: rgba(10, 16, 28, 0.65);
+  --bg-card-hover: rgba(16, 24, 40, 0.8);
+  --text: #9aa8c0;
+  --text-dim: #4a5568;
+  --text-bright: #e2ecf8;
+  --accent: #60a5fa;
+  --accent-glow: rgba(96, 165, 250, 0.15);
+  --accent2: #a78bfa;
+  --accent2-glow: rgba(167, 139, 250, 0.12);
+  --accent3: #34d399;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(96, 165, 250, 0.2);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 300;
+  line-height: 1.75;
+  overflow-x: hidden;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.5;
+}
+
+#orbital-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+}
+.blob-1 {
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(96,165,250,0.08), transparent 70%);
+  top: -10%; right: -5%;
+  animation: blobDrift1 25s ease-in-out infinite;
+}
+.blob-2 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(167,139,250,0.06), transparent 70%);
+  bottom: 10%; left: -8%;
+  animation: blobDrift2 30s ease-in-out infinite;
+}
+.blob-3 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(52,211,153,0.04), transparent 70%);
+  top: 50%; right: 20%;
+  animation: blobDrift3 20s ease-in-out infinite;
+}
+
+@keyframes blobDrift1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-60px, 40px) scale(1.1); }
+  66% { transform: translate(30px, -50px) scale(0.95); }
+}
+@keyframes blobDrift2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(50px, -30px) scale(1.05); }
+  66% { transform: translate(-40px, 60px) scale(0.9); }
+}
+@keyframes blobDrift3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-70px, -40px) scale(1.15); }
+}
+
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 0 3rem;
+  height: 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: blur(24px) saturate(1.2);
+  background: rgba(5, 7, 9, 0.6);
+  border-bottom: 1px solid var(--border);
+  transition: all 0.4s ease;
+}
+
+nav.scrolled {
+  background: rgba(5, 7, 9, 0.88);
+  box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+}
+
+.nav-logo {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--text-bright);
+  text-decoration: none;
+  letter-spacing: 0.15em;
+}
+
+.nav-logo .dot { color: var(--accent); }
+
+.nav-links { display: flex; gap: 0.3rem; }
+
+.nav-links a {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-family: 'DM Mono', monospace;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.nav-links a:hover {
+  color: var(--text-bright);
+  background: rgba(255,255,255,0.04);
+}
+
+.hero {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 0 8vw;
+}
+
+.hero-content { max-width: 720px; position: relative; }
+
+.hero-overline {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--accent);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin-bottom: 1.8rem;
+  opacity: 0;
+  animation: fadeUp 0.7s 0.2s forwards;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.hero-overline::before {
+  content: '';
+  display: inline-block;
+  width: 32px;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+.hero h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(3.2rem, 7vw, 6rem);
+  font-weight: 400;
+  line-height: 1.02;
+  color: var(--text-bright);
+  letter-spacing: -0.035em;
+  margin-bottom: 2rem;
+  opacity: 0;
+  animation: fadeUp 0.7s 0.4s forwards;
+}
+
+.hero h1 .gradient-text {
+  font-style: italic;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 8s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+}
+
+.hero-desc {
+  font-size: 1.08rem;
+  color: var(--text);
+  max-width: 540px;
+  margin-bottom: 2.8rem;
+  opacity: 0;
+  animation: fadeUp 0.7s 0.6s forwards;
+  font-weight: 300;
+}
+
+.hero-links {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  opacity: 0;
+  animation: fadeUp 0.7s 0.8s forwards;
+}
+
+.hero-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.3rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  text-decoration: none;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.03em;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(10, 14, 22, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+.hero-links a:hover {
+  border-color: var(--border-hover);
+  color: var(--text-bright);
+  background: var(--accent-glow);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(96, 165, 250, 0.1);
+}
+
+.hero-links a.primary {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.08));
+  border-color: rgba(96,165,250,0.2);
+  color: var(--text-bright);
+}
+
+.hero-links a.primary:hover {
+  background: linear-gradient(135deg, rgba(96,165,250,0.18), rgba(167,139,250,0.14));
+  border-color: rgba(96,165,250,0.35);
+  box-shadow: 0 4px 24px rgba(96, 165, 250, 0.15);
+}
+
+.hero-viz {
+  position: absolute;
+  top: 50%;
+  right: -30vw;
+  transform: translateY(-50%);
+  width: 55vw;
+  height: 55vw;
+  max-width: 700px;
+  max-height: 700px;
+  pointer-events: none;
+  opacity: 0;
+  animation: fadeIn 1.5s 0.5s forwards;
+}
+
+#hero-orbital { width: 100%; height: 100%; }
+
+.section-divider {
+  position: relative;
+  z-index: 1;
+  height: 1px;
+  margin: 0 8vw;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
+
+section {
+  position: relative;
+  z-index: 1;
+  padding: 8rem 8vw;
+}
+
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--accent2);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.section-label::before {
+  content: '';
+  width: 20px;
+  height: 1px;
+  background: var(--accent2);
+  opacity: 0.5;
+}
+
+.section-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2.2rem, 4.5vw, 3.2rem);
+  color: var(--text-bright);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  margin-bottom: 3.5rem;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 4rem;
+  max-width: 1100px;
+}
+
+.about-text p { margin-bottom: 1.4rem; font-size: 1rem; line-height: 1.85; }
+
+.affiliation-list { list-style: none; display: flex; flex-direction: column; gap: 0.8rem; }
+
+.affiliation-item {
+  padding: 1.4rem 1.6rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.affiliation-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(96,165,250,0), rgba(96,165,250,0));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  transition: background 0.4s ease;
+  pointer-events: none;
+}
+
+.affiliation-item:hover::before {
+  background: linear-gradient(135deg, rgba(96,165,250,0.3), rgba(167,139,250,0.2));
+}
+
+.affiliation-item:hover {
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.affiliation-item .role {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.affiliation-item .org {
+  font-size: 0.98rem;
+  color: var(--text-bright);
+  margin-top: 0.3rem;
+  font-weight: 400;
+}
+
+.affiliation-item .detail {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin-top: 0.15rem;
+}
+
+.research-areas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.2rem;
+  max-width: 1100px;
+}
+
+.research-card {
+  padding: 2.2rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.research-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(96,165,250,0), rgba(167,139,250,0));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  transition: background 0.4s ease;
+  pointer-events: none;
+}
+
+.research-card::after {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%),
+    rgba(96,165,250,0.06) 0%, transparent 50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.research-card:hover::before {
+  background: linear-gradient(135deg, rgba(96,165,250,0.25), rgba(167,139,250,0.15));
+}
+
+.research-card:hover::after { opacity: 1; }
+
+.research-card:hover {
+  background: var(--bg-card-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+
+.research-card .icon-wrap {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.2rem;
+  font-size: 1.3rem;
+  background: linear-gradient(135deg, var(--accent-glow), var(--accent2-glow));
+  border: 1px solid var(--border);
+}
+
+.research-card h3 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.3rem;
+  color: var(--text-bright);
+  font-weight: 400;
+  margin-bottom: 0.7rem;
+}
+
+.research-card p {
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+
+.pub-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  max-width: 900px;
+}
+
+.pub-item {
+  padding: 2rem 2.2rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.pub-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(96,165,250,0), rgba(167,139,250,0));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  transition: background 0.4s ease;
+  pointer-events: none;
+}
+
+.pub-item:hover::before {
+  background: linear-gradient(135deg, rgba(96,165,250,0.2), rgba(167,139,250,0.12));
+}
+
+.pub-item:hover {
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+}
+
+.pub-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+
+.pub-badge {
+  display: inline-block;
+  padding: 0.22rem 0.75rem;
+  border-radius: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.pub-badge.spotlight {
+  background: rgba(96,165,250,0.1);
+  color: var(--accent);
+  border: 1px solid rgba(96,165,250,0.2);
+}
+
+.pub-badge.award {
+  background: rgba(52,211,153,0.1);
+  color: var(--accent3);
+  border: 1px solid rgba(52,211,153,0.2);
+}
+
+.pub-item h3 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.2rem;
+  color: var(--text-bright);
+  font-weight: 400;
+  margin-bottom: 0.45rem;
+  line-height: 1.35;
+}
+
+.pub-item .authors { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.25rem; }
+.pub-item .authors strong { color: var(--text); font-weight: 500; }
+.pub-item .venue { font-family: 'DM Mono', monospace; font-size: 0.74rem; color: var(--text-dim); }
+
+footer {
+  position: relative;
+  z-index: 1;
+  padding: 3rem 8vw;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+footer .copy { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--text-dim); }
+footer .footer-links { display: flex; gap: 1.5rem; }
+footer .footer-links a {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  transition: color 0.3s;
+}
+footer .footer-links a:hover { color: var(--accent); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fade-in.visible { opacity: 1; transform: translateY(0); }
+.fade-in:nth-child(2) { transition-delay: 0.08s; }
+.fade-in:nth-child(3) { transition-delay: 0.16s; }
+.fade-in:nth-child(4) { transition-delay: 0.24s; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+@media (max-width: 900px) { .hero-viz { display: none; } }
+@media (max-width: 768px) {
+  nav { padding: 0 1.5rem; }
+  .nav-links a { font-size: 0.7rem; padding: 0.4rem 0.6rem; }
+  .hero { padding: 0 5vw; }
+  section { padding: 5rem 5vw; }
+  .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+  .research-areas { grid-template-columns: 1fr; }
+  footer { padding: 2rem 5vw; }
+  .section-divider { margin: 0 5vw; }
+}
+@media (max-width: 480px) {
+  .nav-links a { font-size: 0.65rem; }
+  .hero-links { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+<canvas id="orbital-canvas"></canvas>
+
+<nav>
+  <a href="#" class="nav-logo">Eike S<span class="dot">.</span> Eberhard</a>
+  <div class="nav-links">
+    <a href="#about">About</a>
+    <a href="#research">Research</a>
+    <a href="#publications">Papers</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-overline">PhD Researcher &middot; TU Munich</div>
+    <h1>Machine Learning<br>for <span class="gradient-text">Electronic<br>Structure</span></h1>
+    <p class="hero-desc">
+      Neural network exchange-correlation functionals, differentiable SCF solvers, and equivariant architectures to accelerate quantum chemistry from first principles.
+    </p>
+    <div class="hero-links">
+      <a href="mailto:e.eberhard@tum.de" class="primary">&#9993; Contact</a>
+      <a href="https://scholar.google.com/citations?user=FL38Be8AAAAJ" target="_blank">Scholar</a>
+      <a href="https://github.com/ESEberhard" target="_blank">GitHub</a>
+      <a href="https://linkedin.com/in/eike-eberhard-23b170276" target="_blank">LinkedIn</a>
+    </div>
+  </div>
+  <div class="hero-viz">
+    <canvas id="hero-orbital"></canvas>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<section id="about">
+  <div class="section-label fade-in">01 &middot; About</div>
+  <h2 class="section-title fade-in">Background</h2>
+  <div class="about-grid">
+    <div class="about-text fade-in">
+      <p>
+        I am a PhD researcher at the Technical University of Munich working at the intersection of machine learning and quantum chemistry. My goal is to make density functional theory faster and more accurate by learning its hardest component, the exchange-correlation functional, directly from data.
+      </p>
+      <p>
+        I develop equivariant graph neural networks that operate on molecular electronic structure, differentiable self-consistent field solvers in JAX, and training paradigms that leverage physical derivatives on the Grassmannian manifold of density matrices.
+      </p>
+    </div>
+    <ul class="affiliation-list fade-in">
+      <li class="affiliation-item">
+        <a href="https://www.cs.cit.tum.de/daml/home/" target="_blank" style="text-decoration:none;color:inherit;display:block;">
+          <div class="role">PhD Researcher</div>
+          <div class="org">DAML Group, TU Munich</div>
+          <div class="detail">Prof. Stephan G&uuml;nnemann</div>
+        </a>
+      </li>
+      <li class="affiliation-item">
+        <a href="https://www.mdsi.tum.de/" target="_blank" style="text-decoration:none;color:inherit;display:block;">
+          <div class="role">Member</div>
+          <div class="org">Munich Data Science Institute (MDSI)</div>
+          <div class="detail">Technical University of Munich</div>
+        </a>
+      </li>
+      <li class="affiliation-item">
+        <a href="https://mcml.ai/" target="_blank" style="text-decoration:none;color:inherit;display:block;">
+          <div class="role">Member</div>
+          <div class="org">Munich Center for Machine Learning (MCML)</div>
+          <div class="detail">LMU Munich &middot; TU Munich</div>
+        </a>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<section id="research">
+  <div class="section-label fade-in">02 &middot; Research</div>
+  <h2 class="section-title fade-in">Focus Areas</h2>
+  <div class="research-areas">
+    <div class="research-card fade-in">
+      <div class="icon-wrap">&#9883;</div>
+      <h3>Neural XC Functionals</h3>
+      <p>Learning the exchange-correlation functional of DFT using expressive neural network architectures, from semi-local mGGA models to fully equivariant graph-based functionals that see the molecular topology.</p>
+    </div>
+    <div class="research-card fade-in">
+      <div class="icon-wrap">&nabla;</div>
+      <h3>Differentiable SCF Solvers</h3>
+      <p>End-to-end differentiable self-consistent field calculations in JAX, enabling gradient-based training through the iterative Kohn-Sham procedure with custom backward passes through eigendecompositions and DIIS.</p>
+    </div>
+    <div class="research-card fade-in">
+      <div class="icon-wrap">&#9672;</div>
+      <h3>Equivariant Architectures</h3>
+      <p>SE(3)-equivariant graph neural networks that respect the symmetries of molecular systems, building on frameworks like e3nn, NequIP, and EquiformerV2 for electronic structure prediction.</p>
+    </div>
+    <div class="research-card fade-in">
+      <div class="icon-wrap">&#10227;</div>
+      <h3>SCF Acceleration</h3>
+      <p>Learning intelligent initial guesses and convergence strategies for self-consistent field calculations to reduce the computational cost of density functional theory at scale.</p>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<section id="publications">
+  <div class="section-label fade-in">03 &middot; Selected Papers</div>
+  <h2 class="section-title fade-in">Publications</h2>
+  <div class="pub-list">
+    <div class="pub-item fade-in">
+      <div class="pub-badges">
+        <span class="pub-badge spotlight">ICLR 2024 &middot; Spotlight</span>
+        <span class="pub-badge award">ChemAI 2025 &middot; 1st Place</span>
+      </div>
+      <h3>EG-XC: An Equivariant Graph Exchange-Correlation Functional</h3>
+      <div class="authors"><strong>Eike Eberhard</strong>*, Nicholas Gao*, Stephan G&uuml;nnemann</div>
+      <div class="venue">International Conference on Learning Representations, 2024</div>
+    </div>
+    <div class="pub-item fade-in">
+      <div class="pub-badges">
+        <span class="pub-badge spotlight">Nano Letters &middot; 2025</span>
+      </div>
+      <h3>Force Generation by Enhanced Diffusion in Enzyme-Loaded Vesicles</h3>
+      <div class="authors"><strong>Eike Eberhard</strong>*, Ludwig Burger*, C&eacute;sar L. Pastrana*, Hamid Seyed-Allaei, Giovanni Giunta, Ulrich Gerland</div>
+      <div class="venue">Nano Letters, 2025, 25(14), 5754&ndash;5761</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="copy">&copy; 2026 Eike Eberhard</div>
+  <div class="footer-links">
+    <a href="mailto:e.eberhard@tum.de">Email</a>
+    <a href="https://scholar.google.com/citations?user=FL38Be8AAAAJ" target="_blank">Scholar</a>
+    <a href="https://github.com/ESEberhard" target="_blank">GitHub</a>
+  </div>
+</footer>
+
+<script>
+// === PARTICLE NETWORK ===
+const canvas = document.getElementById('orbital-canvas');
+const ctx = canvas.getContext('2d');
+let w, h, particles = [], mouse = { x: -1000, y: -1000 };
+
+function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * w;
+    this.y = Math.random() * h;
+    this.vx = (Math.random() - 0.5) * 0.25;
+    this.vy = (Math.random() - 0.5) * 0.25;
+    this.r = Math.random() * 1.5 + 0.3;
+    this.alpha = Math.random() * 0.35 + 0.05;
+    this.hue = [197, 260, 160][Math.floor(Math.random() * 3)];
+  }
+  update() {
+    const dx = mouse.x - this.x, dy = mouse.y - this.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 250) {
+      const f = 0.00006 * (1 - dist / 250);
+      this.vx += dx * f; this.vy += dy * f;
+    }
+    this.x += this.vx; this.y += this.vy;
+    this.vx *= 0.998; this.vy *= 0.998;
+    if (this.x < 0 || this.x > w) this.vx *= -1;
+    if (this.y < 0 || this.y > h) this.vy *= -1;
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = 'hsla(' + this.hue + ', 60%, 65%, ' + this.alpha + ')';
+    ctx.fill();
+  }
+}
+
+for (let i = 0; i < 100; i++) particles.push(new Particle());
+
+function drawConnections() {
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 160) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = 'rgba(96, 165, 250, ' + (0.04 * (1 - dist / 160)) + ')';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function animateParticles() {
+  ctx.clearRect(0, 0, w, h);
+  particles.forEach(function(p) { p.update(); p.draw(); });
+  drawConnections();
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// === HERO ORBITAL (WebGL) ===
+(function() {
+  var c = document.getElementById('hero-orbital');
+  var gl = c.getContext('webgl', { alpha: true, antialias: true });
+  if (!gl) return;
+
+  function resizeGL() {
+    var rect = c.parentElement.getBoundingClientRect();
+    var dpr = Math.min(devicePixelRatio, 2);
+    c.width = rect.width * dpr;
+    c.height = rect.height * dpr;
+    gl.viewport(0, 0, c.width, c.height);
+  }
+  resizeGL();
+  window.addEventListener('resize', resizeGL);
+
+  var vs = 'attribute vec2 pos; varying vec2 uv; void main() { uv = pos * 0.5 + 0.5; gl_Position = vec4(pos, 0.0, 1.0); }';
+
+  var fs = [
+    'precision highp float;',
+    'varying vec2 uv;',
+    'uniform float t;',
+    'uniform vec2 mouse;',
+    'float Y(float theta, float phi, float l, float m) {',
+    '  return sin(l * theta + t * 0.3) * cos(m * phi - t * 0.2);',
+    '}',
+    'void main() {',
+    '  vec2 p = (uv - 0.5) * 2.0;',
+    '  float r = length(p);',
+    '  float theta = atan(p.y, p.x);',
+    '  float phi = r * 3.14159;',
+    '  float d = 0.0;',
+    '  d += abs(Y(theta, phi, 2.0, 1.0)) * exp(-r * 1.8);',
+    '  d += abs(Y(theta, phi, 3.0, 2.0)) * exp(-r * 2.2) * 0.7;',
+    '  d += abs(Y(theta, phi, 1.0, 3.0)) * exp(-r * 1.5) * 0.5;',
+    '  vec2 mp = mouse * 0.15;',
+    '  d += 0.15 * exp(-length(p - mp) * 3.0);',
+    '  float rings = sin(r * 12.0 - t * 1.5) * 0.5 + 0.5;',
+    '  rings *= exp(-r * 2.5);',
+    '  d += rings * 0.15;',
+    '  vec3 col = vec3(0.0);',
+    '  col += vec3(0.38, 0.65, 0.98) * d * 1.5;',
+    '  col += vec3(0.65, 0.55, 0.98) * d * d * 2.0;',
+    '  col += vec3(0.2, 0.83, 0.6) * rings * 0.4;',
+    '  col += vec3(0.38, 0.65, 0.98) * 0.02 / (r + 0.3);',
+    '  float alpha = smoothstep(0.0, 0.02, d) * (1.0 - smoothstep(0.8, 1.0, r));',
+    '  gl_FragColor = vec4(col, alpha * 0.6);',
+    '}'
+  ].join('\n');
+
+  function createShader(src, type) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s); return s;
+  }
+
+  var prog = gl.createProgram();
+  gl.attachShader(prog, createShader(vs, gl.VERTEX_SHADER));
+  gl.attachShader(prog, createShader(fs, gl.FRAGMENT_SHADER));
+  gl.linkProgram(prog); gl.useProgram(prog);
+
+  var buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  var posLoc = gl.getAttribLocation(prog, 'pos');
+  gl.enableVertexAttribArray(posLoc);
+  gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+  var tLoc = gl.getUniformLocation(prog, 't');
+  var mLoc = gl.getUniformLocation(prog, 'mouse');
+
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+  var mx = 0, my = 0;
+  document.addEventListener('mousemove', function(e) {
+    var rect = c.getBoundingClientRect();
+    mx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+    my = -((e.clientY - rect.top) / rect.height - 0.5) * 2;
+  });
+
+  function render(now) {
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.uniform1f(tLoc, now * 0.001);
+    gl.uniform2f(mLoc, mx, my);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+})();
+
+// === SCROLL ANIMATIONS ===
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.fade-in').forEach(function(el) { observer.observe(el); });
+
+// === NAV SCROLL ===
+window.addEventListener('scroll', function() {
+  document.querySelector('nav').classList.toggle('scrolled', window.scrollY > 50);
+});
+
+// === CARD MOUSE GLOW ===
+document.querySelectorAll('.research-card').forEach(function(card) {
+  card.addEventListener('mousemove', function(e) {
+    var rect = card.getBoundingClientRect();
+    card.style.setProperty('--mx', ((e.clientX - rect.left) / rect.width * 100) + '%');
+    card.style.setProperty('--my', ((e.clientY - rect.top) / rect.height * 100) + '%');
+  });
+});
+</script>
+
+</body>
+</html>
