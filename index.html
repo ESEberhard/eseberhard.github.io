@@ -413,6 +413,81 @@ section {
   margin-top: 0.15rem;
 }
 
+.cv-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.4rem;
+  max-width: 1100px;
+}
+
+.cv-column {
+  padding: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+}
+
+.cv-column-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.5rem;
+  color: var(--text-bright);
+  font-weight: 400;
+  margin-bottom: 1.4rem;
+}
+
+.cv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.cv-item {
+  display: grid;
+  grid-template-columns: 145px minmax(0, 1fr);
+  gap: 1.15rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.cv-item:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.cv-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.6;
+}
+
+.cv-role {
+  font-size: 1rem;
+  color: var(--text-bright);
+  font-weight: 500;
+  margin-bottom: 0.22rem;
+}
+
+.cv-org {
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.cv-detail {
+  font-size: 0.84rem;
+  color: var(--text-dim);
+  line-height: 1.65;
+  margin-top: 0.2rem;
+}
+
+.cv-detail + .cv-detail {
+  margin-top: 0.08rem;
+}
+
 .research-areas {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -674,9 +749,19 @@ section {
   line-height: 1.35;
 }
 
-.pub-item .authors { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.25rem; }
+.pub-item .authors { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.55rem; }
 .pub-item .authors strong { color: var(--text); font-weight: 500; }
-.pub-item .venue { font-family: 'DM Mono', monospace; font-size: 0.74rem; color: var(--text-dim); }
+.pub-item .venue {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.72rem;
+  border-radius: 999px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-bright);
+  background: rgba(96,165,250,0.1);
+  border: 1px solid rgba(96,165,250,0.16);
+}
 
 footer {
   position: relative;
@@ -744,6 +829,8 @@ footer .footer-links a:hover { color: var(--accent); }
     width: 132px;
   }
   .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+  .cv-grid { grid-template-columns: 1fr; }
+  .cv-item { grid-template-columns: 1fr; gap: 0.45rem; }
   .research-areas { grid-template-columns: 1fr; }
   .tool-grid { grid-template-columns: 1fr; }
   footer { padding: 2rem 5vw; }
@@ -767,8 +854,9 @@ footer .footer-links a:hover { color: var(--accent); }
   <div class="nav-links">
     <a href="#about">About</a>
     <a href="#research">Research</a>
-    <a href="#tools">Tools</a>
     <a href="#publications">Papers</a>
+    <a href="#tools">Tools</a>
+    <a href="#cv">CV</a>
   </div>
 </nav>
 
@@ -865,8 +953,36 @@ footer .footer-links a:hover { color: var(--accent); }
 
 <div class="section-divider"></div>
 
+<section id="publications">
+  <div class="section-label fade-in">03 &middot; Selected Papers</div>
+  <h2 class="section-title fade-in">Publications</h2>
+  <div class="pub-list">
+    <a href="https://arxiv.org/html/2601.16955v1" class="pub-item fade-in" target="_blank" rel="noopener noreferrer">
+      <h3>3D Molecule Generation from Rigid Motifs via SE(3) Flows</h3>
+      <div class="authors">Roman Poletukhin, Marcel Kollovieh, <strong>Eike Eberhard</strong>, Stephan G&uuml;nnemann</div>
+      <div class="venue">Preprint &middot; 2026</div>
+    </a>
+    <a href="https://pubs.acs.org/doi/10.1021/acs.nanolett.5c00306" class="pub-item fade-in" target="_blank" rel="noopener noreferrer">
+      <h3>Force Generation by Enhanced Diffusion in Enzyme-Loaded Vesicles</h3>
+      <div class="authors"><strong>Eike Eberhard</strong>*, Ludwig Burger*, C&eacute;sar L. Pastrana*, Hamid Seyed-Allaei, Giovanni Giunta, Ulrich Gerland</div>
+      <div class="venue">Nano Letters &middot; 2025</div>
+    </a>
+    <a href="https://arxiv.org/abs/2410.07972" class="pub-item fade-in" target="_blank" rel="noopener noreferrer">
+      <div class="pub-badges">
+        <span class="pub-badge spotlight">Spotlight</span>
+        <span class="pub-badge award">ChemAI 2025 &middot; 1st Place</span>
+      </div>
+      <h3>Learning Equivariant Non-Local Electron Density Functionals</h3>
+      <div class="authors"><strong>Eike Eberhard</strong>*, Nicholas Gao*, Stephan G&uuml;nnemann</div>
+      <div class="venue">International Conference on Learning Representations &middot; 2025</div>
+    </a>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
 <section id="tools">
-  <div class="section-label fade-in">03 &middot; Tools</div>
+  <div class="section-label fade-in">04 &middot; Tools</div>
   <h2 class="section-title fade-in">Interactive Utilities</h2>
   <div class="tool-grid">
     <a href="markdown-counter.html" class="tool-card fade-in">
@@ -892,29 +1008,74 @@ footer .footer-links a:hover { color: var(--accent); }
 
 <div class="section-divider"></div>
 
-<section id="publications">
-  <div class="section-label fade-in">04 &middot; Selected Papers</div>
-  <h2 class="section-title fade-in">Publications</h2>
-  <div class="pub-list">
-    <a href="https://arxiv.org/html/2601.16955v1" class="pub-item fade-in" target="_blank" rel="noopener noreferrer">
-      <h3>3D Molecule Generation from Rigid Motifs via SE(3) Flows</h3>
-      <div class="authors">Roman Poletukhin, Marcel Kollovieh, <strong>Eike Eberhard</strong>, Stephan G&uuml;nnemann</div>
-      <div class="venue">Preprint &middot; 2026</div>
-    </a>
-    <a href="https://pubs.acs.org/doi/10.1021/acs.nanolett.5c00306" class="pub-item fade-in" target="_blank" rel="noopener noreferrer">
-      <h3>Force Generation by Enhanced Diffusion in Enzyme-Loaded Vesicles</h3>
-      <div class="authors"><strong>Eike Eberhard</strong>*, Ludwig Burger*, C&eacute;sar L. Pastrana*, Hamid Seyed-Allaei, Giovanni Giunta, Ulrich Gerland</div>
-      <div class="venue">Nano Letters &middot; 2025</div>
-    </a>
-    <a href="https://arxiv.org/abs/2410.07972" class="pub-item fade-in" target="_blank" rel="noopener noreferrer">
-      <div class="pub-badges">
-        <span class="pub-badge spotlight">Spotlight</span>
-        <span class="pub-badge award">ChemAI 2025 &middot; 1st Place</span>
+<section id="cv">
+  <div class="section-label fade-in">05 &middot; CV</div>
+  <h2 class="section-title fade-in">Academic CV</h2>
+  <div class="cv-grid">
+    <div class="cv-column fade-in">
+      <h3 class="cv-column-title">Academic Path</h3>
+      <div class="cv-list">
+        <div class="cv-item">
+          <div class="cv-date">2025 Jan - Present</div>
+          <div>
+            <div class="cv-role">PhD Candidate</div>
+            <div class="cv-org">Data Analytics and Machine Learning Group @ TUM</div>
+            <div class="cv-detail">Munich Data Science Institute (MDSI)</div>
+          </div>
+        </div>
+        <div class="cv-item">
+          <div class="cv-date">2022 Oct - Aug 2024</div>
+          <div>
+            <div class="cv-role">M.Sc. Computer Science &amp; Engineering</div>
+            <div class="cv-org">Technical University of Munich (TUM)</div>
+            <div class="cv-detail">Best of class 2024</div>
+            <div class="cv-detail">Thesis in machine learning for density functional theory at the Data Analytics and Machine Learning chair (Prof. G&uuml;nnemann).</div>
+          </div>
+        </div>
+        <div class="cv-item">
+          <div class="cv-date">2021 Oct - Oct 2023</div>
+          <div>
+            <div class="cv-role">M.Sc. Physics</div>
+            <div class="cv-org">Technical University of Munich (TUM)</div>
+            <div class="cv-detail">Specialization in theoretical biophysics.</div>
+            <div class="cv-detail">Thesis on effects of enhanced diffusion in enzyme-loaded vesicles: a multiscale simulation study.</div>
+          </div>
+        </div>
+        <div class="cv-item">
+          <div class="cv-date">2017 Oct - 2021 Oct</div>
+          <div>
+            <div class="cv-role">B.Sc. Physics</div>
+            <div class="cv-org">Technical University of Munich (TUM)</div>
+            <div class="cv-detail">Thesis on mathematical particle physics: extending dispersive bounds to include sub-threshold branch cuts.</div>
+          </div>
+        </div>
       </div>
-      <h3>Learning Equivariant Non-Local Electron Density Functionals</h3>
-      <div class="authors"><strong>Eike Eberhard</strong>*, Nicholas Gao*, Stephan G&uuml;nnemann</div>
-      <div class="venue">International Conference on Learning Representations &middot; 2025</div>
-    </a>
+    </div>
+    <div class="cv-column fade-in">
+      <h3 class="cv-column-title">Invited Talks</h3>
+      <div class="cv-list">
+        <div class="cv-item">
+          <div class="cv-date">2025 Nov</div>
+          <div>
+            <div class="cv-role">AMLab</div>
+            <div class="cv-detail">Ensing &amp; Welling groups, University of Amsterdam</div>
+          </div>
+        </div>
+        <div class="cv-item">
+          <div class="cv-date">2025 May</div>
+          <div>
+            <div class="cv-role">University of Heidelberg</div>
+          </div>
+        </div>
+        <div class="cv-item">
+          <div class="cv-date">2024 Nov</div>
+          <div>
+            <div class="cv-role">Learning on Graphs Reading Group</div>
+            <div class="cv-detail">MIT (online format)</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
