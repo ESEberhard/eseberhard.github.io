@@ -7,11 +7,12 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&family=Manrope:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
+  --max-w: 1700px;
   --bg: #050709;
   --bg-card: rgba(10, 16, 28, 0.65);
   --bg-card-hover: rgba(16, 24, 40, 0.8);
@@ -119,12 +120,12 @@ nav.scrolled {
 }
 
 .nav-logo {
-  font-family: 'Instrument Serif', serif;
-  font-size: 1.1rem;
-  font-weight: 400;
+  font-family: 'Manrope', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
   color: var(--text-bright);
   text-decoration: none;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.04em;
 }
 
 .nav-logo .dot { color: var(--accent); }
@@ -157,6 +158,8 @@ nav.scrolled {
   align-items: center;
   gap: clamp(2rem, 5vw, 4rem);
   padding: 0 8vw;
+  max-width: var(--max-w);
+  margin-inline: auto;
 }
 
 .hero-content { max-width: 720px; position: relative; }
@@ -199,9 +202,9 @@ nav.scrolled {
 }
 
 .hero h1 {
-  font-family: 'Instrument Serif', serif;
-  font-size: clamp(3.2rem, 7vw, 6rem);
-  font-weight: 400;
+  font-family: 'Manrope', sans-serif;
+  font-size: clamp(3rem, 5vw, 4.8rem);
+  font-weight: 600;
   line-height: 1.04;
   color: var(--text-bright);
   letter-spacing: -0.035em;
@@ -308,7 +311,9 @@ nav.scrolled {
   position: relative;
   z-index: 1;
   height: 1px;
-  margin: 0 8vw;
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 8vw;
   background: linear-gradient(90deg, transparent, var(--border), transparent);
 }
 
@@ -316,6 +321,8 @@ section {
   position: relative;
   z-index: 1;
   padding: 8rem 8vw;
+  max-width: var(--max-w);
+  margin-inline: auto;
 }
 
 .section-label {
@@ -339,7 +346,7 @@ section {
 }
 
 .section-title {
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Manrope', sans-serif;
   font-size: clamp(2.2rem, 4.5vw, 3.2rem);
   color: var(--text-bright);
   font-weight: 400;
@@ -351,7 +358,7 @@ section {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 4rem;
-  max-width: 1100px;
+  width: 100%;
 }
 
 .about-text p { margin-bottom: 1.4rem; font-size: 1rem; line-height: 1.85; }
@@ -418,7 +425,7 @@ section {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.4rem;
-  max-width: 1100px;
+  width: 100%;
 }
 
 .cv-column {
@@ -430,7 +437,7 @@ section {
 }
 
 .cv-column-title {
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 1.5rem;
   color: var(--text-bright);
   font-weight: 400;
@@ -493,7 +500,7 @@ section {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.2rem;
-  max-width: 1100px;
+  width: 100%;
 }
 
 .research-card {
@@ -558,7 +565,7 @@ section {
 }
 
 .research-card h3 {
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 1.3rem;
   color: var(--text-bright);
   font-weight: 400;
@@ -575,7 +582,7 @@ section {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.2rem;
-  max-width: 1100px;
+  width: 100%;
 }
 
 .tool-card {
@@ -644,7 +651,7 @@ section {
 }
 
 .tool-card h3 {
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 1.25rem;
   color: var(--text-bright);
   font-weight: 400;
@@ -670,7 +677,7 @@ section {
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
-  max-width: 900px;
+  width: 100%;
 }
 
 .pub-item {
@@ -742,7 +749,7 @@ section {
 }
 
 .pub-item h3 {
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 1.2rem;
   color: var(--text-bright);
   font-weight: 400;
@@ -768,6 +775,8 @@ footer {
   position: relative;
   z-index: 1;
   padding: 3rem 8vw;
+  max-width: var(--max-w);
+  margin-inline: auto;
   border-top: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
@@ -843,7 +852,7 @@ footer .footer-links a:hover { color: var(--accent); }
   .research-areas { grid-template-columns: 1fr; }
   .tool-grid { grid-template-columns: 1fr; }
   footer { padding: 2rem 5vw; }
-  .section-divider { margin: 0 5vw; }
+  .section-divider { padding: 0 5vw; }
 }
 .nav-logo-short { display: none; }
 
