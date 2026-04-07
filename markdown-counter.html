@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Markdown Counter &amp; Compressor | Eike S. Eberhard</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -36,53 +36,64 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Manrope', sans-serif;
     font-weight: 300;
     line-height: 1.7;
     display: flex;
     flex-direction: column;
     padding: 0;
+    padding-top: calc(64px + env(safe-area-inset-top));
   }
 
-  /* === NAV === */
+  /* === NAV (match index.html) === */
   nav {
-    padding: 1.2rem 2.5rem;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: env(safe-area-inset-top) 3rem 0;
+    height: calc(64px + env(safe-area-inset-top));
     display: flex;
     justify-content: space-between;
     align-items: center;
+    backdrop-filter: blur(24px) saturate(1.2);
+    background: rgba(5, 7, 9, 0.6);
     border-bottom: 1px solid var(--border);
-    background: rgba(6, 8, 13, 0.92);
-    flex-shrink: 0;
+    transition: all 0.4s ease;
   }
 
   .nav-logo {
-    font-family: 'Instrument Serif', serif;
-    font-size: 1.1rem;
-    font-weight: 400;
+    font-family: 'Manrope', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
     color: var(--text-bright);
     text-decoration: none;
+    letter-spacing: 0.04em;
   }
 
   .nav-logo .dot { color: var(--accent); }
 
-  .nav-links { display: flex; gap: 2rem; }
+  .nav-links { display: flex; gap: 0.3rem; }
 
   .nav-links a {
     color: var(--text-dim);
     text-decoration: none;
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     font-family: 'DM Mono', monospace;
     font-weight: 400;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    transition: color 0.3s;
+    letter-spacing: 0.06em;
+    padding: 0.45rem 0.9rem;
+    border-radius: 6px;
+    transition: all 0.3s;
   }
 
-  .nav-links a:hover { color: var(--accent); }
+  .nav-links a:hover {
+    color: var(--text-bright);
+    background: rgba(255,255,255,0.04);
+  }
 
   /* === HEADER === */
   .page-header {
-    padding: 2.5rem 2.5rem 0;
+    padding: 2.5rem 3rem 0;
     flex-shrink: 0;
   }
 
@@ -98,11 +109,11 @@
   .page-tag::before { content: '▸ '; color: var(--accent); }
 
   .page-title {
-    font-family: 'Instrument Serif', serif;
-    font-size: 2rem;
+    font-family: 'Manrope', sans-serif;
+    font-size: clamp(2.2rem, 4.5vw, 3.2rem);
     font-weight: 400;
     color: var(--text-bright);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
     margin-bottom: 0.8rem;
   }
 
@@ -155,7 +166,7 @@
   .stats {
     display: flex;
     gap: 1rem;
-    padding: 0 2.5rem;
+    padding: 0 3rem;
     margin-bottom: 1rem;
     flex-shrink: 0;
     flex-wrap: wrap;
@@ -204,7 +215,7 @@
     gap: 0;
     flex: 1;
     min-height: 0;
-    padding: 0 2.5rem;
+    padding: 0 3rem;
     margin-bottom: 1rem;
   }
 
@@ -257,7 +268,7 @@
     background: var(--bg-card);
   }
 
-  .preview h1, .preview h2, .preview h3 { margin: 0.8em 0 0.4em; color: var(--text-bright); font-family: 'Instrument Serif', serif; font-weight: 400; }
+  .preview h1, .preview h2, .preview h3 { margin: 0.8em 0 0.4em; color: var(--text-bright); font-family: 'Manrope', sans-serif; font-weight: 400; }
   .preview h1 { font-size: 1.4rem; }
   .preview h2 { font-size: 1.2rem; }
   .preview h3 { font-size: 1.05rem; }
@@ -276,7 +287,7 @@
 
   /* === BUTTONS === */
   .btn-row {
-    padding: 0 2.5rem 1.5rem;
+    padding: 0 3rem 1.5rem;
     display: flex;
     gap: 0.8rem;
     flex-shrink: 0;
@@ -314,13 +325,18 @@
 
   /* === MOBILE === */
   @media (max-width: 768px) {
-    nav { padding: 1rem 1.5rem; }
+    nav { padding: 0 1.5rem; }
+    .nav-links a { font-size: 0.7rem; padding: 0.4rem 0.6rem; }
     .page-header { padding: 1.5rem 1.5rem 0; }
     .stats { padding: 0 1.5rem; }
     .panes { padding: 0 1.5rem; flex-direction: column; }
     textarea { border-right: 1px solid var(--border); border-radius: 6px 6px 0 0; border-bottom: none; min-height: 200px; }
     .preview { border-radius: 0 0 6px 6px; min-height: 200px; }
     .btn-row { padding: 0 1.5rem 1.5rem; }
+  }
+
+  @media (max-width: 550px) {
+    .nav-links a { font-size: 0.65rem; }
   }
 </style>
 </head>
