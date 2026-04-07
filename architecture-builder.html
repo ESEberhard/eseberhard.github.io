@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture Builder | Eike S. Eberhard</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root {
+  --bg: #0a0c10;
+  --bg-panel: #0f1218;
+  --bg-input: #0a0d14;
+  --text: #9aa8c0;
+  --text-dim: #4a5568;
+  --text-bright: #e2ecf8;
+  --accent: #60a5fa;
+  --accent-glow: rgba(96,165,250,0.15);
+  --accent2: #a78bfa;
+  --border: rgba(255,255,255,0.08);
+  --border-hover: rgba(96,165,250,0.25);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 300;
+  display: flex;
+  flex-direction: column;
+}
+
+nav {
+  padding: 0 1.5rem;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(10,12,16,0.95);
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.nav-back {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.nav-back:hover { color: var(--accent); }
+
+.nav-title {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-bright);
+  letter-spacing: -0.01em;
+}
+
+.editor {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* === TOOLBAR === */
+.toolbar {
+  width: 52px;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.6rem 0;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.tool-btn {
+  width: 40px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  transition: all 0.15s;
+  position: relative;
+}
+.tool-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+.tool-btn.active { color: var(--accent); background: var(--accent-glow); }
+.tool-btn svg { width: 18px; height: 18px; }
+
+.tool-sep {
+  width: 28px;
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.tool-btn[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 48px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #1a1f2e;
+  color: var(--text-bright);
+  font-size: 0.68rem;
+  font-family: 'DM Mono', monospace;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 200;
+  pointer-events: none;
+  border: 1px solid var(--border);
+}
+
+/* === CANVAS AREA === */
+.canvas-area {
+  flex: 1;
+  overflow: auto;
+  background: #13161d;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.canvas-wrap {
+  position: relative;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+#figure-canvas {
+  background: #ffffff;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  border-radius: 4px;
+}
+
+#figure-canvas.tool-box,
+#figure-canvas.tool-input,
+#figure-canvas.tool-group,
+#figure-canvas.tool-circle { cursor: crosshair; }
+#figure-canvas.tool-arrow { cursor: crosshair; }
+#figure-canvas.tool-text { cursor: text; }
+
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.arrow-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.arrow-layer line,
+.arrow-layer path,
+.arrow-layer polyline { pointer-events: stroke; cursor: pointer; }
+
+.arrow-hit { stroke: transparent; stroke-width: 12; fill: none; pointer-events: stroke; cursor: pointer; }
+.arrow-line { fill: none; pointer-events: none; }
+.arrow-line.selected { stroke: #1976D2 !important; }
+
+/* === NODES === */
+.node {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  user-select: none;
+  cursor: move;
+  z-index: 10;
+  overflow: visible;
+}
+
+.node.type-group {
+  z-index: 1;
+}
+
+.node.type-text {
+  z-index: 15;
+  cursor: move;
+  background: transparent !important;
+  border: none !important;
+}
+
+.node.type-circle {
+  border-radius: 50% !important;
+}
+
+.node.selected {
+  outline: 2px solid #1976D2;
+  outline-offset: 1px;
+}
+
+.node .node-label {
+  pointer-events: none;
+  line-height: 1.3;
+  padding: 4px 8px;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.node .node-label .katex { font-size: 1em; }
+.node .node-label .katex-display { margin: 0; }
+.node .node-label .katex-html { white-space: nowrap; }
+
+.node .node-label[contenteditable="true"] {
+  pointer-events: auto;
+  cursor: text;
+  outline: none;
+  min-width: 20px;
+}
+
+/* Resize handles */
+.resize-handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #1976D2;
+  border: 1px solid #fff;
+  border-radius: 2px;
+  z-index: 30;
+  pointer-events: auto;
+}
+.resize-handle.nw { top: -4px; left: -4px; cursor: nw-resize; }
+.resize-handle.ne { top: -4px; right: -4px; cursor: ne-resize; }
+.resize-handle.sw { bottom: -4px; left: -4px; cursor: sw-resize; }
+.resize-handle.se { bottom: -4px; right: -4px; cursor: se-resize; }
+.resize-handle.n  { top: -4px; left: calc(50% - 4px); cursor: n-resize; }
+.resize-handle.s  { bottom: -4px; left: calc(50% - 4px); cursor: s-resize; }
+.resize-handle.w  { top: calc(50% - 4px); left: -4px; cursor: w-resize; }
+.resize-handle.e  { top: calc(50% - 4px); right: -4px; cursor: e-resize; }
+
+/* Port indicators (arrow mode) */
+.port {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  z-index: 25;
+  pointer-events: auto;
+  cursor: crosshair;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.port.visible { opacity: 1; }
+.port.top    { top: -5px; left: calc(50% - 5px); }
+.port.bottom { bottom: -5px; left: calc(50% - 5px); }
+.port.left   { top: calc(50% - 5px); left: -5px; }
+.port.right  { top: calc(50% - 5px); right: -5px; }
+
+/* Alignment guides */
+.align-guide {
+  position: absolute;
+  background: #1976D2;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.5;
+}
+.align-guide.h { height: 1px; left: 0; right: 0; }
+.align-guide.v { width: 1px; top: 0; bottom: 0; }
+
+/* === PROPERTIES PANEL === */
+.props-panel {
+  width: 220px;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding: 1rem 0.8rem;
+  font-size: 0.76rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.props-section-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.4rem;
+}
+
+.props-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.props-row label {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  min-width: 42px;
+  flex-shrink: 0;
+}
+
+.props-input {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-bright);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  padding: 4px 6px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.props-input:focus { border-color: var(--accent); }
+
+.props-textarea {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-bright);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  padding: 4px 6px;
+  outline: none;
+  resize: vertical;
+  min-height: 36px;
+  transition: border-color 0.2s;
+}
+.props-textarea:focus { border-color: var(--accent); }
+
+.color-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.color-swatch:hover { transform: scale(1.15); }
+.color-swatch.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.color-swatch.transparent-swatch {
+  background: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 10px 10px;
+}
+
+.props-btn {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.04em;
+}
+.props-btn:hover { border-color: var(--border-hover); color: var(--text-bright); background: rgba(255,255,255,0.03); }
+.props-btn.danger { border-color: rgba(239,68,68,0.3); color: #ef4444; }
+.props-btn.danger:hover { background: rgba(239,68,68,0.08); }
+.props-btn.primary { border-color: rgba(96,165,250,0.3); color: var(--accent); }
+.props-btn.primary:hover { background: var(--accent-glow); }
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 34px;
+  height: 18px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.toggle-switch.on { background: rgba(96,165,250,0.4); }
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: var(--text-dim);
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+.toggle-switch.on::after { left: 18px; background: var(--accent); }
+
+select.props-input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234a5568'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  padding-right: 20px;
+}
+
+.props-hint {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  padding: 0.5rem 0;
+}
+
+/* === BOTTOM BAR === */
+.bottom-bar {
+  height: 32px;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  gap: 1.5rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.status-item { display: flex; align-items: center; gap: 0.3rem; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-back">&larr; Home</a>
+  <span class="nav-title">ML Architecture Builder</span>
+</nav>
+
+<div class="editor">
+  <!-- Left toolbar -->
+  <div class="toolbar">
+    <button class="tool-btn active" data-tool="select" data-tooltip="Select (V)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>
+    </button>
+    <button class="tool-btn" data-tool="box" data-tooltip="Box (B)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="3"/></svg>
+    </button>
+    <button class="tool-btn" data-tool="input" data-tooltip="Input / Output (I)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2"><rect x="3" y="5" width="18" height="14" rx="4"/></svg>
+    </button>
+    <button class="tool-btn" data-tool="group" data-tooltip="Group Region (G)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="4" fill="currentColor" fill-opacity="0.12"/></svg>
+    </button>
+    <button class="tool-btn" data-tool="circle" data-tooltip="Circle / Operator (O)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+    </button>
+    <div class="tool-sep"></div>
+    <button class="tool-btn" data-tool="arrow" data-tooltip="Arrow (A)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12l7 7 7-7"/></svg>
+    </button>
+    <button class="tool-btn" data-tool="text" data-tooltip="Text Label (T)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h12"/><path d="M12 4v16"/><path d="M8 20h8"/></svg>
+    </button>
+    <div class="tool-sep"></div>
+    <button class="tool-btn" id="btn-snap" data-tooltip="Snap to Grid" onclick="toggleSnap()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    </button>
+    <button class="tool-btn" data-tooltip="Snap Align All" onclick="snapAll()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10H3"/><path d="M21 6H3"/><path d="M21 14H3"/><path d="M21 18H3"/></svg>
+    </button>
+    <div class="tool-sep"></div>
+    <button class="tool-btn primary" data-tooltip="Export PDF" onclick="exportPDF()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M12 11v6"/><path d="M9 14l3 3 3-3"/></svg>
+    </button>
+  </div>
+
+  <!-- Canvas area -->
+  <div class="canvas-area" id="canvas-area">
+    <div class="canvas-wrap">
+      <div id="figure-canvas" style="width:1000px;height:700px;">
+        <canvas class="grid-overlay" id="grid-canvas"></canvas>
+        <svg class="arrow-layer" id="arrow-svg">
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+              <polygon points="0 0, 10 4, 0 8" fill="#424242"/>
+            </marker>
+            <marker id="arrowhead-sel" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+              <polygon points="0 0, 10 4, 0 8" fill="#1976D2"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Properties panel -->
+  <div class="props-panel" id="props-panel">
+    <div id="props-none">
+      <div class="props-section-title">Canvas</div>
+      <div class="props-row">
+        <label>Width</label>
+        <input type="number" class="props-input" id="canvas-w" value="1000" min="200" max="3000" step="10" onchange="resizeCanvas()">
+      </div>
+      <div class="props-row">
+        <label>Height</label>
+        <input type="number" class="props-input" id="canvas-h" value="700" min="200" max="3000" step="10" onchange="resizeCanvas()">
+      </div>
+      <div class="props-row">
+        <label>Grid</label>
+        <input type="number" class="props-input" id="grid-size" value="20" min="5" max="100" step="5" onchange="updateGrid()">
+      </div>
+      <div class="toggle-row">
+        <label style="font-size:0.7rem;color:var(--text-dim)">Show Grid</label>
+        <div class="toggle-switch" id="toggle-grid" onclick="toggleGridVisibility()"></div>
+      </div>
+      <div style="margin-top:0.5rem">
+        <button class="props-btn" onclick="saveState()">Save to Browser</button>
+      </div>
+      <div style="margin-top:0.3rem">
+        <button class="props-btn" onclick="loadState()">Load from Browser</button>
+      </div>
+      <div style="margin-top:0.3rem">
+        <button class="props-btn danger" onclick="clearCanvas()">Clear Canvas</button>
+      </div>
+
+      <div style="margin-top:1.2rem">
+        <div class="props-section-title">Shortcuts</div>
+        <div class="props-hint">
+          <strong style="color:var(--text)">V</strong> Select &nbsp; <strong style="color:var(--text)">B</strong> Box<br>
+          <strong style="color:var(--text)">I</strong> Input &nbsp; <strong style="color:var(--text)">G</strong> Group<br>
+          <strong style="color:var(--text)">O</strong> Circle &nbsp; <strong style="color:var(--text)">A</strong> Arrow<br>
+          <strong style="color:var(--text)">T</strong> Text &nbsp; <strong style="color:var(--text)">Del</strong> Delete<br>
+          <strong style="color:var(--text)">Ctrl+D</strong> Duplicate<br>
+          <strong style="color:var(--text)">Esc</strong> Deselect<br>
+          <strong style="color:var(--text)">Dbl-click</strong> Edit label
+        </div>
+        <div class="props-hint" style="margin-top:0.2rem">
+          Labels support LaTeX via <code style="color:var(--accent);font-family:'DM Mono',monospace;font-size:0.62rem">$...$</code> delimiters.
+        </div>
+      </div>
+    </div>
+
+    <div id="props-node" style="display:none">
+      <div class="props-section-title">Element</div>
+      <div class="props-row">
+        <label>Label</label>
+      </div>
+      <textarea class="props-textarea" id="prop-label" rows="2" oninput="updateNodeProp('label', this.value)"></textarea>
+      <div class="props-hint">Use <code style="color:var(--accent);font-family:'DM Mono',monospace;font-size:0.62rem">$...$</code> for LaTeX, e.g. <code style="color:var(--accent);font-family:'DM Mono',monospace;font-size:0.62rem">$\mathbf{x}_i^{(N)}$</code></div>
+
+      <div style="margin-top:0.4rem">
+        <div class="props-section-title">Fill</div>
+        <div class="color-palette" id="fill-palette"></div>
+      </div>
+
+      <div style="margin-top:0.6rem">
+        <div class="props-section-title">Border</div>
+        <div class="color-palette" id="stroke-palette"></div>
+        <div class="props-row" style="margin-top:0.5rem">
+          <label>Style</label>
+          <select class="props-input" id="prop-stroke-style" onchange="updateNodeProp('strokeDash', this.value==='dashed')">
+            <option value="solid">Solid</option>
+            <option value="dashed">Dashed</option>
+          </select>
+        </div>
+        <div class="props-row">
+          <label>Width</label>
+          <input type="number" class="props-input" id="prop-stroke-width" value="1.5" min="0.5" max="5" step="0.5" onchange="updateNodeProp('strokeWidth', +this.value)">
+        </div>
+      </div>
+
+      <div style="margin-top:0.6rem">
+        <div class="props-section-title">Dimensions</div>
+        <div class="props-row">
+          <label>W</label>
+          <input type="number" class="props-input" id="prop-w" min="10" step="5" onchange="updateNodeProp('w', +this.value)">
+        </div>
+        <div class="props-row">
+          <label>H</label>
+          <input type="number" class="props-input" id="prop-h" min="10" step="5" onchange="updateNodeProp('h', +this.value)">
+        </div>
+        <div class="props-row">
+          <label>Radius</label>
+          <input type="number" class="props-input" id="prop-radius" min="0" max="100" step="1" onchange="updateNodeProp('borderRadius', +this.value)">
+        </div>
+      </div>
+
+      <div style="margin-top:0.6rem">
+        <div class="props-section-title">Text</div>
+        <div class="props-row">
+          <label>Size</label>
+          <input type="number" class="props-input" id="prop-font-size" min="8" max="36" step="1" onchange="updateNodeProp('fontSize', +this.value)">
+        </div>
+        <div class="props-row">
+          <label>Bold</label>
+          <div class="toggle-switch" id="toggle-bold" onclick="toggleBold()"></div>
+        </div>
+        <div class="props-section-title" style="margin-top:0.4rem">Text Color</div>
+        <div class="color-palette" id="text-color-palette"></div>
+      </div>
+
+      <div style="margin-top:0.8rem">
+        <div class="props-section-title">Actions</div>
+        <button class="props-btn" onclick="duplicateSelected()" style="margin-bottom:4px">Duplicate</button>
+        <button class="props-btn" onclick="bringForward()" style="margin-bottom:4px">Bring Forward</button>
+        <button class="props-btn" onclick="sendBackward()" style="margin-bottom:4px">Send Backward</button>
+        <button class="props-btn danger" onclick="deleteSelected()">Delete</button>
+      </div>
+    </div>
+
+    <div id="props-arrow" style="display:none">
+      <div class="props-section-title">Arrow</div>
+      <div class="props-row">
+        <label>Color</label>
+      </div>
+      <div class="color-palette" id="arrow-color-palette"></div>
+      <div class="props-row" style="margin-top:0.5rem">
+        <label>Width</label>
+        <input type="number" class="props-input" id="prop-arrow-width" value="1.5" min="0.5" max="5" step="0.5" onchange="updateArrowProp('strokeWidth', +this.value)">
+      </div>
+      <div class="props-row">
+        <label>Head</label>
+        <select class="props-input" id="prop-arrow-head" onchange="updateArrowProp('headStyle', this.value)">
+          <option value="arrow">Arrow</option>
+          <option value="none">None</option>
+        </select>
+      </div>
+      <div class="props-row">
+        <label>Style</label>
+        <select class="props-input" id="prop-arrow-dash" onchange="updateArrowProp('dash', this.value==='dashed')">
+          <option value="solid">Solid</option>
+          <option value="dashed">Dashed</option>
+        </select>
+      </div>
+      <div style="margin-top:0.6rem">
+        <button class="props-btn danger" onclick="deleteSelected()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <span class="status-item" id="status-tool">Tool: Select</span>
+  <span class="status-item" id="status-pos">—</span>
+  <span class="status-item" id="status-count">0 elements</span>
+</div>
+
+<script>
+const FILL_COLORS = [
+  {n:'White',v:'#FFFFFF'},{n:'Snow',v:'#FAFAFA'},{n:'Silver',v:'#EEEEEE'},
+  {n:'Cream',v:'#FFF8E1'},{n:'Amber',v:'#FFF3E0'},{n:'Peach',v:'#FFE0B2'},
+  {n:'Apricot',v:'#FFCCBC'},{n:'Mint',v:'#E8F5E9'},{n:'Sage',v:'#C8E6C9'},
+  {n:'Seafoam',v:'#B2DFDB'},{n:'Lemon',v:'#FFFDE7'},{n:'Gold',v:'#FFF9C4'},
+  {n:'Ice',v:'#E3F2FD'},{n:'Sky',v:'#BBDEFB'},{n:'Lilac',v:'#F3E5F5'},
+  {n:'Lavender',v:'#E1BEE7'},{n:'Rose',v:'#FCE4EC'},{n:'Blush',v:'#F8BBD0'},
+  {n:'None',v:'transparent'}
+];
+
+const STROKE_COLORS = [
+  {n:'Black',v:'#212121'},{n:'Charcoal',v:'#424242'},{n:'Gray',v:'#757575'},
+  {n:'Silver',v:'#9E9E9E'},{n:'Light',v:'#BDBDBD'},{n:'Faint',v:'#E0E0E0'},
+  {n:'Amber',v:'#F57F17'},{n:'Orange',v:'#E65100'},{n:'Green',v:'#2E7D32'},
+  {n:'Teal',v:'#00695C'},{n:'Blue',v:'#1565C0'},{n:'Navy',v:'#1A237E'},
+  {n:'Purple',v:'#6A1B9A'},{n:'Red',v:'#C62828'},{n:'Brown',v:'#4E342E'},
+  {n:'None',v:'transparent'}
+];
+
+const TEXT_COLORS = [
+  {n:'Black',v:'#212121'},{n:'Dark',v:'#333333'},{n:'Gray',v:'#616161'},
+  {n:'Medium',v:'#757575'},{n:'Light',v:'#9E9E9E'},{n:'White',v:'#FFFFFF'},
+  {n:'Amber',v:'#E65100'},{n:'Green',v:'#1B5E20'},{n:'Blue',v:'#0D47A1'},
+  {n:'Purple',v:'#4A148C'},{n:'Red',v:'#B71C1C'}
+];
+
+const DEFAULTS = {
+  box:    { w:120, h:42, fill:'#FFFFFF', stroke:'#616161', strokeWidth:1.5, strokeDash:false, borderRadius:6,  fontSize:13, fontWeight:'normal', textColor:'#333333', zIndex:10 },
+  input:  { w:80,  h:34, fill:'#FFFFFF', stroke:'#9E9E9E', strokeWidth:1.5, strokeDash:true,  borderRadius:8,  fontSize:12, fontWeight:'normal', textColor:'#333333', zIndex:10 },
+  group:  { w:220, h:260, fill:'#FFF3E0', stroke:'#FFB74D', strokeWidth:1.5, strokeDash:false, borderRadius:12, fontSize:14, fontWeight:'600',   textColor:'#333333', zIndex:1  },
+  circle: { w:32,  h:32, fill:'#FFFFFF', stroke:'#616161', strokeWidth:1.5, strokeDash:false, borderRadius:999, fontSize:14, fontWeight:'normal', textColor:'#333333', zIndex:10 },
+  text:   { w:100, h:24, fill:'transparent', stroke:'transparent', strokeWidth:0, strokeDash:false, borderRadius:0, fontSize:13, fontWeight:'normal', textColor:'#333333', zIndex:15 },
+};
+
+let state = {
+  nodes: [],
+  arrows: [],
+  nextId: 1,
+};
+
+let tool = 'select';
+let snapEnabled = false;
+let gridSize = 20;
+let gridVisible = false;
+let selectedId = null;
+let selectedType = null; // 'node' | 'arrow'
+
+let dragState = null;
+let resizeState = null;
+let arrowDrawing = null;
+let creatingNode = null;
+
+const figCanvas = document.getElementById('figure-canvas');
+const arrowSvg = document.getElementById('arrow-svg');
+const gridCanvas = document.getElementById('grid-canvas');
+const gridCtx = gridCanvas.getContext('2d');
+
+function snap(v) {
+  return snapEnabled ? Math.round(v / gridSize) * gridSize : v;
+}
+
+function getNodeById(id) {
+  return state.nodes.find(n => n.id === id);
+}
+
+function getArrowById(id) {
+  return state.arrows.find(a => a.id === id);
+}
+
+// ── LATEX LABEL RENDERING ──
+
+function renderLabelHTML(text) {
+  if (!text) return '';
+  const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  if (typeof katex === 'undefined') return escaped.replace(/\n/g, '<br>');
+  return escaped.replace(/\$([^$]+)\$/g, (_, tex) => {
+    try {
+      return katex.renderToString(tex, { throwOnError: false, displayMode: false });
+    } catch (e) {
+      return _;
+    }
+  }).replace(/\n/g, '<br>');
+}
+
+// ── RENDERING ──
+
+function render() {
+  renderNodes();
+  renderArrows();
+  renderGrid();
+  updateProps();
+  updateStatus();
+}
+
+function renderGrid() {
+  const cw = figCanvas.offsetWidth;
+  const ch = figCanvas.offsetHeight;
+  gridCanvas.width = cw;
+  gridCanvas.height = ch;
+  gridCtx.clearRect(0, 0, cw, ch);
+  if (!gridVisible) return;
+  gridCtx.fillStyle = '#d0d0d0';
+  for (let x = gridSize; x < cw; x += gridSize) {
+    for (let y = gridSize; y < ch; y += gridSize) {
+      gridCtx.fillRect(x - 0.5, y - 0.5, 1, 1);
+    }
+  }
+}
+
+function renderNodes() {
+  const existing = new Set();
+  const sorted = [...state.nodes].sort((a, b) => a.zIndex - b.zIndex);
+
+  sorted.forEach(node => {
+    existing.add('node-' + node.id);
+    let el = document.getElementById('node-' + node.id);
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'node-' + node.id;
+      el.className = 'node';
+      el.innerHTML = '<span class="node-label"></span>' +
+        '<div class="port top" data-side="top"></div>' +
+        '<div class="port bottom" data-side="bottom"></div>' +
+        '<div class="port left" data-side="left"></div>' +
+        '<div class="port right" data-side="right"></div>';
+      figCanvas.appendChild(el);
+    }
+
+    el.className = 'node type-' + node.type + (selectedId === node.id && selectedType === 'node' ? ' selected' : '');
+    el.style.left = node.x + 'px';
+    el.style.top = node.y + 'px';
+    el.style.width = node.w + 'px';
+    el.style.height = node.h + 'px';
+    el.style.background = node.fill;
+    el.style.border = node.strokeWidth + 'px ' + (node.strokeDash ? 'dashed' : 'solid') + ' ' + node.stroke;
+    el.style.borderRadius = (node.type === 'circle' ? '50%' : node.borderRadius + 'px');
+    el.style.zIndex = node.zIndex;
+
+    const lbl = el.querySelector('.node-label');
+    if (document.activeElement !== lbl && lbl._lastRendered !== node.label) {
+      lbl.innerHTML = renderLabelHTML(node.label);
+      lbl._lastRendered = node.label;
+    }
+    lbl.style.fontSize = node.fontSize + 'px';
+    lbl.style.fontWeight = node.fontWeight;
+    lbl.style.color = node.textColor;
+
+    // Show ports in arrow mode
+    const showPorts = tool === 'arrow';
+    el.querySelectorAll('.port').forEach(p => p.classList.toggle('visible', showPorts));
+
+    // Resize handles
+    el.querySelectorAll('.resize-handle').forEach(h => h.remove());
+    if (selectedId === node.id && selectedType === 'node') {
+      ['nw','n','ne','e','se','s','sw','w'].forEach(dir => {
+        const h = document.createElement('div');
+        h.className = 'resize-handle ' + dir;
+        h.dataset.handle = dir;
+        el.appendChild(h);
+      });
+    }
+  });
+
+  figCanvas.querySelectorAll('.node').forEach(el => {
+    if (!existing.has(el.id)) el.remove();
+  });
+}
+
+function renderArrows() {
+  const defsHTML = arrowSvg.querySelector('defs').outerHTML;
+  let html = defsHTML;
+
+  state.arrows.forEach(arrow => {
+    const pts = getArrowPoints(arrow);
+    if (!pts) return;
+    const [x1, y1, x2, y2] = pts;
+    const isSel = selectedId === arrow.id && selectedType === 'arrow';
+    const col = isSel ? '#1976D2' : arrow.stroke;
+    const marker = arrow.headStyle !== 'none' ? (' marker-end="url(#' + (isSel ? 'arrowhead-sel' : 'arrowhead') + ')"') : '';
+    const dashAttr = arrow.dash ? ' stroke-dasharray="6 4"' : '';
+
+    html += '<line class="arrow-hit" data-arrow-id="' + arrow.id + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>';
+    html += '<line class="arrow-line' + (isSel ? ' selected' : '') + '" data-arrow-id="' + arrow.id + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + col + '" stroke-width="' + arrow.strokeWidth + '"' + marker + dashAttr + '/>';
+  });
+
+  if (arrowDrawing && arrowDrawing.mx != null) {
+    const from = getNodeById(arrowDrawing.fromId);
+    const [x1, y1] = getPortPos(from, arrowDrawing.fromSide);
+    html += '<line class="arrow-line" x1="' + x1 + '" y1="' + y1 + '" x2="' + arrowDrawing.mx + '" y2="' + arrowDrawing.my + '" stroke="#1976D2" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowhead-sel)"/>';
+  }
+
+  arrowSvg.innerHTML = html;
+}
+
+function getPortPos(node, side) {
+  if (!node) return [0, 0];
+  switch (side) {
+    case 'top':    return [node.x + node.w / 2, node.y];
+    case 'bottom': return [node.x + node.w / 2, node.y + node.h];
+    case 'left':   return [node.x, node.y + node.h / 2];
+    case 'right':  return [node.x + node.w, node.y + node.h / 2];
+  }
+  return [node.x + node.w / 2, node.y + node.h / 2];
+}
+
+function getArrowPoints(arrow) {
+  const from = getNodeById(arrow.fromId);
+  const to = getNodeById(arrow.toId);
+  if (!from || !to) return null;
+  const [x1, y1] = getPortPos(from, arrow.fromSide);
+  const [x2, y2] = getPortPos(to, arrow.toSide);
+  return [x1, y1, x2, y2];
+}
+
+function bestSide(fromNode, toNode) {
+  const fcx = fromNode.x + fromNode.w / 2, fcy = fromNode.y + fromNode.h / 2;
+  const tcx = toNode.x + toNode.w / 2, tcy = toNode.y + toNode.h / 2;
+  const dx = tcx - fcx, dy = tcy - fcy;
+  if (Math.abs(dy) >= Math.abs(dx)) {
+    return dy > 0 ? ['bottom', 'top'] : ['top', 'bottom'];
+  }
+  return dx > 0 ? ['right', 'left'] : ['left', 'right'];
+}
+
+// ── EVENT HANDLERS ──
+
+figCanvas.addEventListener('mousedown', e => {
+  if (e.target.closest('.node-label[contenteditable="true"]')) return;
+  const rect = figCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  // Handle port click (arrow tool)
+  if (tool === 'arrow') {
+    const port = e.target.closest('.port');
+    if (port) {
+      const nodeEl = port.closest('.node');
+      const nodeId = +nodeEl.id.replace('node-', '');
+      const side = port.dataset.side;
+      if (!arrowDrawing) {
+        arrowDrawing = { fromId: nodeId, fromSide: side, mx: null, my: null };
+      } else {
+        state.arrows.push({
+          id: state.nextId++,
+          fromId: arrowDrawing.fromId,
+          toId: nodeId,
+          fromSide: arrowDrawing.fromSide,
+          toSide: side,
+          stroke: '#424242',
+          strokeWidth: 1.5,
+          headStyle: 'arrow',
+          dash: false,
+        });
+        arrowDrawing = null;
+      }
+      render();
+      return;
+    }
+
+    // Click on a node (auto-detect best port)
+    const nodeEl = e.target.closest('.node');
+    if (nodeEl) {
+      const nodeId = +nodeEl.id.replace('node-', '');
+      const node = getNodeById(nodeId);
+      if (!arrowDrawing) {
+        const side = closestSide(node, mx, my);
+        arrowDrawing = { fromId: nodeId, fromSide: side, mx: null, my: null };
+      } else {
+        const side = closestSide(node, mx, my);
+        state.arrows.push({
+          id: state.nextId++,
+          fromId: arrowDrawing.fromId,
+          toId: nodeId,
+          fromSide: arrowDrawing.fromSide,
+          toSide: side,
+          stroke: '#424242',
+          strokeWidth: 1.5,
+          headStyle: 'arrow',
+          dash: false,
+        });
+        arrowDrawing = null;
+      }
+      render();
+      return;
+    }
+
+    arrowDrawing = null;
+    render();
+    return;
+  }
+
+  // Handle resize handle
+  const handleEl = e.target.closest('.resize-handle');
+  if (handleEl && selectedId && selectedType === 'node') {
+    const node = getNodeById(selectedId);
+    resizeState = {
+      id: node.id,
+      handle: handleEl.dataset.handle,
+      startMx: mx, startMy: my,
+      ox: node.x, oy: node.y, ow: node.w, oh: node.h,
+    };
+    e.preventDefault();
+    return;
+  }
+
+  // Handle arrow selection
+  const arrowHit = e.target.closest('.arrow-hit');
+  if (arrowHit) {
+    const arrowId = +arrowHit.dataset.arrowId;
+    selectedId = arrowId;
+    selectedType = 'arrow';
+    render();
+    return;
+  }
+
+  // Handle node selection / drag
+  const nodeEl = e.target.closest('.node');
+  if (nodeEl && (tool === 'select' || tool === 'arrow')) {
+    const nodeId = +nodeEl.id.replace('node-', '');
+    selectedId = nodeId;
+    selectedType = 'node';
+    const node = getNodeById(nodeId);
+    dragState = { id: nodeId, offX: mx - node.x, offY: my - node.y };
+    render();
+    e.preventDefault();
+    return;
+  }
+
+  // Create new node
+  if (['box', 'input', 'group', 'circle', 'text'].includes(tool)) {
+    const def = { ...DEFAULTS[tool] };
+    const node = {
+      id: state.nextId++,
+      type: tool,
+      x: snap(mx - def.w / 2),
+      y: snap(my - def.h / 2),
+      ...def,
+      label: tool === 'circle' ? '+' : (tool === 'group' ? 'Group' : (tool === 'text' ? 'Label' : 'Block')),
+    };
+    state.nodes.push(node);
+    selectedId = node.id;
+    selectedType = 'node';
+    render();
+    return;
+  }
+
+  // Deselect
+  selectedId = null;
+  selectedType = null;
+  render();
+});
+
+figCanvas.addEventListener('mousemove', e => {
+  const rect = figCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  document.getElementById('status-pos').textContent = Math.round(mx) + ', ' + Math.round(my);
+
+  if (arrowDrawing) {
+    arrowDrawing.mx = mx;
+    arrowDrawing.my = my;
+    renderArrows();
+    return;
+  }
+
+  if (resizeState) {
+    const node = getNodeById(resizeState.id);
+    if (!node) return;
+    const dx = mx - resizeState.startMx;
+    const dy = my - resizeState.startMy;
+    const h = resizeState.handle;
+    let nx = resizeState.ox, ny = resizeState.oy, nw = resizeState.ow, nh = resizeState.oh;
+
+    if (h.includes('e')) nw = Math.max(20, resizeState.ow + dx);
+    if (h.includes('w')) { nw = Math.max(20, resizeState.ow - dx); nx = resizeState.ox + resizeState.ow - nw; }
+    if (h.includes('s')) nh = Math.max(20, resizeState.oh + dy);
+    if (h.includes('n')) { nh = Math.max(20, resizeState.oh - dy); ny = resizeState.oy + resizeState.oh - nh; }
+
+    node.x = snap(nx);
+    node.y = snap(ny);
+    node.w = snap(nw);
+    node.h = snap(nh);
+    if (node.type === 'circle') node.h = node.w;
+    render();
+    return;
+  }
+
+  if (dragState) {
+    const node = getNodeById(dragState.id);
+    if (!node) return;
+    node.x = snap(mx - dragState.offX);
+    node.y = snap(my - dragState.offY);
+    render();
+    return;
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  dragState = null;
+  resizeState = null;
+});
+
+figCanvas.addEventListener('dblclick', e => {
+  const nodeEl = e.target.closest('.node');
+  if (!nodeEl) return;
+  const nodeId = +nodeEl.id.replace('node-', '');
+  const node = getNodeById(nodeId);
+  if (!node) return;
+  const lbl = nodeEl.querySelector('.node-label');
+  lbl.textContent = node.label;
+  lbl._lastRendered = null;
+  lbl.contentEditable = 'true';
+  lbl.focus();
+  document.execCommand('selectAll', false, null);
+
+  const finish = () => {
+    lbl.contentEditable = 'false';
+    if (node) {
+      node.label = lbl.textContent;
+      lbl.innerHTML = renderLabelHTML(node.label);
+      lbl._lastRendered = node.label;
+      updateProps();
+    }
+    lbl.removeEventListener('blur', finish);
+    lbl.removeEventListener('keydown', onKey);
+  };
+
+  const onKey = ev => {
+    if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); finish(); }
+    if (ev.key === 'Escape') finish();
+  };
+
+  lbl.addEventListener('blur', finish);
+  lbl.addEventListener('keydown', onKey);
+});
+
+function closestSide(node, mx, my) {
+  const cx = node.x + node.w / 2, cy = node.y + node.h / 2;
+  const dx = mx - cx, dy = my - cy;
+  const nx = dx / (node.w / 2), ny = dy / (node.h / 2);
+  if (Math.abs(ny) > Math.abs(nx)) return ny > 0 ? 'bottom' : 'top';
+  return nx > 0 ? 'right' : 'left';
+}
+
+// ── KEYBOARD ──
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+
+  const key = e.key.toLowerCase();
+  if (key === 'v') setTool('select');
+  else if (key === 'b') setTool('box');
+  else if (key === 'i') setTool('input');
+  else if (key === 'g') setTool('group');
+  else if (key === 'o') setTool('circle');
+  else if (key === 'a') setTool('arrow');
+  else if (key === 't') setTool('text');
+  else if (key === 'escape') {
+    arrowDrawing = null;
+    selectedId = null;
+    selectedType = null;
+    render();
+  }
+  else if ((key === 'delete' || key === 'backspace') && selectedId) { deleteSelected(); }
+  else if (key === 'd' && (e.ctrlKey || e.metaKey) && selectedId) { e.preventDefault(); duplicateSelected(); }
+});
+
+// ── TOOL MANAGEMENT ──
+
+function setTool(t) {
+  tool = t;
+  arrowDrawing = null;
+  document.querySelectorAll('.toolbar .tool-btn[data-tool]').forEach(b =>
+    b.classList.toggle('active', b.dataset.tool === t)
+  );
+  figCanvas.className = '';
+  if (t !== 'select') figCanvas.classList.add('tool-' + t);
+  document.getElementById('status-tool').textContent = 'Tool: ' + t.charAt(0).toUpperCase() + t.slice(1);
+  render();
+}
+
+document.querySelectorAll('.toolbar .tool-btn[data-tool]').forEach(btn => {
+  btn.addEventListener('click', () => setTool(btn.dataset.tool));
+});
+
+// ── SNAP ──
+
+function toggleSnap() {
+  snapEnabled = !snapEnabled;
+  document.getElementById('btn-snap').classList.toggle('active', snapEnabled);
+}
+
+function snapAll() {
+  state.nodes.forEach(n => {
+    n.x = Math.round(n.x / gridSize) * gridSize;
+    n.y = Math.round(n.y / gridSize) * gridSize;
+    n.w = Math.max(gridSize, Math.round(n.w / gridSize) * gridSize);
+    n.h = Math.max(gridSize, Math.round(n.h / gridSize) * gridSize);
+    if (n.type === 'circle') n.h = n.w;
+  });
+  render();
+}
+
+function toggleGridVisibility() {
+  gridVisible = !gridVisible;
+  document.getElementById('toggle-grid').classList.toggle('on', gridVisible);
+  renderGrid();
+}
+
+function updateGrid() {
+  gridSize = +document.getElementById('grid-size').value || 20;
+  renderGrid();
+}
+
+// ── CANVAS RESIZE ──
+
+function resizeCanvas() {
+  const w = +document.getElementById('canvas-w').value || 1000;
+  const h = +document.getElementById('canvas-h').value || 700;
+  figCanvas.style.width = w + 'px';
+  figCanvas.style.height = h + 'px';
+  renderGrid();
+}
+
+// ── PROPERTIES PANEL ──
+
+function updateProps() {
+  const none = document.getElementById('props-none');
+  const nodeP = document.getElementById('props-node');
+  const arrowP = document.getElementById('props-arrow');
+  none.style.display = 'none';
+  nodeP.style.display = 'none';
+  arrowP.style.display = 'none';
+
+  if (selectedType === 'node' && selectedId) {
+    const node = getNodeById(selectedId);
+    if (!node) { none.style.display = ''; return; }
+    nodeP.style.display = '';
+    document.getElementById('prop-label').value = node.label;
+    document.getElementById('prop-w').value = Math.round(node.w);
+    document.getElementById('prop-h').value = Math.round(node.h);
+    document.getElementById('prop-radius').value = node.borderRadius;
+    document.getElementById('prop-font-size').value = node.fontSize;
+    document.getElementById('prop-stroke-style').value = node.strokeDash ? 'dashed' : 'solid';
+    document.getElementById('prop-stroke-width').value = node.strokeWidth;
+    document.getElementById('toggle-bold').classList.toggle('on', node.fontWeight === '600' || node.fontWeight === 'bold');
+    buildPalette('fill-palette', FILL_COLORS, node.fill, c => updateNodeProp('fill', c));
+    buildPalette('stroke-palette', STROKE_COLORS, node.stroke, c => updateNodeProp('stroke', c));
+    buildPalette('text-color-palette', TEXT_COLORS, node.textColor, c => updateNodeProp('textColor', c));
+  } else if (selectedType === 'arrow' && selectedId) {
+    const arrow = getArrowById(selectedId);
+    if (!arrow) { none.style.display = ''; return; }
+    arrowP.style.display = '';
+    document.getElementById('prop-arrow-width').value = arrow.strokeWidth;
+    document.getElementById('prop-arrow-head').value = arrow.headStyle;
+    document.getElementById('prop-arrow-dash').value = arrow.dash ? 'dashed' : 'solid';
+    buildPalette('arrow-color-palette', STROKE_COLORS, arrow.stroke, c => updateArrowProp('stroke', c));
+  } else {
+    none.style.display = '';
+  }
+
+  document.getElementById('status-count').textContent = state.nodes.length + ' elements, ' + state.arrows.length + ' arrows';
+}
+
+function buildPalette(containerId, colors, active, onClick) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  colors.forEach(c => {
+    const sw = document.createElement('div');
+    sw.className = 'color-swatch' + (c.v === active ? ' active' : '') + (c.v === 'transparent' ? ' transparent-swatch' : '');
+    sw.style.background = c.v === 'transparent' ? '' : c.v;
+    sw.title = c.n;
+    sw.addEventListener('click', () => { onClick(c.v); render(); });
+    container.appendChild(sw);
+  });
+}
+
+function updateNodeProp(prop, value) {
+  if (!selectedId || selectedType !== 'node') return;
+  const node = getNodeById(selectedId);
+  if (!node) return;
+  node[prop] = value;
+  if (prop === 'label') {
+    const el = document.getElementById('node-' + node.id);
+    if (el) {
+      const lbl = el.querySelector('.node-label');
+      if (lbl) lbl._lastRendered = null;
+    }
+  }
+  render();
+}
+
+function updateArrowProp(prop, value) {
+  if (!selectedId || selectedType !== 'arrow') return;
+  const arrow = getArrowById(selectedId);
+  if (!arrow) return;
+  arrow[prop] = value;
+  render();
+}
+
+function toggleBold() {
+  if (!selectedId || selectedType !== 'node') return;
+  const node = getNodeById(selectedId);
+  if (!node) return;
+  node.fontWeight = (node.fontWeight === '600' || node.fontWeight === 'bold') ? 'normal' : '600';
+  render();
+}
+
+// ── ACTIONS ──
+
+function deleteSelected() {
+  if (!selectedId) return;
+  if (selectedType === 'node') {
+    state.nodes = state.nodes.filter(n => n.id !== selectedId);
+    state.arrows = state.arrows.filter(a => a.fromId !== selectedId && a.toId !== selectedId);
+  } else if (selectedType === 'arrow') {
+    state.arrows = state.arrows.filter(a => a.id !== selectedId);
+  }
+  selectedId = null;
+  selectedType = null;
+  render();
+}
+
+function duplicateSelected() {
+  if (!selectedId || selectedType !== 'node') return;
+  const node = getNodeById(selectedId);
+  if (!node) return;
+  const dup = { ...node, id: state.nextId++, x: node.x + 20, y: node.y + 20 };
+  state.nodes.push(dup);
+  selectedId = dup.id;
+  render();
+}
+
+function bringForward() {
+  if (!selectedId || selectedType !== 'node') return;
+  const node = getNodeById(selectedId);
+  if (!node) return;
+  node.zIndex = Math.min(node.zIndex + 1, 100);
+  render();
+}
+
+function sendBackward() {
+  if (!selectedId || selectedType !== 'node') return;
+  const node = getNodeById(selectedId);
+  if (!node) return;
+  node.zIndex = Math.max(node.zIndex - 1, 0);
+  render();
+}
+
+function clearCanvas() {
+  if (!confirm('Clear all elements?')) return;
+  state.nodes = [];
+  state.arrows = [];
+  selectedId = null;
+  selectedType = null;
+  render();
+}
+
+function updateStatus() {
+  document.getElementById('status-tool').textContent = 'Tool: ' + tool.charAt(0).toUpperCase() + tool.slice(1) + (snapEnabled ? ' [Snap]' : '');
+}
+
+// ── SAVE / LOAD ──
+
+function saveState() {
+  const data = JSON.stringify({
+    nodes: state.nodes,
+    arrows: state.arrows,
+    nextId: state.nextId,
+    canvasW: figCanvas.style.width,
+    canvasH: figCanvas.style.height,
+  });
+  localStorage.setItem('arch-builder-state', data);
+  alert('Saved to browser storage.');
+}
+
+function loadState() {
+  const raw = localStorage.getItem('arch-builder-state');
+  if (!raw) { alert('No saved state found.'); return; }
+  try {
+    const data = JSON.parse(raw);
+    state.nodes = data.nodes || [];
+    state.arrows = data.arrows || [];
+    state.nextId = data.nextId || 1;
+    if (data.canvasW) { figCanvas.style.width = data.canvasW; document.getElementById('canvas-w').value = parseInt(data.canvasW); }
+    if (data.canvasH) { figCanvas.style.height = data.canvasH; document.getElementById('canvas-h').value = parseInt(data.canvasH); }
+    selectedId = null;
+    selectedType = null;
+    render();
+  } catch (err) {
+    alert('Failed to load: ' + err.message);
+  }
+}
+
+// ── PDF EXPORT ──
+
+async function exportPDF() {
+  const prevSel = selectedId;
+  const prevType = selectedType;
+  selectedId = null;
+  selectedType = null;
+  render();
+
+  const cw = figCanvas.offsetWidth;
+  const ch = figCanvas.offsetHeight;
+  const scale = 4;
+
+  try {
+    const canvas = await html2canvas(figCanvas, {
+      scale: scale,
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      logging: false,
+      removeContainer: true,
+    });
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+      orientation: cw > ch ? 'landscape' : 'portrait',
+      unit: 'pt',
+      format: [cw, ch],
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    doc.addImage(imgData, 'PNG', 0, 0, cw, ch, undefined, 'FAST');
+    doc.save('architecture.pdf');
+  } catch (err) {
+    alert('PDF export failed: ' + err.message);
+  }
+
+  selectedId = prevSel;
+  selectedType = prevType;
+  render();
+}
+
+function hexToRGB(hex) {
+  if (!hex || hex === 'transparent') return { r: 255, g: 255, b: 255 };
+  hex = hex.replace('#', '');
+  if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+  return {
+    r: parseInt(hex.substring(0, 2), 16),
+    g: parseInt(hex.substring(2, 4), 16),
+    b: parseInt(hex.substring(4, 6), 16),
+  };
+}
+
+// ── INIT ──
+
+render();
+setTool('select');
+</script>
+</body>
+</html>
