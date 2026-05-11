@@ -498,89 +498,6 @@ section {
   margin-top: 0.08rem;
 }
 
-.research-areas {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.2rem;
-  width: 100%;
-}
-
-.research-card {
-  padding: 2.2rem;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.research-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(96,165,250,0), rgba(167,139,250,0));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  transition: background 0.4s ease;
-  pointer-events: none;
-}
-
-.research-card::after {
-  content: '';
-  position: absolute;
-  top: -50%; left: -50%;
-  width: 200%; height: 200%;
-  background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%),
-    rgba(96,165,250,0.06) 0%, transparent 50%);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-
-.research-card:hover::before {
-  background: linear-gradient(135deg, rgba(96,165,250,0.25), rgba(167,139,250,0.15));
-}
-
-.research-card:hover::after { opacity: 1; }
-
-.research-card:hover {
-  background: var(--bg-card-hover);
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
-}
-
-.research-card .icon-wrap {
-  width: 44px; height: 44px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.2rem;
-  font-size: 1.3rem;
-  background: linear-gradient(135deg, var(--accent-glow), var(--accent2-glow));
-  border: 1px solid var(--border);
-}
-
-.research-card h3 {
-  font-family: 'Manrope', sans-serif;
-  font-size: 1.3rem;
-  color: var(--text-bright);
-  font-weight: 400;
-  margin-bottom: 0.7rem;
-}
-
-.research-card p {
-  font-size: 0.88rem;
-  color: var(--text-dim);
-  line-height: 1.65;
-}
-
 .tool-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -752,6 +669,52 @@ section {
   border: 1px solid rgba(52,211,153,0.2);
 }
 
+.pub-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  margin-top: 1.15rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid var(--border);
+}
+
+.pub-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.52rem 1.05rem;
+  border-radius: 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid var(--border-hover);
+  color: var(--text-bright);
+  transition: background 0.25s, border-color 0.25s, color 0.25s;
+}
+
+.pub-action-btn:hover {
+  background: rgba(96, 165, 250, 0.12);
+  border-color: rgba(96, 165, 250, 0.4);
+}
+
+.pub-action-btn--interactive {
+  border-color: rgba(251, 191, 36, 0.38);
+  color: #fbbf24;
+}
+
+.pub-action-btn--interactive:hover {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.55);
+}
+
+.pub-action-btn:focus-visible {
+  outline: 2px solid rgba(96, 165, 250, 0.65);
+  outline-offset: 3px;
+}
+
 .pub-item h3 {
   font-family: 'Manrope', sans-serif;
   font-size: 1.2rem;
@@ -853,7 +816,6 @@ footer .footer-links a:hover { color: var(--accent); }
   .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
   .cv-grid { grid-template-columns: 1fr; }
   .cv-item { grid-template-columns: 1fr; gap: 0.45rem; }
-  .research-areas { grid-template-columns: 1fr; }
   .tool-grid { grid-template-columns: 1fr; }
   footer { padding: 2rem 5vw; }
   .section-divider { padding: 0 5vw; }
@@ -879,7 +841,6 @@ footer .footer-links a:hover { color: var(--accent); }
   <a href="#" class="nav-logo"><span class="nav-logo-full">Eike S<span class="dot">.</span> Eberhard</span><span class="nav-logo-short">E<span class="dot">.</span>S<span class="dot">.</span>E</span></a>
   <div class="nav-links">
     <a href="#about">About</a>
-    <a href="#research">Research</a>
     <a href="#publications">Papers</a>
     <a href="#tools">Tools</a>
     <a href="#cv">CV</a>
@@ -954,44 +915,19 @@ footer .footer-links a:hover { color: var(--accent); }
 
 <div class="section-divider"></div>
 
-<section id="research">
-  <div class="section-label fade-in">02 &middot; Research</div>
-  <h2 class="section-title fade-in">Focus Areas</h2>
-  <div class="research-areas">
-    <div class="research-card fade-in">
-      <div class="icon-wrap">&#9883;</div>
-      <h3>Neural XC Functionals</h3>
-      <p>Learning the exchange-correlation functional of DFT using expressive neural network architectures, from semi-local mGGA models to fully equivariant graph-based functionals that see the molecular topology.</p>
-    </div>
-    <div class="research-card fade-in">
-      <div class="icon-wrap">&nabla;</div>
-      <h3>Differentiable SCF Solvers</h3>
-      <p>End-to-end differentiable self-consistent field calculations in JAX, enabling gradient-based training through the iterative Kohn-Sham procedure with custom backward passes through eigendecompositions and DIIS.</p>
-    </div>
-    <div class="research-card fade-in">
-      <div class="icon-wrap">&#9672;</div>
-      <h3>Equivariant Architectures</h3>
-      <p>SE(3)-equivariant graph neural networks that respect the symmetries of molecular systems, building on frameworks like e3nn, NequIP, and EquiformerV2 for electronic structure prediction.</p>
-    </div>
-    <div class="research-card fade-in">
-      <div class="icon-wrap">&#10227;</div>
-      <h3>SCF Acceleration</h3>
-      <p>Learning intelligent initial guesses and convergence strategies for self-consistent field calculations to reduce the computational cost of density functional theory at scale.</p>
-    </div>
-  </div>
-</section>
-
-<div class="section-divider"></div>
-
 <section id="publications">
-  <div class="section-label fade-in">03 &middot; Selected Papers</div>
+  <div class="section-label fade-in">02 &middot; Selected Papers</div>
   <h2 class="section-title fade-in">Publications</h2>
   <div class="pub-list">
-    <a href="https://arxiv.org/abs/2604.21657" class="pub-item fade-in" target="_blank" rel="noopener noreferrer">
+    <div class="pub-item fade-in">
       <h3>Transferable SCF-Acceleration through Solver-Aligned Initialization Learning</h3>
       <div class="authors"><strong>Eike Eberhard</strong>*, Viktor Kotsev*, Timm G&uuml;thle, Stephan G&uuml;nnemann</div>
       <div class="venue">Preprint &middot; 2026</div>
-    </a>
+      <div class="pub-actions">
+        <a href="https://arxiv.org/abs/2604.21657" class="pub-action-btn" target="_blank" rel="noopener noreferrer">Paper (arXiv)</a>
+        <a href="sail-results.html" class="pub-action-btn pub-action-btn--interactive">Interactive results</a>
+      </div>
+    </div>
     <a href="https://arxiv.org/html/2601.16955v1" class="pub-item fade-in" target="_blank" rel="noopener noreferrer">
       <h3>3D Molecule Generation from Rigid Motifs via SE(3) Flows</h3>
       <div class="authors">Roman Poletukhin, Marcel Kollovieh, <strong>Eike Eberhard</strong>, Stephan G&uuml;nnemann</div>
@@ -1017,7 +953,7 @@ footer .footer-links a:hover { color: var(--accent); }
 <div class="section-divider"></div>
 
 <section id="tools">
-  <div class="section-label fade-in">04 &middot; Tools</div>
+  <div class="section-label fade-in">03 &middot; Tools</div>
   <h2 class="section-title fade-in">Interactive Utilities</h2>
   <div class="tool-grid">
     <a href="markdown-counter.html" class="tool-card fade-in">
@@ -1050,7 +986,7 @@ footer .footer-links a:hover { color: var(--accent); }
 <div class="section-divider"></div>
 
 <section id="cv">
-  <div class="section-label fade-in">05 &middot; CV</div>
+  <div class="section-label fade-in">04 &middot; CV</div>
   <h2 class="section-title fade-in">Academic CV</h2>
   <div class="cv-grid">
     <div class="cv-column fade-in">
@@ -1302,14 +1238,6 @@ window.addEventListener('scroll', function() {
   document.querySelector('nav').classList.toggle('scrolled', window.scrollY > 50);
 });
 
-// === CARD MOUSE GLOW ===
-document.querySelectorAll('.research-card').forEach(function(card) {
-  card.addEventListener('mousemove', function(e) {
-    var rect = card.getBoundingClientRect();
-    card.style.setProperty('--mx', ((e.clientX - rect.left) / rect.width * 100) + '%');
-    card.style.setProperty('--my', ((e.clientY - rect.top) / rect.height * 100) + '%');
-  });
-});
 </script>
 
 </body>

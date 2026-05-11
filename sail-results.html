@@ -1,0 +1,2158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAIL — Interactive Results | Eike S. Eberhard</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0e14;
+    --bg-soft: #11161e;
+    --bg-card: #141a23;
+    --bg-elev: #1a2230;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.18);
+    --ink: #ece7d9;
+    --ink-soft: #b5af9f;
+    --ink-mute: #756f63;
+
+    --p-color: #e9966c;
+    --f-color: #7fb069;
+    --c-color: #5b8bb5;
+    --sail: #f4c95d;
+    --danger: #c97a6d;
+
+    --p-soft: rgba(233, 150, 108, 0.18);
+    --f-soft: rgba(127, 176, 105, 0.18);
+    --c-soft: rgba(91, 139, 181, 0.18);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-weight: 300;
+    font-size: 17px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  .paper-links {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    align-items: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+  }
+  .paper-links a {
+    color: var(--sail);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(244, 201, 93, 0.35);
+    padding-bottom: 1px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .paper-links a:hover {
+    color: var(--ink);
+    border-bottom-color: var(--ink-soft);
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(ellipse 1200px 600px at top left, rgba(244, 201, 93, 0.05), transparent 60%),
+      radial-gradient(ellipse 1200px 800px at bottom right, rgba(91, 139, 181, 0.05), transparent 60%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  #sail-particle-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 3;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 56px 48px 80px;
+  }
+
+  /* ============ HEADER ============ */
+  header {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 40px;
+    margin-bottom: 56px;
+  }
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sail);
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-weight: 500;
+    font-size: clamp(48px, 6vw, 84px);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--sail);
+  }
+  .lede {
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 720px;
+    font-weight: 300;
+  }
+  .header-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 48px;
+  }
+  .authors {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-mute);
+    line-height: 1.85;
+    text-align: right;
+  }
+  .authors strong { color: var(--ink-soft); font-weight: 400; }
+
+  /* ============ HEADLINE METRICS ============ */
+  .headline-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    margin-top: 40px;
+  }
+  .metric {
+    background: var(--bg-card);
+    padding: 28px 28px;
+  }
+  .metric .label {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 12px;
+    line-height: 1.35;
+  }
+  .metric .big {
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-weight: 500;
+    font-style: normal;
+    font-size: 52px;
+    line-height: 1.12;
+    color: var(--sail);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.12em;
+  }
+  .metric .big .metric-unit {
+    font-size: 0.46em;
+    font-weight: 500;
+    color: var(--ink-soft);
+    letter-spacing: 0;
+    transform: translateY(-0.06em);
+  }
+  .metric .sub {
+    margin-top: 10px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
+
+  /* ============ SECTIONS ============ */
+  section {
+    margin-top: 88px;
+  }
+  .section-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px 28px;
+    margin-bottom: 28px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .section-header h2 { flex: 1 1 260px; }
+  .section-num { display: none; }
+  h2 {
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: clamp(28px, 4vw, 36px);
+    color: var(--ink);
+    letter-spacing: -0.015em;
+  }
+  .section-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-mute);
+    letter-spacing: 0.06em;
+  }
+  .section-intro {
+    font-size: 17px;
+    color: var(--ink-soft);
+    max-width: none;
+    margin-bottom: 28px;
+    line-height: 1.65;
+  }
+  .section-intro strong { color: var(--ink); font-weight: 500; }
+
+  .eric-initial {
+    color: var(--sail);
+    font-weight: 600;
+  }
+  .panel-title .eric-abbr {
+    color: var(--ink-soft);
+    font-weight: 500;
+    font-size: 0.94em;
+  }
+
+  /* ============ CHART PANELS ============ */
+  .panel {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 28px 32px 24px;
+    position: relative;
+  }
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .panel-title {
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 22px;
+    color: var(--ink);
+  }
+  .panel-sub {
+    margin-top: 6px;
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  sub, sup {
+    font-family: inherit;
+    font-size: 0.72em;
+    line-height: 0;
+    vertical-align: baseline;
+    position: relative;
+    bottom: -0.08em;
+  }
+
+  .fig1-y1-drag .fig1-y1-handle-ring {
+    fill: rgba(244, 201, 93, 0.35);
+    stroke: var(--sail);
+    stroke-width: 2;
+    cursor: ns-resize;
+    transition: stroke 0.15s, fill 0.15s;
+  }
+  .fig1-y1-drag:hover .fig1-y1-handle-ring {
+    fill: rgba(244, 201, 93, 0.55);
+    stroke: #fcd975;
+  }
+
+  .panel-combined-size-wall .combined-size-wall-eric {
+    padding-bottom: 28px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  .panel-combined-size-wall .wall-grid.wall-grid--combined {
+    border: none;
+    background: var(--line);
+    margin: 0;
+    grid-template-columns: 1fr 1fr;
+  }
+  .panel-combined-size-wall .wall-grid.wall-grid--combined > div {
+    background: var(--bg-card);
+  }
+  /* Equal subtitle blocks so both SVG plot areas start at the same vertical offset */
+  .panel-combined-size-wall .wall-grid.wall-grid--combined .panel-sub {
+    min-height: calc(1.5em * 4);
+  }
+
+  /* ============ LEGEND ============ */
+  .legend {
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+    align-items: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    user-select: none;
+  }
+  .legend-item.dim { opacity: 0.35; }
+  .legend-item:hover { color: var(--ink); }
+
+  .legend.legend--fig1 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px 0;
+  }
+  .legend-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 20px;
+    width: 100%;
+  }
+  .legend-row-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    flex: 0 0 auto;
+    width: 10.5em;
+  }
+  .legend-row-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px 22px;
+    align-items: center;
+    flex: 1 1 auto;
+  }
+  .legend-swatch.legend-swatch--p0 {
+    background: repeating-linear-gradient(
+      -52deg,
+      var(--ink),
+      var(--ink) 2px,
+      rgba(236, 231, 217, 0.38) 2px,
+      rgba(236, 231, 217, 0.38) 4px
+    );
+    width: 12px;
+    height: 12px;
+    border-radius: 1px;
+  }
+
+  .legend-swatch {
+    width: 22px;
+    height: 4px;
+    border-radius: 1px;
+  }
+  .legend-swatch.dotted {
+    background: transparent !important;
+    border-bottom: 2px dotted currentColor;
+    height: 4px;
+  }
+  .legend-style {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ============ SVG STYLES ============ */
+  svg.chart { display: block; width: 100%; height: auto; overflow: visible; min-height: 280px; }
+  .axis text {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    fill: var(--ink-mute);
+  }
+  .axis-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    fill: var(--ink-soft);
+    text-transform: uppercase;
+  }
+  .gridline { stroke: rgba(255,255,255,0.05); stroke-width: 1; }
+  .axis-line { stroke: var(--line-strong); stroke-width: 1; }
+  .ref-line { stroke: var(--ink-mute); stroke-width: 1; stroke-dasharray: 4 4; opacity: 0.6; }
+  .region-shade { fill: rgba(255,255,255,0.018); }
+  .region-divider { stroke: rgba(255,255,255,0.12); stroke-width: 1; stroke-dasharray: 2 4; }
+  .region-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    fill: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .series-line { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: opacity 0.25s; }
+  .series-line.dotted { stroke-dasharray: 4 4; stroke-width: 1.5; }
+  .series-band { opacity: 0.18; transition: opacity 0.25s; }
+  .series-dot { stroke: var(--bg-card); stroke-width: 1; transition: opacity 0.25s; }
+  .series-dot.hollow { fill: var(--bg-card); stroke-width: 1.5; }
+  .bin-highlight-band {
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+  .bin-highlight-band.is-active {
+    opacity: 0.26 !important;
+  }
+
+  .crosshair-v { stroke: var(--sail); stroke-width: 1; opacity: 0; pointer-events: none; }
+  .crosshair-pt { fill: var(--sail); pointer-events: none; opacity: 0; }
+  .hover-target { fill: transparent; cursor: crosshair; }
+
+  /* Tooltip */
+  .tooltip {
+    position: fixed;
+    pointer-events: none;
+    background: var(--bg-elev);
+    border: 1px solid var(--line-strong);
+    padding: 14px 18px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--ink);
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 100;
+    border-radius: 2px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    min-width: 220px;
+    max-width: min(420px, calc(100vw - 24px));
+  }
+  .tooltip.visible { opacity: 1; }
+  .tooltip .tt-section {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 4px;
+  }
+  .tooltip .tt-header + .tt-section {
+    margin-top: 6px;
+    padding-top: 4px;
+    border-top: none;
+  }
+  .tooltip .tt-header {
+    color: var(--sail);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+  }
+  .tooltip .tt-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 2px 0;
+  }
+  .tooltip .tt-row .tt-name { color: var(--ink-soft); }
+  .tooltip .tt-row .tt-val { color: var(--ink); font-weight: 500; }
+  .tooltip .tt-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+  .tooltip .tt-note {
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--ink-mute);
+    margin-bottom: 8px;
+    margin-top: 2px;
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-weight: 300;
+  }
+  .tooltip .tt-note strong { color: var(--ink-soft); font-weight: 500; }
+  .tooltip .tt-subsection {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    margin-top: 8px;
+    margin-bottom: 3px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .tooltip .tt-note + .tt-subsection {
+    margin-top: 4px;
+    padding-top: 0;
+    border-top: none;
+  }
+  .tooltip .tt-row.tt-row--sub .tt-name {
+    padding-left: 4px;
+    font-size: 12px;
+  }
+
+  /* ============ SMALL MULTIPLES ============ */
+  .small-multiples {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border: 1px solid var(--line);
+  }
+  .sm-panel {
+    background: var(--bg-card);
+    border-right: 1px solid var(--line);
+    padding: 28px 28px 20px;
+  }
+  .sm-panel:last-child { border-right: none; }
+  .sm-title {
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 22px;
+    color: var(--ink);
+  }
+  .sm-title .sm-tag {
+    font-family: 'DM Mono', monospace;
+    font-style: normal;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.12em;
+    margin-left: 12px;
+    padding: 3px 8px;
+    border: 1px solid var(--line-strong);
+    border-radius: 1px;
+    vertical-align: 3px;
+  }
+  .sm-sub {
+    margin-top: 6px;
+    font-size: 15px;
+    color: var(--ink-soft);
+    margin-bottom: 18px;
+  }
+
+  /* ============ WALL-TIME ============ */
+  .wall-grid {
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    align-items: stretch;
+  }
+  .wall-grid > div {
+    background: var(--bg-card);
+    padding: 28px 28px 24px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .wall-grid .chart {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 320px;
+    max-height: 520px;
+  }
+
+  .speedup-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    fill: var(--sail);
+    text-anchor: middle;
+  }
+
+  g.wall-bin-active rect.wall-bar,
+  g.acq-bin-active rect.acq-bar {
+    stroke: var(--sail);
+    stroke-width: 1.5;
+  }
+
+  /* ============ BASIS TABLE ============ */
+  .basis-table {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .bt-header, .bt-row {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr 1.4fr;
+    align-items: center;
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--line);
+    transition: background 0.2s;
+    gap: 16px;
+  }
+  .bt-row:last-child { border-bottom: none; }
+  .bt-row:hover { background: var(--bg-elev); }
+  .bt-header {
+    background: var(--bg-soft);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .bt-row .bt-basis {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .bt-row .bt-basis .id-tag {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 11px;
+    padding: 2px 6px;
+    background: var(--sail);
+    color: var(--bg);
+    border-radius: 1px;
+    letter-spacing: 0.1em;
+    vertical-align: 2px;
+  }
+  .bt-row .bt-basis .ood-tag {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 11px;
+    padding: 2px 6px;
+    background: var(--p-color);
+    color: var(--bg);
+    border-radius: 1px;
+    letter-spacing: 0.1em;
+    vertical-align: 2px;
+  }
+  .bt-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    color: var(--ink);
+  }
+  .bt-num.improved { color: var(--sail); font-weight: 500; }
+  .bt-num.base { color: var(--ink-mute); }
+  .bt-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .bt-bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-soft);
+    position: relative;
+    overflow: hidden;
+  }
+  .bt-bar-fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    background: linear-gradient(to right, var(--sail), var(--p-color));
+    transform-origin: left;
+  }
+  .bt-delta {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--sail);
+    min-width: 38px;
+    text-align: right;
+  }
+
+  /* ============ CONCEPT CARD ============ */
+  .concept {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 16px;
+  }
+  .concept-card {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    padding: 28px 32px;
+    border-radius: 2px;
+    position: relative;
+  }
+  .concept-card.baseline { border-left: 3px solid var(--ink-mute); }
+  .concept-card.sail { border-left: 3px solid var(--sail); }
+  .concept-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    padding: 4px 10px;
+    margin-bottom: 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 1px;
+    color: var(--ink-soft);
+  }
+  .concept-card.sail .concept-tag {
+    background: var(--sail);
+    color: var(--bg);
+    border-color: var(--sail);
+  }
+  .concept-card .heading {
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 24px;
+    color: var(--ink);
+    line-height: 1.25;
+    margin-bottom: 16px;
+  }
+  .concept-card p { color: var(--ink-soft); font-size: 16px; line-height: 1.65; }
+  .formula-display {
+    margin-top: 22px;
+    padding: 22px 24px;
+    background: var(--bg-soft);
+    border-left: 3px solid;
+    overflow-x: auto;
+  }
+  .formula-display--bare {
+    background: transparent;
+    margin-top: 18px;
+    padding: 12px 0 12px 20px;
+    border-left-width: 3px;
+    border-left-style: solid;
+  }
+  .concept-card.baseline .formula-display { border-color: var(--ink-mute); }
+  .concept-card.sail .formula-display { border-color: var(--sail); }
+  .formula-display .katex-display { margin: 0; }
+  .formula-caption {
+    margin-top: 14px;
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+
+  .formula-display--ric { border-left-color: var(--ink-mute); }
+  .formula-display--eric { border-left-color: var(--sail); }
+
+  /* ============ FOOTER ============ */
+  footer {
+    margin-top: 100px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-mute);
+    letter-spacing: 0.05em;
+  }
+
+  /* ============ SITE NAV ============ */
+  .site-nav {
+    position: relative;
+    z-index: 10;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px 48px 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .site-nav a {
+    color: var(--ink-mute);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .site-nav a:hover { color: var(--sail); }
+
+  @media (max-width: 1000px) {
+    .site-nav { padding-left: 20px; padding-right: 20px; }
+    .wrap { padding: 32px 20px; }
+    .headline-metrics { grid-template-columns: repeat(2, 1fr); }
+    .small-multiples { grid-template-columns: 1fr; }
+    .sm-panel { border-right: none; border-bottom: 1px solid var(--line); }
+    .wall-grid { grid-template-columns: 1fr; }
+    .concept { grid-template-columns: 1fr; }
+    .header-row { grid-template-columns: 1fr; }
+    .authors { text-align: left; }
+  }
+
+</style>
+</head>
+<body>
+<canvas id="sail-particle-canvas" aria-hidden="true"></canvas>
+<nav class="site-nav"><a href="index.html">&larr; Back to site</a></nav>
+
+<div class="tooltip" id="tooltip"></div>
+
+<div class="wrap">
+
+  <!-- ===================== HEADER ===================== -->
+  <header>
+    <div class="header-row">
+      <div>
+        <div class="eyebrow">Solver-Aligned Initialization Learning · NeurIPS</div>
+        <h1>An ML initial guess that<br>doesn't <em>break</em> on big molecules.</h1>
+        <div class="paper-links">
+          <a href="https://arxiv.org/abs/2604.21657" target="_blank" rel="noopener noreferrer">Paper (arXiv)</a>
+        </div>
+        <p class="lede">Matrix-prediction models trained on ground-state targets <em style="color: var(--danger); font-style: italic;">decelerate</em> the SCF solver when extrapolating beyond their training distribution. SAIL fixes this by backpropagating through the SCF solver itself — supervising the trajectory toward self-consistency rather than fitting a converged matrix. The result: reliable acceleration 10× past the training distribution, on hybrid functionals, with no labels required.</p>
+      </div>
+      <div class="authors">
+        <div><strong>Eberhard, Kotsev,</strong></div>
+        <div><strong>Güthle, Günnemann</strong></div>
+        <div style="margin-top: 14px; opacity: 0.7;">TUM / MDSI / MCML</div>
+      </div>
+    </div>
+
+    <div class="headline-metrics">
+      <div class="metric">
+        <div class="label">PBE / def2-SVP</div>
+        <div class="big"><span class="metric-num">37</span><span class="metric-unit">%</span></div>
+        <div class="sub">ERIC reduction on QM40</div>
+      </div>
+      <div class="metric">
+        <div class="label">SCAN / def2-SVP</div>
+        <div class="big"><span class="metric-num">33</span><span class="metric-unit">%</span></div>
+        <div class="sub">ERIC reduction on QM40</div>
+      </div>
+      <div class="metric">
+        <div class="label">B3LYP / def2-SVP</div>
+        <div class="big"><span class="metric-num">28</span><span class="metric-unit">%</span></div>
+        <div class="sub">ERIC reduction on QM40</div>
+      </div>
+      <div class="metric">
+        <div class="label">B3LYP wall-time · QMugs</div>
+        <div class="big"><span class="metric-num">1.35</span><span class="metric-unit">×</span></div>
+        <div class="sub">Wall-Time Speedup on QMugs</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== CONCEPT ===================== -->
+  <section style="margin-top: 56px;">
+    <div class="section-header">
+      <h2>Two losses, opposite outcomes</h2>
+      <span class="section-meta">Supervision matters</span>
+    </div>
+    <p class="section-intro">Both approaches use the same backbone — an SE(3)-equivariant GNN reading the molecular point cloud. They differ only in <strong>what they minimize</strong>. The matrix surrogate loss fits a converged target tensor; SAIL minimizes the energy gradient along the SCF trajectory. The surrogate target tells you where to land; the trajectory loss tells you how the solver gets there.</p>
+
+    <div class="concept">
+      <div class="concept-card baseline">
+        <span class="concept-tag">Baseline · ground-state supervision</span>
+        <div class="heading">Fit the converged tensor.</div>
+        <p>Train the ML head to reproduce the SCF-converged matrix on labeled data. The loss is small at the answer — but it weighs all matrix entries uniformly, including occupied–occupied and virtual–virtual rotations that don't affect the energy or the solver dynamics.</p>
+        <div class="formula-display" id="loss-base-wrap"><span id="katex-loss-base"></span></div>
+        <p class="formula-caption">Ground-state surrogate: small error at the converged solution, but poor extrapolation when molecules leave the training hull.</p>
+      </div>
+      <div class="concept-card sail">
+        <span class="concept-tag">SAIL · trajectory supervision</span>
+        <div class="heading">Differentiate through the solver.</div>
+        <p>Run T SCF cycles end-to-end from the predicted P⁽⁰⁾. At each cycle compute the RMS energy gradient on the Grassmannian; sum, backpropagate through DIIS and the eigendecomposition into the GNN. Label-free — only the geometry is needed.</p>
+        <div class="formula-display" id="loss-sail-wrap"><span id="katex-loss-sail"></span></div>
+        <p class="formula-caption">Trajectory loss: penalizes non-stationarity each SCF cycle—label-free except for geometry.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SIZE + WALL-TIME ===================== -->
+  <section>
+    <div class="section-header">
+      <h2>Size extrapolation, B3LYP / def2-SVP</h2>
+      <span class="section-meta">QM9 → QM40 → QMugs · trained on ≤ 20 atoms</span>
+    </div>
+    <p class="section-intro">Every model below was trained on the same QM9 split (molecules with ≤ 20 atoms) and evaluated across the full range up to 90 heavy atoms — <strong>10× larger</strong> than anything seen during training. We summarize solver cost with <strong>ERIC</strong> (<span class="eric-initial">E</span>ffective <span class="eric-initial">R</span>elative <span class="eric-initial">I</span>teration <span class="eric-initial">C</span>ount), defined as in the paper: ERIC &lt; 1 means speedup over the standard MINAO guess; ERIC &gt; 1 means the ML initialization <em style="color: var(--danger); font-style: italic;">slows the solver down</em>. Click legend items to toggle series. Shaded vertical bands mark heavy-atom bins shared with the linked bar charts in this figure—hover any chart to emphasize the same bin.</p>
+    <p class="section-intro"><strong>B3LYP / def2-SVP · NVIDIA A100 · GPU4PySCF.</strong> ERIC is a proxy. Below we measure actual SCF wall-time on the GPU, including the model forward pass and initial-guess construction. The speedup grows roughly linearly with molecular size on QMugs and <em>does not degrade</em> 10× beyond training — confirming that the ERIC reductions translate into hybrid-functional wall-time on drug-like molecules.</p>
+
+    <div class="panel panel-combined-size-wall" id="combined-size-wall-panel">
+      <div class="combined-size-wall-eric">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title"><span class="eric-initial">E</span>ffective <span class="eric-initial">R</span>elative <span class="eric-initial">I</span>teration <span class="eric-initial">C</span>ount <span class="eric-abbr">(ERIC)</span></div>
+            <div class="panel-sub">Solid lines: SAIL. Dotted lines: baseline (ground-state supervised). Bands: ±1 SE across ≥30 molecules per bin. Default axis: logarithmic (as in the paper). Drag the circular handle on the left axis to split the mapping at ERIC = 1 — linear stretch for speedups below 1, logarithmic for slowdowns above 1. Double-click the handle to restore the default.</div>
+          </div>
+          <div class="legend" id="fig1-legend"></div>
+        </div>
+        <svg class="chart" id="fig1-chart" viewBox="0 0 1280 540"></svg>
+      </div>
+      <div class="wall-grid wall-grid--combined">
+        <div>
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">SCF wall-time by molecule size</div>
+              <div class="panel-sub">Hover bars for breakdown. Numbers above show ratio of baseline to best ML method (density P). Vertical time scales align with the breakdown panel (70 s and 7 s span the same height).</div>
+            </div>
+          </div>
+          <svg class="chart" id="fig5-chart" viewBox="0 0 820 480"></svg>
+          <div class="legend" id="fig5-legend" style="margin-top: 12px;"></div>
+        </div>
+        <div>
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Initial-guess cost breakdown</div>
+              <div class="panel-sub">Per-component time on QMugs. The hidden Fock build M<sub>P→F</sub> is why ERIC matters.</div>
+            </div>
+          </div>
+          <svg class="chart" id="fig5b-chart" viewBox="0 0 820 480"></svg>
+          <div class="legend" id="fig5b-legend" style="margin-top: 12px;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-header">
+      <h2>Why ERIC and not RIC?</h2>
+      <span class="section-meta">Eqs. (6)–(7) · preprint</span>
+    </div>
+    <p class="section-intro fade-in">Prior work often reports acceleration using the <strong>relative iteration count (RIC)</strong>: the number of SCF iterations starting from a learned guess, divided by the iterations needed from an established non-ML reference initialization <strong>P</strong><sub>ref</sub><sup>(0)</sup> (for example MINAO). RIC ignores hidden work in the initialization—such as extra Fock constructions inside Δ-learning or coefficient pipelines—so it need not match wall-time speedup.</p>
+    <p class="section-intro fade-in">The <strong>effective relative iteration count (ERIC)</strong> is the paper’s correction: it counts every Fock build from initialization through convergence, including those performed only to obtain <strong>P</strong><sup>(0)</sup>. On hybrids, where each iteration is dominated by the Fock update, ERIC tracks total Fock work more faithfully than raw iteration counts.</p>
+    <div class="formula-display formula-display--bare formula-display--ric fade-in"><span id="katex-ric-def"></span></div>
+    <p class="formula-caption fade-in"><strong>RIC</strong> — iteration ratio only (Eq.&nbsp;6).</p>
+    <div class="formula-display formula-display--bare formula-display--eric fade-in"><span id="katex-eric-def"></span></div>
+    <p class="formula-caption fade-in"><strong>ERIC</strong> — ratio of total Fock builds, including initialization (Eq.&nbsp;7). Values below 1 mean fewer Fock builds than the reference; above 1 mean the ML pipeline costs more in Fock-equivalent units.</p>
+  </section>
+
+  <!-- ===================== FUNCTIONALS ===================== -->
+  <section>
+    <div class="section-header">
+      <h2>Three rungs of Jacob's ladder</h2>
+      <span class="section-meta">GGA · meta-GGA · hybrid</span>
+    </div>
+    <p class="section-intro">The same failure mode reappears across all three functional classes — baselines diverge on Hamiltonian and density-matrix ansätze, while the coefficient model stays flat but cannot fall below ~0.85 on SCAN and B3LYP because it has to compensate for fixed Fock-build substitutions. <strong>SAIL flattens every curve</strong>, regardless of functional or ansatz.</p>
+
+    <div class="small-multiples" id="fig4-grid">
+      <!-- Filled by JS -->
+    </div>
+    <div style="display: flex; justify-content: center; margin-top: 24px;">
+      <div class="legend" id="fig4-legend"></div>
+    </div>
+  </section>
+
+  <!-- ===================== BASIS TABLE ===================== -->
+  <section>
+    <div class="section-header">
+      <h2>Across basis sets, without retraining</h2>
+      <span class="section-meta">Coefficient ansatz · B3LYP · QM40</span>
+    </div>
+    <p class="section-intro">Matrix-based ansätze tie their predictions to a specific AO basis and must be retrained per target. Coefficient models predict in a fixed auxiliary basis and apply unchanged to any compatible AO basis. <strong>Train on def2-SVP, evaluate on def2-QZVP</strong> — and SAIL still beats the surrogate-trained baseline.</p>
+
+    <div class="basis-table">
+      <div class="bt-header">
+        <div>Target basis set</div>
+        <div>RIC baseline</div>
+        <div>RIC SAIL</div>
+        <div>ERIC baseline</div>
+        <div>ERIC SAIL</div>
+        <div>SAIL improvement</div>
+      </div>
+      <div class="bt-row" data-basis="svp">
+        <div class="bt-basis">def2-SVP <span class="id-tag">ID</span></div>
+        <div class="bt-num base">0.83</div>
+        <div class="bt-num improved">0.67</div>
+        <div class="bt-num base">0.91</div>
+        <div class="bt-num improved">0.75</div>
+        <div class="bt-bar">
+          <div class="bt-bar-track"><div class="bt-bar-fill" style="width: 100%;"></div></div>
+          <div class="bt-delta">−16%</div>
+        </div>
+      </div>
+      <div class="bt-row" data-basis="tzvp">
+        <div class="bt-basis">def2-TZVP <span class="ood-tag">OOD</span></div>
+        <div class="bt-num base">0.82</div>
+        <div class="bt-num improved">0.74</div>
+        <div class="bt-num base">0.90</div>
+        <div class="bt-num improved">0.82</div>
+        <div class="bt-bar">
+          <div class="bt-bar-track"><div class="bt-bar-fill" style="width: 50%;"></div></div>
+          <div class="bt-delta">−8%</div>
+        </div>
+      </div>
+      <div class="bt-row" data-basis="tzvppd">
+        <div class="bt-basis">def2-TZVPPD <span class="ood-tag">OOD</span></div>
+        <div class="bt-num base">0.82</div>
+        <div class="bt-num improved">0.74</div>
+        <div class="bt-num base">0.90</div>
+        <div class="bt-num improved">0.82</div>
+        <div class="bt-bar">
+          <div class="bt-bar-track"><div class="bt-bar-fill" style="width: 50%;"></div></div>
+          <div class="bt-delta">−8%</div>
+        </div>
+      </div>
+      <div class="bt-row" data-basis="qzvp">
+        <div class="bt-basis">def2-QZVP <span class="ood-tag">OOD</span></div>
+        <div class="bt-num base">0.82</div>
+        <div class="bt-num improved">0.74</div>
+        <div class="bt-num base">0.90</div>
+        <div class="bt-num improved">0.82</div>
+        <div class="bt-bar">
+          <div class="bt-bar-track"><div class="bt-bar-fill" style="width: 50%;"></div></div>
+          <div class="bt-delta">−8%</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>Eberhard, Kotsev, Güthle &amp; Günnemann · <em style="color: var(--ink-soft); font-style: italic;">SAIL</em> · 2026</div>
+    <div>Data digitized from main-paper figures · interactive companion</div>
+  </footer>
+
+</div>
+
+<script>
+// =====================================================================
+//   DATA — digitized from the paper's figures (acceleration_b3lyp.pdf,
+//   acc_combined.pdf, wall_time_b3lyp_v2.pdf) and Table 2.
+// =====================================================================
+
+const COLORS = {
+  P: '#e9966c',
+  F: '#7fb069',
+  c: '#5b8bb5',
+  sail: '#f4c95d',
+  ink: '#ece7d9',
+  inkSoft: '#b5af9f',
+  inkMute: '#756f63',
+  bg: '#0a0e14',
+  bgSoft: '#11161e',
+  danger: '#c97a6d'
+};
+
+/** Same N_heavy bins as SCF wall-time / acquisition bar charts — linked highlights with Fig. 1 */
+const WALL_HEAVY_ATOM_BINS = [12, 24, 36, 40, 50, 60, 70, 80, 90];
+
+/** Fig 1 SVG geometry — kept in one place for drag math */
+const FIG1_VIEW = {
+  W: 1280,
+  H: 540,
+  margin: { top: 30, right: 30, bottom: 70, left: 70 }
+};
+/**
+ * Pixel y where ERIC = 1 is drawn when hybrid mode is on. Ignored until first drag.
+ */
+let sailFig1AnchorY1 = null;
+/** After first drag on the handle: linear [yMin,1], log (1,yMax]; until then pure log like the paper figure */
+let sailFig1Hybrid = false;
+let sailFig1Dragging = false;
+
+function svgClientToLocal(svg, clientX, clientY) {
+  const pt = svg.createSVGPoint();
+  pt.x = clientX;
+  pt.y = clientY;
+  const ctm = svg.getScreenCTM();
+  if (!ctm) return { x: 0, y: 0 };
+  const loc = pt.matrixTransform(ctm.inverse());
+  return { x: loc.x, y: loc.y };
+}
+
+function syncHeavyAtomHighlight(n) {
+  const hit = WALL_HEAVY_ATOM_BINS.includes(n);
+  document.querySelectorAll('#fig1-chart .bin-highlight-band').forEach((el) => {
+    el.classList.toggle('is-active', hit && +el.dataset.n === n);
+  });
+  document.querySelectorAll('.wall-group').forEach((g) => {
+    g.classList.toggle('wall-bin-active', hit && +g.dataset.n === n);
+  });
+  document.querySelectorAll('.acq-group').forEach((g) => {
+    g.classList.toggle('acq-bin-active', hit && +g.dataset.n === n);
+  });
+}
+
+function clearHeavyAtomHighlight() {
+  document.querySelectorAll('#fig1-chart .bin-highlight-band').forEach((el) => el.classList.remove('is-active'));
+  document.querySelectorAll('.wall-group').forEach((g) => g.classList.remove('wall-bin-active'));
+  document.querySelectorAll('.acq-group').forEach((g) => g.classList.remove('acq-bin-active'));
+}
+
+function renderLossEquations() {
+  if (typeof katex === 'undefined') return;
+  const elB = document.getElementById('katex-loss-base');
+  const elS = document.getElementById('katex-loss-sail');
+  if (elB) {
+    katex.render(
+      String.raw`\mathcal{L}_{F} = \|\hat{F} - F^{\star}\|_{\mathrm{F}} + \|\hat{F} - F^{\star}\|_{1}`,
+      elB,
+      { displayMode: true, throwOnError: false }
+    );
+  }
+  if (elS) {
+    katex.render(
+      String.raw`\mathcal{L}_{\mathrm{SAIL}} = \frac{1}{T} \sum_{t} \sqrt{\left\langle \left( (C^{\mathrm{occ}})^{\mathsf{T}} F^{(t)} C^{\mathrm{virt}} \right)^{2} \right\rangle}`,
+      elS,
+      { displayMode: true, throwOnError: false }
+    );
+  }
+}
+
+function renderEricRicEquations() {
+  if (typeof katex === 'undefined') return;
+  const elRic = document.getElementById('katex-ric-def');
+  const elEric = document.getElementById('katex-eric-def');
+  if (elRic) {
+    katex.render(
+      String.raw`\mathrm{RIC} = \frac{\#\,\text{SCF iterations from learned initialization}}{\#\,\text{SCF iterations from }\mathbf{P}_{\mathrm{ref}}^{(0)}}`,
+      elRic,
+      { displayMode: true, throwOnError: false }
+    );
+  }
+  if (elEric) {
+    katex.render(
+      String.raw`\mathrm{ERIC} = \frac{\#\,\text{total Fock builds required for SCF with ML initialization}}{\#\,\text{Fock builds when starting from }\mathbf{P}_{\mathrm{ref}}^{(0)}}`,
+      elEric,
+      { displayMode: true, throwOnError: false }
+    );
+  }
+}
+
+// ---------- Figure 1: B3LYP size extrapolation ----------
+// QM9: 4-9 heavy atoms, QM40: 10-38, QMugs: 40-90
+// Values approximated from paper Figure 1; preserves shape, magnitude, and trends.
+function buildFig1Data() {
+  const data = { P: { base: [], sail: [] }, F: { base: [], sail: [] }, c: { base: [], sail: [] } };
+
+  // QM9 region: ages 4-9
+  const qm9_x = [4, 5, 6, 7, 8, 9];
+
+  // QM40 region: 10-38
+  const qm40_x = [];
+  for (let i = 10; i <= 38; i++) qm40_x.push(i);
+
+  // QMugs region: discrete bins
+  const qmugs_x = [40, 50, 60, 70, 80, 90];
+
+  // Baseline F (green dotted): jumps up sharply at ~N=14
+  const baseF = {
+    4: 0.86, 5: 0.83, 6: 0.78, 7: 0.78, 8: 0.81, 9: 1.00,
+    10: 0.86, 11: 0.94, 12: 1.06, 13: 0.94, 14: 1.36,
+    15: 1.52, 16: 1.58, 17: 1.62, 18: 1.66, 19: 1.62, 20: 1.66,
+    21: 1.70, 22: 1.66, 23: 1.78, 24: 1.86, 25: 1.86, 26: 1.94,
+    27: 1.97, 28: 2.00, 29: 1.94, 30: 1.94, 31: 1.95, 32: 1.95,
+    33: 1.94, 34: 1.96, 35: 1.96, 36: 1.97, 37: 1.99, 38: 2.00,
+    40: 2.00, 50: 2.50, 60: 2.70, 70: 2.86, 80: 3.05, 90: 3.18
+  };
+
+  // Baseline P (orange dotted): rises gradually
+  const baseP = {
+    4: 0.79, 5: 0.79, 6: 0.79, 7: 0.78, 8: 0.78, 9: 0.95,
+    10: 0.84, 11: 0.86, 12: 0.98, 13: 0.94, 14: 0.99,
+    15: 1.04, 16: 1.13, 17: 1.19, 18: 1.20, 19: 1.20, 20: 1.25,
+    21: 1.30, 22: 1.40, 23: 1.45, 24: 1.50, 25: 1.50, 26: 1.50,
+    27: 1.55, 28: 1.45, 29: 1.40, 30: 1.40, 31: 1.45, 32: 1.40,
+    33: 1.40, 34: 1.35, 35: 1.40, 36: 1.50, 37: 1.50, 38: 1.55,
+    40: 1.66, 50: 1.86, 60: 2.20, 70: 2.45, 80: 2.85, 90: 3.05
+  };
+
+  // Baseline c (blue dotted): mostly flat ~0.92
+  const baseC = {
+    4: 0.95, 5: 0.95, 6: 0.92, 7: 0.92, 8: 1.00, 9: 0.92,
+    10: 0.92, 11: 0.92, 12: 0.92, 13: 0.92, 14: 0.92,
+    15: 0.92, 16: 0.93, 17: 0.93, 18: 0.93, 19: 0.93, 20: 0.92,
+    21: 0.92, 22: 0.93, 23: 0.93, 24: 0.93, 25: 0.93, 26: 0.92,
+    27: 0.92, 28: 0.93, 29: 0.93, 30: 0.93, 31: 0.92, 32: 0.93,
+    33: 0.93, 34: 0.93, 35: 0.93, 36: 0.93, 37: 0.92, 38: 0.92,
+    40: 0.93, 50: 0.92, 60: 0.90, 70: 0.90, 80: 0.91, 90: 0.88
+  };
+
+  // SAIL P (orange solid)
+  const sailP = {
+    4: 0.68, 5: 0.70, 6: 0.69, 7: 0.71, 8: 0.71, 9: 0.83,
+    10: 0.75, 11: 0.77, 12: 0.80, 13: 0.78, 14: 0.73,
+    15: 0.72, 16: 0.71, 17: 0.70, 18: 0.71, 19: 0.72, 20: 0.71,
+    21: 0.71, 22: 0.71, 23: 0.72, 24: 0.72, 25: 0.71, 26: 0.71,
+    27: 0.72, 28: 0.72, 29: 0.72, 30: 0.72, 31: 0.72, 32: 0.72,
+    33: 0.72, 34: 0.72, 35: 0.72, 36: 0.73, 37: 0.72, 38: 0.73,
+    40: 0.80, 50: 0.78, 60: 0.78, 70: 0.78, 80: 0.78, 90: 0.76
+  };
+
+  // SAIL F (green solid)
+  const sailF = {
+    4: 0.72, 5: 0.71, 6: 0.71, 7: 0.74, 8: 0.74, 9: 0.85,
+    10: 0.77, 11: 0.79, 12: 0.82, 13: 0.80, 14: 0.76,
+    15: 0.75, 16: 0.74, 17: 0.73, 18: 0.74, 19: 0.75, 20: 0.74,
+    21: 0.74, 22: 0.74, 23: 0.75, 24: 0.75, 25: 0.74, 26: 0.74,
+    27: 0.75, 28: 0.75, 29: 0.75, 30: 0.75, 31: 0.75, 32: 0.75,
+    33: 0.75, 34: 0.75, 35: 0.75, 36: 0.76, 37: 0.75, 38: 0.76,
+    40: 0.80, 50: 0.79, 60: 0.78, 70: 0.78, 80: 0.78, 90: 0.79
+  };
+
+  // SAIL c (blue solid)
+  const sailC = {
+    4: 0.72, 5: 0.74, 6: 0.73, 7: 0.75, 8: 0.74, 9: 0.86,
+    10: 0.78, 11: 0.80, 12: 0.83, 13: 0.82, 14: 0.76,
+    15: 0.74, 16: 0.73, 17: 0.72, 18: 0.73, 19: 0.74, 20: 0.73,
+    21: 0.73, 22: 0.73, 23: 0.74, 24: 0.74, 25: 0.74, 26: 0.74,
+    27: 0.75, 28: 0.75, 29: 0.75, 30: 0.74, 31: 0.74, 32: 0.74,
+    33: 0.75, 34: 0.74, 35: 0.74, 36: 0.74, 37: 0.74, 38: 0.74,
+    40: 0.80, 50: 0.78, 60: 0.76, 70: 0.76, 80: 0.75, 90: 0.74
+  };
+
+  const allX = [...qm9_x, ...qm40_x, ...qmugs_x];
+
+  allX.forEach((x) => {
+    data.P.base.push({ x, y: baseP[x] });
+    data.P.sail.push({ x, y: sailP[x] });
+    data.F.base.push({ x, y: baseF[x] });
+    data.F.sail.push({ x, y: sailF[x] });
+    data.c.base.push({ x, y: baseC[x] });
+    data.c.sail.push({ x, y: sailC[x] });
+  });
+
+  return data;
+}
+
+const FIG1_DATA = buildFig1Data();
+
+// ---------- Figure 4: per-functional ERIC vs Nheavy (QM9+QM40 only, 4-37) ----------
+function buildFig4Data() {
+  // PBE, SCAN, B3LYP
+  // For brevity, sample at every other heavy atom + key inflection points
+  const data = { PBE: {}, SCAN: {}, B3LYP: {} };
+
+  // PBE
+  data.PBE.baseF = [
+    [4, 0.85], [6, 0.78], [8, 0.76], [10, 0.78], [12, 0.78], [14, 0.78],
+    [16, 0.85], [18, 0.85], [20, 0.78], [22, 0.95], [23, 1.30], [24, 1.75],
+    [25, 1.85], [27, 1.92], [29, 1.95], [31, 1.95], [33, 1.96], [35, 1.97], [37, 1.99]
+  ];
+  data.PBE.baseP = [
+    [4, 0.78], [6, 0.72], [8, 0.74], [10, 0.78], [12, 0.85], [14, 0.85],
+    [16, 0.90], [18, 0.90], [20, 0.95], [22, 1.00], [24, 1.02], [26, 1.05],
+    [28, 1.10], [30, 1.18], [32, 1.10], [34, 1.20], [37, 1.30]
+  ];
+  data.PBE.baseC = [
+    [4, 0.55], [6, 0.62], [8, 0.62], [10, 0.62], [12, 0.62], [14, 0.62],
+    [16, 0.62], [18, 0.62], [20, 0.61], [22, 0.62], [24, 0.62], [26, 0.62],
+    [28, 0.62], [30, 0.62], [32, 0.62], [34, 0.62], [37, 0.63]
+  ];
+  data.PBE.sailF = [
+    [4, 0.71], [6, 0.70], [8, 0.70], [10, 0.72], [12, 0.71], [14, 0.69],
+    [16, 0.69], [18, 0.68], [20, 0.68], [22, 0.78], [23, 0.86], [24, 0.65],
+    [26, 0.65], [28, 0.65], [30, 0.66], [32, 0.66], [34, 0.67], [37, 0.68]
+  ];
+  data.PBE.sailP = [
+    [4, 0.62], [6, 0.65], [8, 0.62], [10, 0.65], [12, 0.66], [14, 0.65],
+    [16, 0.64], [18, 0.63], [20, 0.62], [22, 0.65], [24, 0.62], [26, 0.62],
+    [28, 0.62], [30, 0.62], [32, 0.62], [34, 0.63], [37, 0.63]
+  ];
+  data.PBE.sailC = [
+    [4, 0.66], [6, 0.68], [8, 0.66], [10, 0.66], [12, 0.66], [14, 0.65],
+    [16, 0.66], [18, 0.65], [20, 0.65], [22, 0.66], [24, 0.66], [26, 0.66],
+    [28, 0.66], [30, 0.66], [32, 0.66], [34, 0.66], [37, 0.66]
+  ];
+
+  // SCAN
+  data.SCAN.baseF = [
+    [4, 0.85], [6, 0.85], [8, 0.80], [10, 0.85], [12, 0.85], [14, 0.85],
+    [16, 1.05], [18, 1.10], [20, 1.10], [22, 1.20], [23, 1.40], [24, 1.80],
+    [26, 1.90], [28, 1.95], [30, 2.00], [32, 2.05], [34, 2.05], [37, 2.10]
+  ];
+  data.SCAN.baseP = [
+    [4, 1.00], [6, 0.95], [8, 0.95], [10, 0.98], [12, 0.95], [14, 1.00],
+    [16, 1.05], [18, 1.05], [20, 1.10], [22, 1.18], [24, 1.20], [26, 1.20],
+    [28, 1.25], [30, 1.25], [32, 1.20], [34, 1.30], [37, 1.40]
+  ];
+  data.SCAN.baseC = [
+    [4, 0.88], [6, 0.88], [8, 0.85], [10, 0.85], [12, 0.85], [14, 0.85],
+    [16, 0.85], [18, 0.85], [20, 0.85], [22, 0.85], [24, 0.84], [26, 0.84],
+    [28, 0.85], [30, 0.85], [32, 0.85], [34, 0.85], [37, 0.85]
+  ];
+  data.SCAN.sailF = [
+    [4, 0.71], [6, 0.72], [8, 0.72], [10, 0.75], [12, 0.75], [14, 0.73],
+    [16, 0.73], [18, 0.72], [20, 0.73], [22, 0.78], [23, 0.82], [24, 0.72],
+    [26, 0.73], [28, 0.73], [30, 0.73], [32, 0.74], [34, 0.74], [37, 0.75]
+  ];
+  data.SCAN.sailP = [
+    [4, 0.67], [6, 0.68], [8, 0.66], [10, 0.69], [12, 0.70], [14, 0.68],
+    [16, 0.66], [18, 0.66], [20, 0.65], [22, 0.70], [24, 0.66], [26, 0.66],
+    [28, 0.66], [30, 0.66], [32, 0.66], [34, 0.66], [37, 0.67]
+  ];
+  data.SCAN.sailC = [
+    [4, 0.65], [6, 0.69], [8, 0.69], [10, 0.71], [12, 0.71], [14, 0.71],
+    [16, 0.72], [18, 0.72], [20, 0.72], [22, 0.74], [24, 0.74], [26, 0.74],
+    [28, 0.74], [30, 0.74], [32, 0.74], [34, 0.74], [37, 0.74]
+  ];
+
+  // B3LYP
+  data.B3LYP.baseF = [
+    [4, 0.85], [6, 0.78], [8, 0.81], [10, 0.86], [12, 1.06], [14, 1.36],
+    [16, 1.58], [18, 1.66], [20, 1.66], [22, 1.66], [24, 1.86], [26, 1.94],
+    [28, 2.00], [30, 1.94], [32, 1.95], [34, 1.96], [37, 1.99]
+  ];
+  data.B3LYP.baseP = [
+    [4, 0.79], [6, 0.79], [8, 0.78], [10, 0.84], [12, 0.98], [14, 0.99],
+    [16, 1.13], [18, 1.20], [20, 1.25], [22, 1.40], [24, 1.50], [26, 1.50],
+    [28, 1.45], [30, 1.40], [32, 1.40], [34, 1.35], [37, 1.50]
+  ];
+  data.B3LYP.baseC = [
+    [4, 0.95], [6, 0.92], [8, 1.00], [10, 0.92], [12, 0.92], [14, 0.92],
+    [16, 0.93], [18, 0.93], [20, 0.92], [22, 0.93], [24, 0.93], [26, 0.92],
+    [28, 0.93], [30, 0.93], [32, 0.93], [34, 0.93], [37, 0.92]
+  ];
+  data.B3LYP.sailF = [
+    [4, 0.72], [6, 0.71], [8, 0.74], [10, 0.77], [12, 0.82], [14, 0.76],
+    [16, 0.74], [18, 0.74], [20, 0.74], [22, 0.74], [24, 0.75], [26, 0.74],
+    [28, 0.75], [30, 0.75], [32, 0.75], [34, 0.75], [37, 0.75]
+  ];
+  data.B3LYP.sailP = [
+    [4, 0.68], [6, 0.69], [8, 0.71], [10, 0.75], [12, 0.80], [14, 0.73],
+    [16, 0.71], [18, 0.71], [20, 0.71], [22, 0.71], [24, 0.72], [26, 0.71],
+    [28, 0.72], [30, 0.72], [32, 0.72], [34, 0.72], [37, 0.72]
+  ];
+  data.B3LYP.sailC = [
+    [4, 0.72], [6, 0.73], [8, 0.74], [10, 0.78], [12, 0.83], [14, 0.76],
+    [16, 0.73], [18, 0.73], [20, 0.73], [22, 0.73], [24, 0.74], [26, 0.74],
+    [28, 0.75], [30, 0.74], [32, 0.74], [34, 0.74], [37, 0.74]
+  ];
+
+  return data;
+}
+
+const FIG4_DATA = buildFig4Data();
+
+// ---------- Figure 5: wall-time bars ----------
+// Heights digitized from wall_time_b3lyp_v2.pdf
+const FIG5_WALL = [
+  { N: 12, baseline: 5.4, coeffs: 4.3, density: 4.3, hamiltonian: 4.3, p0: 0.6, speedup: 1.28 },
+  { N: 24, baseline: 8.0, coeffs: 5.5, density: 5.6, hamiltonian: 5.6, p0: 0.9, speedup: 1.44 },
+  { N: 36, baseline: 11.5, coeffs: 8.5, density: 8.5, hamiltonian: 8.5, p0: 1.3, speedup: 1.36 },
+  { N: 40, baseline: 13.5, coeffs: 10.7, density: 10.7, hamiltonian: 11.0, p0: 1.6, speedup: 1.26 },
+  { N: 50, baseline: 18.5, coeffs: 14.2, density: 14.2, hamiltonian: 15.0, p0: 2.4, speedup: 1.30 },
+  { N: 60, baseline: 28.0, coeffs: 21.0, density: 21.4, hamiltonian: 22.5, p0: 3.3, speedup: 1.32 },
+  { N: 70, baseline: 40.0, coeffs: 30.0, density: 30.5, hamiltonian: 33.0, p0: 4.2, speedup: 1.35 },
+  { N: 80, baseline: 44.0, coeffs: 33.0, density: 35.5, hamiltonian: 37.0, p0: 5.4, speedup: 1.35 },
+  { N: 90, baseline: 70.0, coeffs: 50.5, density: 54.5, hamiltonian: 58.5, p0: 9.3, speedup: 1.38 }
+];
+
+// ---------- Figure 5 right: acquisition cost breakdown ----------
+const FIG5_ACQ = [
+  { N: 40, minao: 0.27, fwdX: 0.08, fwdC: 0.05, mcf: 0.80, mpf: 0.78, mfp: 0.05 },
+  { N: 50, minao: 0.43, fwdX: 0.30, fwdC: 0.15, mcf: 1.10, mpf: 1.08, mfp: 0.05 },
+  { N: 60, minao: 0.73, fwdX: 0.35, fwdC: 0.15, mcf: 1.55, mpf: 1.80, mfp: 0.05 },
+  { N: 70, minao: 1.05, fwdX: 0.45, fwdC: 0.15, mcf: 1.92, mpf: 2.75, mfp: 0.10 },
+  { N: 80, minao: 1.55, fwdX: 0.55, fwdC: 0.22, mcf: 2.15, mpf: 3.70, mfp: 0.10 },
+  { N: 90, minao: 2.45, fwdX: 0.75, fwdC: 0.30, mcf: 3.05, mpf: 6.20, mfp: 0.10 }
+];
+
+// =====================================================================
+//   TOOLTIP
+// =====================================================================
+const tooltip = document.getElementById('tooltip');
+function showTooltip(html, x, y) {
+  tooltip.innerHTML = html;
+  tooltip.classList.add('visible');
+  const rect = tooltip.getBoundingClientRect();
+  let nx = x + 16;
+  let ny = y - rect.height / 2;
+  if (nx + rect.width > window.innerWidth - 12) nx = x - rect.width - 16;
+  if (ny < 12) ny = 12;
+  if (ny + rect.height > window.innerHeight - 12) ny = window.innerHeight - rect.height - 12;
+  tooltip.style.left = nx + 'px';
+  tooltip.style.top = ny + 'px';
+}
+function hideTooltip() {
+  tooltip.classList.remove('visible');
+}
+
+/** One tooltip for Fig 1 + wall-time + acquisition when hovering any linked chart at the same N_heavy */
+function showUnifiedBinTooltip(n, clientX, clientY) {
+  const region = n < 10 ? 'QM9 (in-distribution)' : (n < 39 ? 'QM40 (OOD)' : 'QMugs (10× OOD)');
+  let html = `<div class="tt-header">N<sub>heavy</sub> = ${n} · ${region}</div>`;
+
+  html += `<div class="tt-section">ERIC</div>`;
+  html += `<div class="tt-note">Fig.&nbsp;1 — grouped by input ansatz; training method determines baseline vs SAIL.</div>`;
+
+  [
+    { key: 'P', title: 'Density matrix P', color: COLORS.P },
+    { key: 'F', title: 'Hamiltonian F', color: COLORS.F },
+    { key: 'c', title: 'Coefficients c', color: COLORS.c }
+  ].forEach(({ key, title, color }) => {
+    const base = FIG1_DATA[key].base.find((p) => p.x === n);
+    const sail = FIG1_DATA[key].sail.find((p) => p.x === n);
+    if (!base && !sail) return;
+    html += `<div class="tt-subsection"><span class="tt-dot" style="background:${color}"></span>${title}</div>`;
+    if (base) {
+      html += `<div class="tt-row tt-row--sub"><span class="tt-name">Ground-state baseline</span><span class="tt-val">${base.y.toFixed(2)}</span></div>`;
+    }
+    if (sail) {
+      html += `<div class="tt-row tt-row--sub"><span class="tt-name">SAIL</span><span class="tt-val">${sail.y.toFixed(2)}</span></div>`;
+    }
+  });
+
+  const wall = FIG5_WALL.find((g) => g.N === n);
+  if (wall) {
+    html += `<div class="tt-section">SCF wall-time [s]</div>`;
+    html += `<div class="tt-note">Fig.&nbsp;5 (left) — <strong>only SAIL-trained</strong> ML initials (three ansätze), vs MINAO reference. Striped bottom = P₀ acquisition inside each ML bar. Badge = baseline ÷ best SAIL time (density&nbsp;P).</div>`;
+    html += `<div class="tt-subsection">MINAO reference · non-ML</div>`;
+    html += `<div class="tt-row tt-row--sub"><span class="tt-name">Baseline wall-time</span><span class="tt-val">${wall.baseline.toFixed(1)}</span></div>`;
+    html += `<div class="tt-subsection">SAIL-trained ML initials</div>`;
+    html += `<div class="tt-row tt-row--sub"><span class="tt-name"><span class="tt-dot" style="background:${COLORS.c}"></span>Coeffs c</span><span class="tt-val">${wall.coeffs.toFixed(1)}</span></div>`;
+    html += `<div class="tt-row tt-row--sub"><span class="tt-name"><span class="tt-dot" style="background:${COLORS.P}"></span>Density P</span><span class="tt-val">${wall.density.toFixed(1)}</span></div>`;
+    html += `<div class="tt-row tt-row--sub"><span class="tt-name"><span class="tt-dot" style="background:${COLORS.F}"></span>Hamiltonian F</span><span class="tt-val">${wall.hamiltonian.toFixed(1)}</span></div>`;
+    html += `<div class="tt-row tt-row--sub"><span class="tt-name">P₀ acquisition (shared stripe height)</span><span class="tt-val">${wall.p0.toFixed(1)}</span></div>`;
+    html += `<div class="tt-row"><span class="tt-name">Speedup vs best SAIL (density P)</span><span class="tt-val" style="color:${COLORS.sail}">${wall.speedup.toFixed(2)}×</span></div>`;
+  }
+
+  const acq = FIG5_ACQ.find((g) => g.N === n);
+  if (acq) {
+    html += `<div class="tt-section">Initial-guess cost [s]</div>`;
+    html += `<div class="tt-note">Fig.&nbsp;5 (right) — QMugs acquisition breakdown (representative pipeline).</div>`;
+    html += `<div class="tt-subsection">MINAO · reference build</div>`;
+    html += `<div class="tt-row tt-row--sub"><span class="tt-name">MINAO build</span><span class="tt-val">${acq.minao.toFixed(2)}</span></div>`;
+    html += `<div class="tt-subsection">ML forward · training method SAIL</div>`;
+    html += `<div class="tt-row tt-row--sub"><span class="tt-name">Model fwd X</span><span class="tt-val">${acq.fwdX.toFixed(2)}</span></div>`;
+    html += `<div class="tt-row tt-row--sub"><span class="tt-name">Model fwd c</span><span class="tt-val">${acq.fwdC.toFixed(2)}</span></div>`;
+    html += `<div class="tt-subsection">Fock maps · SCF operators</div>`;
+    html += `<div class="tt-row tt-row--sub"><span class="tt-name">M<sub>c→F</sub></span><span class="tt-val">${acq.mcf.toFixed(2)}</span></div>`;
+    html += `<div class="tt-row tt-row--sub"><span class="tt-name">M<sub>P→F</sub></span><span class="tt-val">${acq.mpf.toFixed(2)}</span></div>`;
+    html += `<div class="tt-row tt-row--sub"><span class="tt-name">M<sub>F→P</sub></span><span class="tt-val">${acq.mfp.toFixed(2)}</span></div>`;
+  }
+
+  showTooltip(html, clientX, clientY);
+}
+
+// =====================================================================
+//   FIGURE 1 — Size extrapolation (hero chart)
+// =====================================================================
+function renderFig1() {
+  const svg = document.getElementById('fig1-chart');
+  const { W, H, margin } = FIG1_VIEW;
+  const innerW = W - margin.left - margin.right;
+  const innerH = H - margin.top - margin.bottom;
+  const top = margin.top;
+  const bottom = top + innerH;
+
+  // X scale: linear 4..90
+  const xMin = 4, xMax = 90;
+  const xScale = (x) => margin.left + (x - xMin) / (xMax - xMin) * innerW;
+
+  /**
+   * Y scale: pure log (publication default) until the user drags the ERIC = 1 handle;
+   * then linear on [yMin, 1] and log on (1, yMax], stitched at a draggable row ySplit.
+   */
+  const yMin = 0.65, yMax = 4.0;
+  const yLogAt1 =
+    bottom - (Math.log(1) - Math.log(yMin)) / (Math.log(yMax) - Math.log(yMin)) * innerH;
+  const yScalePureLog = (y) =>
+    bottom - (Math.log(y) - Math.log(yMin)) / (Math.log(yMax) - Math.log(yMin)) * innerH;
+
+  const pad = 12;
+  let ySplit;
+  let yScale;
+  if (!sailFig1Hybrid) {
+    yScale = yScalePureLog;
+    ySplit = yScalePureLog(1);
+  } else {
+    ySplit = sailFig1AnchorY1 == null ? yLogAt1 : sailFig1AnchorY1;
+    ySplit = Math.min(bottom - pad, Math.max(top + pad, ySplit));
+    sailFig1AnchorY1 = ySplit;
+    yScale = (y) => {
+      if (y <= 1) {
+        return bottom - ((bottom - ySplit) * (y - yMin)) / (1 - yMin);
+      }
+      return ySplit - ((ySplit - top) * (Math.log(y) / Math.log(yMax)));
+    };
+  }
+
+  let s = '';
+
+  // Region shading
+  // QM9: 4-9.5
+  // QM40: 9.5-38.5
+  // QMugs: 38.5-90
+  s += `<rect x="${xScale(4)}" y="${margin.top}" width="${xScale(9.5)-xScale(4)}" height="${innerH}" fill="rgba(255,255,255,0.025)"/>`;
+  s += `<rect x="${xScale(9.5)}" y="${margin.top}" width="${xScale(38.5)-xScale(9.5)}" height="${innerH}" fill="rgba(255,255,255,0.015)"/>`;
+
+  WALL_HEAVY_ATOM_BINS.forEach((N, idx) => {
+    const xPrev = idx === 0 ? (xMin + N) / 2 : (WALL_HEAVY_ATOM_BINS[idx - 1] + N) / 2;
+    const xNext = idx === WALL_HEAVY_ATOM_BINS.length - 1 ? xMax : (N + WALL_HEAVY_ATOM_BINS[idx + 1]) / 2;
+    const xa = xScale(xPrev);
+    const xb = xScale(xNext);
+    const w = Math.max(0.8, xb - xa);
+    s += `<rect class="bin-highlight-band" data-n="${N}" x="${xa}" y="${margin.top}" width="${w}" height="${innerH}" fill="${COLORS.sail}" opacity="0.055"/>`;
+  });
+
+  // Region dividers
+  s += `<line x1="${xScale(9.5)}" y1="${margin.top}" x2="${xScale(9.5)}" y2="${margin.top + innerH}" class="region-divider"/>`;
+  s += `<line x1="${xScale(38.5)}" y1="${margin.top}" x2="${xScale(38.5)}" y2="${margin.top + innerH}" class="region-divider"/>`;
+
+  // Region labels
+  s += `<text class="region-label" x="${(xScale(4)+xScale(9.5))/2}" y="${margin.top + 18}" text-anchor="middle">QM9</text>`;
+  s += `<text class="region-label" x="${(xScale(9.5)+xScale(38.5))/2}" y="${margin.top + 18}" text-anchor="middle">QM40</text>`;
+  s += `<text class="region-label" x="${(xScale(38.5)+xScale(90))/2}" y="${margin.top + 18}" text-anchor="middle">QMugs · drug-like</text>`;
+
+  // Gridlines (y) — hybrid map
+  const yTicks = [0.7, 0.8, 0.9, 1.0, 2.0, 3.0, 4.0];
+  yTicks.forEach((t) => {
+    const y = yScale(t);
+    s += `<line class="gridline" x1="${margin.left}" y1="${y}" x2="${margin.left + innerW}" y2="${y}"/>`;
+    s += `<text class="axis-label" x="${margin.left - 14}" y="${y + 4}" text-anchor="end" style="font-size: 13px; text-transform: none;">${t.toFixed(1)}</text>`;
+  });
+  // ref line at 1.0 (ERIC neutrality — draggable splits linear vs log)
+  s += `<line class="ref-line" x1="${margin.left}" y1="${ySplit}" x2="${margin.left + innerW}" y2="${ySplit}"/>`;
+  s += `<text x="${margin.left + innerW - 12}" y="${ySplit - 8}" text-anchor="end" font-family="DM Mono, monospace" font-size="13" fill="${COLORS.danger}">↑ slowdown</text>`;
+  s += `<text x="${margin.left + innerW - 12}" y="${ySplit + 18}" text-anchor="end" font-family="DM Mono, monospace" font-size="13" fill="${COLORS.F}">↓ speedup</text>`;
+
+  // X ticks
+  const xTicks = [10, 20, 30, 40, 50, 60, 70, 80, 90];
+  xTicks.forEach((t) => {
+    const x = xScale(t);
+    s += `<line class="gridline" x1="${x}" y1="${margin.top}" x2="${x}" y2="${margin.top + innerH}" stroke-opacity="0.5"/>`;
+    s += `<text class="axis-label" x="${x}" y="${margin.top + innerH + 24}" text-anchor="middle" style="font-size: 13px; text-transform: none;">${t}</text>`;
+  });
+
+  // Axis labels
+  s += `<text class="axis-label" x="${margin.left + innerW / 2}" y="${margin.top + innerH + 50}" text-anchor="middle"># heavy atoms</text>`;
+  s += `<text class="axis-label" x="${margin.left - 50}" y="${margin.top + innerH / 2}" text-anchor="middle" transform="rotate(-90 ${margin.left - 50} ${margin.top + innerH / 2})">Effective Relative Iteration Count</text>`;
+
+  // OOD arrow
+  s += `<line x1="${xScale(9.5)}" y1="${margin.top + innerH - 8}" x2="${xScale(90)}" y2="${margin.top + innerH - 8}" stroke="${COLORS.inkMute}" stroke-width="0.8" marker-end="url(#arrow-r)"/>`;
+  s += `<defs><marker id="arrow-r" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="${COLORS.inkMute}"/></marker></defs>`;
+  s += `<text x="${(xScale(9.5)+xScale(90))/2}" y="${margin.top + innerH - 14}" text-anchor="middle" font-family="DM Mono, monospace" font-size="13" fill="${COLORS.inkMute}" letter-spacing="0.12em" style="text-transform: uppercase;">out-of-distribution</text>`;
+
+  // Series rendering — paths for each series
+  const series = [
+    { id: 'P-base', data: FIG1_DATA.P.base, color: COLORS.P, dashed: true },
+    { id: 'F-base', data: FIG1_DATA.F.base, color: COLORS.F, dashed: true },
+    { id: 'c-base', data: FIG1_DATA.c.base, color: COLORS.c, dashed: true },
+    { id: 'P-sail', data: FIG1_DATA.P.sail, color: COLORS.P, dashed: false },
+    { id: 'F-sail', data: FIG1_DATA.F.sail, color: COLORS.F, dashed: false },
+    { id: 'c-sail', data: FIG1_DATA.c.sail, color: COLORS.c, dashed: false }
+  ];
+
+  series.forEach((sr) => {
+    let path = '';
+    sr.data.forEach((p, i) => {
+      const px = xScale(p.x);
+      const py = yScale(p.y);
+      path += (i === 0 ? 'M' : 'L') + px.toFixed(1) + ',' + py.toFixed(1) + ' ';
+    });
+    s += `<path class="series-line ${sr.dashed ? 'dotted' : ''}" data-series="${sr.id}" d="${path}" stroke="${sr.color}"/>`;
+
+    // dots
+    sr.data.forEach((p) => {
+      const px = xScale(p.x);
+      const py = yScale(p.y);
+      if (sr.dashed) {
+        s += `<circle class="series-dot hollow" data-series="${sr.id}" cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2.5" stroke="${sr.color}"/>`;
+      } else {
+        s += `<circle class="series-dot" data-series="${sr.id}" cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2.5" fill="${sr.color}"/>`;
+      }
+    });
+  });
+
+  // Hover overlay (below handles so ERIC=1 grip stays clickable)
+  s += `<rect class="hover-target" id="fig1-hover" x="${margin.left}" y="${margin.top}" width="${innerW}" height="${innerH}"/>`;
+  s += `<line class="crosshair-v" id="fig1-cross" x1="0" y1="${margin.top}" x2="0" y2="${margin.top + innerH}"/>`;
+  /* Inside plot area, right of y-axis tick labels (ticks end ~margin.left − 14) */
+  const hx = margin.left + 14;
+  s += `<g class="fig1-y1-drag" pointer-events="all">
+    <title>Drag vertically to adjust how axis height is split at ERIC = 1 (linear below, logarithmic above). Double-click to reset.</title>
+    <rect class="fig1-y1-hit" x="${hx - 14}" y="${ySplit - 20}" width="28" height="40" fill="transparent" stroke="none" cursor="ns-resize"/>
+    <circle class="fig1-y1-handle-ring" cx="${hx}" cy="${ySplit}" r="7"/>
+  </g>`;
+
+  svg.innerHTML = s;
+
+  window.__sailFig1 = { xScale, yScale, xMin, xMax, margin, innerW, innerH };
+  const legend = document.getElementById('fig1-legend');
+  legend.className = 'legend legend--fig1';
+  legend.innerHTML = '';
+
+  function fig1LegendItem(item) {
+    const el = document.createElement('div');
+    el.className = 'legend-item';
+    el.dataset.series = item.id;
+    el.innerHTML = `<span class="legend-swatch ${item.dotted ? 'dotted' : ''}" style="background: ${item.color}; color: ${item.color};"></span>${item.label}`;
+    el.addEventListener('click', () => {
+      el.classList.toggle('dim');
+      const isDim = el.classList.contains('dim');
+      svg.querySelectorAll(`[data-series="${item.id}"]`).forEach((node) => {
+        node.style.opacity = isDim ? '0.08' : '1';
+      });
+    });
+    return el;
+  }
+
+  const sailLegend = [
+    { id: 'P-sail', label: 'Density P', color: COLORS.P, dotted: false },
+    { id: 'F-sail', label: 'Hamiltonian F', color: COLORS.F, dotted: false },
+    { id: 'c-sail', label: 'Coefficients c', color: COLORS.c, dotted: false }
+  ];
+  const baselineLegend = [
+    { id: 'P-base', label: 'Density P', color: COLORS.P, dotted: true },
+    { id: 'F-base', label: 'Hamiltonian F', color: COLORS.F, dotted: true },
+    { id: 'c-base', label: 'Coefficients c', color: COLORS.c, dotted: true }
+  ];
+
+  [
+    ['SAIL', sailLegend],
+    ['Ground-state baseline', baselineLegend]
+  ].forEach(([rowTitle, items]) => {
+    const row = document.createElement('div');
+    row.className = 'legend-row';
+    const lab = document.createElement('span');
+    lab.className = 'legend-row-label';
+    lab.textContent = rowTitle;
+    row.appendChild(lab);
+    const inner = document.createElement('div');
+    inner.className = 'legend-row-items';
+    items.forEach((item) => inner.appendChild(fig1LegendItem(item)));
+    row.appendChild(inner);
+    legend.appendChild(row);
+  });
+
+  // Hover interactions
+  const hover = document.getElementById('fig1-hover');
+  const cross = document.getElementById('fig1-cross');
+  hover.addEventListener('mousemove', (e) => {
+    if (sailFig1Dragging) return;
+    const rect = svg.getBoundingClientRect();
+    const scale = W / rect.width;
+    const localX = (e.clientX - rect.left) * scale;
+    // figure out which N this corresponds to
+    const xRaw = ((localX - margin.left) / innerW) * (xMax - xMin) + xMin;
+    // snap to nearest integer N (or nearest QMugs point)
+    let nearestN;
+    if (xRaw <= 38) nearestN = Math.round(xRaw);
+    else {
+      const qmugs = [40, 50, 60, 70, 80, 90];
+      nearestN = qmugs.reduce((a, b) => Math.abs(b - xRaw) < Math.abs(a - xRaw) ? b : a);
+    }
+    nearestN = Math.max(4, Math.min(90, nearestN));
+
+    const cx = xScale(nearestN);
+    cross.setAttribute('x1', cx);
+    cross.setAttribute('x2', cx);
+    cross.style.opacity = '1';
+
+    showUnifiedBinTooltip(nearestN, e.clientX, e.clientY);
+    if (WALL_HEAVY_ATOM_BINS.includes(nearestN)) syncHeavyAtomHighlight(nearestN);
+    else clearHeavyAtomHighlight();
+  });
+  hover.addEventListener('mouseleave', () => {
+    hideTooltip();
+    cross.style.opacity = '0';
+    clearHeavyAtomHighlight();
+  });
+}
+
+/** One-time: drag the ERIC = 1 handle (linear below vs logarithmic above). Uses window listeners so redraw does not drop tracking. */
+function attachFig1DragHandlers() {
+  const svg = document.getElementById('fig1-chart');
+  if (!svg || svg.dataset.fig1DragBound === '1') return;
+  svg.dataset.fig1DragBound = '1';
+
+  svg.addEventListener('pointerdown', (e) => {
+    if (!e.target.closest('.fig1-y1-drag')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    sailFig1Dragging = true;
+    hideTooltip();
+
+    const onMove = (ev) => {
+      sailFig1Hybrid = true;
+      const loc = svgClientToLocal(svg, ev.clientX, ev.clientY);
+      const { margin } = FIG1_VIEW;
+      const ih = FIG1_VIEW.H - margin.top - margin.bottom;
+      const tp = margin.top;
+      const bt = tp + ih;
+      sailFig1AnchorY1 = Math.min(bt - 12, Math.max(tp + 12, loc.y));
+      renderFig1();
+    };
+
+    const onUp = () => {
+      sailFig1Dragging = false;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+    };
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+  });
+
+  svg.addEventListener('dblclick', (e) => {
+    if (!e.target.closest('.fig1-y1-drag')) return;
+    e.preventDefault();
+    sailFig1Hybrid = false;
+    sailFig1AnchorY1 = null;
+    renderFig1();
+  });
+}
+
+// =====================================================================
+//   FIGURE 4 — Per-functional small multiples
+// =====================================================================
+function renderFig4() {
+  const grid = document.getElementById('fig4-grid');
+  grid.innerHTML = '';
+
+  const functionals = [
+    { key: 'PBE', label: 'PBE', tag: 'GGA', sub: 'Local · O(B³)' },
+    { key: 'SCAN', label: 'SCAN', tag: 'meta-GGA', sub: 'Semi-local · O(B³)' },
+    { key: 'B3LYP', label: 'B3LYP', tag: 'HYBRID', sub: 'Non-local · O(B⁴)' }
+  ];
+
+  functionals.forEach((fn) => {
+    const panel = document.createElement('div');
+    panel.className = 'sm-panel';
+    panel.innerHTML = `
+      <div class="sm-title">${fn.label} <span class="sm-tag">${fn.tag}</span></div>
+      <div class="sm-sub">${fn.sub}</div>
+      <svg class="chart" id="sm-${fn.key}" viewBox="0 0 420 320"></svg>
+    `;
+    grid.appendChild(panel);
+    renderFig4Panel(fn.key);
+  });
+
+  // shared legend
+  const legend = document.getElementById('fig4-legend');
+  legend.innerHTML = '';
+  const items = [
+    { label: 'Density P', color: COLORS.P, dotted: false },
+    { label: 'Hamiltonian F', color: COLORS.F, dotted: false },
+    { label: 'Coefficients c', color: COLORS.c, dotted: false },
+    { label: 'SAIL', color: COLORS.ink, swatch: 'solid' },
+    { label: 'Baseline', color: COLORS.ink, swatch: 'dotted' }
+  ];
+  items.forEach((item) => {
+    const el = document.createElement('div');
+    el.className = 'legend-item';
+    if (item.swatch === 'solid') {
+      el.innerHTML = `<svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="${item.color}" stroke-width="2"/></svg>${item.label}`;
+    } else if (item.swatch === 'dotted') {
+      el.innerHTML = `<svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="${item.color}" stroke-width="1.5" stroke-dasharray="3 3"/></svg>${item.label}`;
+    } else {
+      el.innerHTML = `<span class="legend-swatch" style="background: ${item.color}"></span>${item.label}`;
+    }
+    legend.appendChild(el);
+  });
+}
+
+function renderFig4Panel(fnKey) {
+  const svg = document.getElementById('sm-' + fnKey);
+  const W = 420, H = 320;
+  const margin = { top: 20, right: 14, bottom: 44, left: 46 };
+  const innerW = W - margin.left - margin.right;
+  const innerH = H - margin.top - margin.bottom;
+
+  const xMin = 4, xMax = 37;
+  const xScale = (x) => margin.left + (x - xMin) / (xMax - xMin) * innerW;
+
+  // log scale 0.5..2.5
+  const yMin = 0.5, yMax = 2.3;
+  const yScale = (y) => margin.top + innerH - (Math.log(y) - Math.log(yMin)) / (Math.log(yMax) - Math.log(yMin)) * innerH;
+
+  let s = '';
+
+  // QM9 region (4-9.5)
+  s += `<rect x="${xScale(4)}" y="${margin.top}" width="${xScale(9.5)-xScale(4)}" height="${innerH}" fill="rgba(255,255,255,0.025)"/>`;
+  s += `<line x1="${xScale(9.5)}" y1="${margin.top}" x2="${xScale(9.5)}" y2="${margin.top + innerH}" class="region-divider"/>`;
+
+  // y ticks
+  const yTicks = [0.5, 0.7, 1.0, 1.5, 2.0];
+  yTicks.forEach((t) => {
+    const y = yScale(t);
+    s += `<line class="gridline" x1="${margin.left}" y1="${y}" x2="${margin.left + innerW}" y2="${y}"/>`;
+    s += `<text class="axis-label" x="${margin.left - 8}" y="${y + 4}" text-anchor="end" style="font-size: 13px; text-transform: none;">${t}</text>`;
+  });
+  // ref line
+  s += `<line class="ref-line" x1="${margin.left}" y1="${yScale(1.0)}" x2="${margin.left + innerW}" y2="${yScale(1.0)}"/>`;
+
+  // x ticks
+  [10, 20, 30].forEach((t) => {
+    const x = xScale(t);
+    s += `<text class="axis-label" x="${x}" y="${margin.top + innerH + 18}" text-anchor="middle" style="font-size: 13px; text-transform: none;">${t}</text>`;
+  });
+  s += `<text class="axis-label" x="${margin.left + innerW / 2}" y="${margin.top + innerH + 38}" text-anchor="middle" style="font-size: 13px;"># heavy atoms</text>`;
+
+  const data = FIG4_DATA[fnKey];
+  const series = [
+    { id: 'baseF', data: data.baseF, color: COLORS.F, dashed: true },
+    { id: 'baseP', data: data.baseP, color: COLORS.P, dashed: true },
+    { id: 'baseC', data: data.baseC, color: COLORS.c, dashed: true },
+    { id: 'sailF', data: data.sailF, color: COLORS.F, dashed: false },
+    { id: 'sailP', data: data.sailP, color: COLORS.P, dashed: false },
+    { id: 'sailC', data: data.sailC, color: COLORS.c, dashed: false }
+  ];
+
+  series.forEach((sr) => {
+    let path = '';
+    sr.data.forEach((p, i) => {
+      const px = xScale(p[0]);
+      const py = yScale(Math.min(yMax, p[1]));
+      path += (i === 0 ? 'M' : 'L') + px.toFixed(1) + ',' + py.toFixed(1) + ' ';
+    });
+    s += `<path class="series-line ${sr.dashed ? 'dotted' : ''}" d="${path}" stroke="${sr.color}" stroke-width="${sr.dashed ? 1.3 : 1.8}"/>`;
+  });
+
+  // small dots only at endpoints for clarity
+  series.forEach((sr) => {
+    sr.data.forEach((p, i) => {
+      if (i % 3 === 0 || i === sr.data.length - 1) {
+        const px = xScale(p[0]);
+        const py = yScale(Math.min(yMax, p[1]));
+        if (sr.dashed) {
+          s += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="1.6" fill="${COLORS.bg}" stroke="${sr.color}" stroke-width="1"/>`;
+        } else {
+          s += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="1.6" fill="${sr.color}"/>`;
+        }
+      }
+    });
+  });
+
+  svg.innerHTML = s;
+}
+
+// =====================================================================
+//   FIGURE 5 — Wall-time speedup
+// =====================================================================
+function renderFig5() {
+  const svg = document.getElementById('fig5-chart');
+  const W = 820, H = 480;
+  const margin = { top: 40, right: 20, bottom: 60, left: 56 };
+  const innerW = W - margin.left - margin.right;
+  const innerH = H - margin.top - margin.bottom;
+
+  const yMax = 70;
+  const yScale = (y) => margin.top + innerH - (y / yMax) * innerH;
+
+  const groupCount = FIG5_WALL.length;
+  const groupW = innerW / groupCount;
+  const groupPad = 12;
+  const barCount = 4; // baseline, coeffs, density, hamiltonian
+  const barW = (groupW - 2 * groupPad) / barCount - 2;
+
+  const colors = {
+    baseline: COLORS.inkMute,
+    coeffs: COLORS.c,
+    density: COLORS.P,
+    hamiltonian: COLORS.F
+  };
+  const labels = {
+    baseline: 'Baseline',
+    coeffs: 'Coeffs c',
+    density: 'Density P',
+    hamiltonian: 'Hamiltonian F'
+  };
+
+  let s = '';
+
+  s += `<defs>
+    <pattern id="wall-p0-stripes" patternUnits="userSpaceOnUse" width="5" height="5">
+      <path d="M0 5 L5 0 M-1 1 L1 -1" stroke="rgba(8,12,18,0.62)" stroke-width="1.15"/>
+    </pattern>
+  </defs>`;
+
+  // y gridlines + ticks
+  [0, 10, 20, 30, 40, 50, 60, 70].forEach((t) => {
+    const y = yScale(t);
+    s += `<line class="gridline" x1="${margin.left}" y1="${y}" x2="${margin.left + innerW}" y2="${y}"/>`;
+    s += `<text class="axis-label" x="${margin.left - 10}" y="${y + 4}" text-anchor="end" style="font-size: 13px; text-transform: none;">${t}</text>`;
+  });
+  s += `<text class="axis-label" x="${margin.left - 40}" y="${margin.top + innerH / 2}" text-anchor="middle" transform="rotate(-90 ${margin.left - 40} ${margin.top + innerH / 2})">Time [s]</text>`;
+
+  // QM40 / QMugs divider — between N=36 and N=40
+  const qm40Boundary = margin.left + (3 / groupCount) * innerW;
+  s += `<line x1="${qm40Boundary}" y1="${margin.top}" x2="${qm40Boundary}" y2="${margin.top + innerH}" stroke="${COLORS.inkMute}" stroke-width="1" stroke-dasharray="4 4" opacity="0.4"/>`;
+  s += `<text class="region-label" x="${margin.left + (1.5 / groupCount) * innerW}" y="${margin.top + 16}" text-anchor="middle">QM40</text>`;
+  s += `<text class="region-label" x="${margin.left + (6 / groupCount) * innerW}" y="${margin.top + 16}" text-anchor="middle"><tspan fill="${COLORS.inkMute}">QMugs · </tspan><tspan fill="${COLORS.P}">10× OOD</tspan></text>`;
+
+  // Bars per group
+  FIG5_WALL.forEach((g, gi) => {
+    const gx = margin.left + gi * groupW + groupPad;
+    const keys = ['baseline', 'coeffs', 'density', 'hamiltonian'];
+
+    s += `<g class="wall-group" data-n="${g.N}">`;
+    keys.forEach((k, ki) => {
+      const bx = gx + ki * (barW + 2);
+      const val = g[k];
+      const by = yScale(val);
+      const bh = (margin.top + innerH) - by;
+
+      s += `<rect class="wall-bar" data-group="${gi}" data-key="${k}" x="${bx}" y="${by}" width="${barW}" height="${bh}" fill="${colors[k]}" opacity="0.85" rx="0.5"/>`;
+
+      if (k !== 'baseline') {
+        const p0h = (g.p0 / yMax) * innerH;
+        const p0y = margin.top + innerH - p0h;
+        s += `<rect class="wall-bar-p0-base" data-group="${gi}" data-key="${k}" x="${bx}" y="${p0y}" width="${barW}" height="${p0h}" fill="${colors[k]}" opacity="0.48" pointer-events="none"/>`;
+        s += `<rect class="wall-bar-p0" data-group="${gi}" data-key="${k}" x="${bx}" y="${p0y}" width="${barW}" height="${p0h}" fill="url(#wall-p0-stripes)" opacity="0.92" pointer-events="none"/>`;
+      }
+    });
+    s += `</g>`;
+
+    // x label
+    s += `<text class="axis-label" x="${gx + (groupW - 2*groupPad) / 2}" y="${margin.top + innerH + 24}" text-anchor="middle" style="font-size: 13px; text-transform: none;">${g.N}</text>`;
+
+    const tallest = Math.max(g.baseline, g.coeffs, g.density, g.hamiltonian);
+    const labelY = Math.max(margin.top + 16, yScale(tallest) - 18);
+    s += `<text class="speedup-badge" x="${gx + (groupW - 2*groupPad) / 2}" y="${labelY}">${g.speedup.toFixed(2)}×</text>`;
+  });
+
+  // X label
+  s += `<text class="axis-label" x="${margin.left + innerW / 2}" y="${margin.top + innerH + 48}" text-anchor="middle"># heavy atoms</text>`;
+
+  svg.innerHTML = s;
+
+  // Legend
+  const legend = document.getElementById('fig5-legend');
+  legend.innerHTML = '';
+  ['baseline', 'coeffs', 'density', 'hamiltonian'].forEach((k) => {
+    const el = document.createElement('div');
+    el.className = 'legend-item';
+    el.innerHTML = `<span class="legend-swatch" style="background: ${colors[k]}; width: 12px; height: 12px;"></span>${labels[k]}`;
+    legend.appendChild(el);
+  });
+  const p0El = document.createElement('div');
+  p0El.className = 'legend-item';
+  p0El.innerHTML = `<span class="legend-swatch legend-swatch--p0"></span>P₀ acquisition (within ML bars)`;
+  legend.appendChild(p0El);
+
+  svg.querySelectorAll('.wall-bar').forEach((bar) => {
+    bar.style.cursor = 'crosshair';
+    bar.addEventListener('mouseenter', () => {
+      bar.setAttribute('opacity', '1');
+    });
+    bar.addEventListener('mousemove', (e) => {
+      const g = FIG5_WALL[+bar.dataset.group];
+      syncHeavyAtomHighlight(g.N);
+      showUnifiedBinTooltip(g.N, e.clientX, e.clientY);
+    });
+    bar.addEventListener('mouseleave', () => {
+      bar.setAttribute('opacity', '0.85');
+      hideTooltip();
+    });
+  });
+
+  svg.addEventListener('mouseleave', () => {
+    clearHeavyAtomHighlight();
+    hideTooltip();
+  });
+}
+
+// =====================================================================
+//   FIGURE 5 right — Acquisition breakdown
+// =====================================================================
+function renderFig5b() {
+  const svg = document.getElementById('fig5b-chart');
+  const W = 820, H = 480;
+  const margin = { top: 40, right: 20, bottom: 60, left: 56 };
+  const innerW = W - margin.left - margin.right;
+  const innerH = H - margin.top - margin.bottom;
+
+  const yMax = 7;
+  const yScale = (y) => margin.top + innerH - (y / yMax) * innerH;
+
+  const groupCount = FIG5_ACQ.length;
+  const groupW = innerW / groupCount;
+  const groupPad = 12;
+  const keys = ['minao', 'fwdX', 'fwdC', 'mcf', 'mpf', 'mfp'];
+  const barW = (groupW - 2 * groupPad) / keys.length - 2;
+
+  const colors = {
+    minao: COLORS.danger,
+    fwdX: '#9bc4e0',
+    fwdC: '#3d6b91',
+    mcf: '#9b87c4',
+    mpf: '#a08560',
+    mfp: '#bfae5e'
+  };
+  const labels = {
+    minao: 'MINAO build',
+    fwdX: 'Model fwd X',
+    fwdC: 'Model fwd c',
+    mcf: 'M<sub>c→F</sub>',
+    mpf: 'M<sub>P→F</sub>',
+    mfp: 'M<sub>F→P</sub>'
+  };
+
+  let s = '';
+
+  for (let t = 0; t <= 7; t++) {
+    const y = yScale(t);
+    s += `<line class="gridline" x1="${margin.left}" y1="${y}" x2="${margin.left + innerW}" y2="${y}"/>`;
+    s += `<text class="axis-label" x="${margin.left - 12}" y="${y + 4}" text-anchor="end" style="font-size: 13px; text-transform: none;">${t}</text>`;
+  }
+  s += `<text class="axis-label" x="${margin.left - 42}" y="${margin.top + innerH / 2}" text-anchor="middle" transform="rotate(-90 ${margin.left - 42} ${margin.top + innerH / 2})">Time [s]</text>`;
+
+  FIG5_ACQ.forEach((g, gi) => {
+    const gx = margin.left + gi * groupW + groupPad;
+    s += `<g class="acq-group" data-n="${g.N}">`;
+    keys.forEach((k, ki) => {
+      const bx = gx + ki * (barW + 2);
+      const val = g[k];
+      const by = yScale(val);
+      const bh = (margin.top + innerH) - by;
+      s += `<rect class="acq-bar" data-group="${gi}" data-key="${k}" x="${bx}" y="${by}" width="${barW}" height="${bh}" fill="${colors[k]}" opacity="0.85" rx="0.5"/>`;
+    });
+    s += `</g>`;
+    s += `<text class="axis-label" x="${gx + (groupW - 2 * groupPad) / 2}" y="${margin.top + innerH + 24}" text-anchor="middle" style="font-size: 13px; text-transform: none;">${g.N}</text>`;
+  });
+
+  s += `<text class="axis-label" x="${margin.left + innerW / 2}" y="${margin.top + innerH + 48}" text-anchor="middle"># heavy atoms</text>`;
+
+  svg.innerHTML = s;
+
+  const legend = document.getElementById('fig5b-legend');
+  legend.innerHTML = '';
+  keys.forEach((k) => {
+    const el = document.createElement('div');
+    el.className = 'legend-item';
+    el.innerHTML = `<span class="legend-swatch" style="background: ${colors[k]}; width: 12px; height: 12px;"></span>${labels[k]}`;
+    legend.appendChild(el);
+  });
+
+  svg.querySelectorAll('.acq-bar').forEach((bar) => {
+    bar.style.cursor = 'crosshair';
+    bar.addEventListener('mousemove', (e) => {
+      const g = FIG5_ACQ[+bar.dataset.group];
+      syncHeavyAtomHighlight(g.N);
+      showUnifiedBinTooltip(g.N, e.clientX, e.clientY);
+      bar.setAttribute('opacity', '1');
+    });
+    bar.addEventListener('mouseleave', () => {
+      bar.setAttribute('opacity', '0.85');
+      hideTooltip();
+    });
+  });
+
+  svg.addEventListener('mouseleave', () => {
+    clearHeavyAtomHighlight();
+    hideTooltip();
+  });
+}
+
+// =====================================================================
+//   INIT
+// =====================================================================
+renderLossEquations();
+renderEricRicEquations();
+renderFig1();
+attachFig1DragHandlers();
+renderFig4();
+renderFig5();
+renderFig5b();
+
+// Animate the table bars on load
+window.addEventListener('load', () => {
+  document.querySelectorAll('.bt-bar-fill').forEach((el, i) => {
+    const target = el.style.width;
+    el.style.width = '0%';
+    setTimeout(() => {
+      el.style.transition = 'width 1s cubic-bezier(0.2, 0.8, 0.2, 1)';
+      el.style.width = target;
+    }, 200 + i * 100);
+  });
+});
+
+// --- Particle network (same structure as index.html; SAIL palette hues) ---
+(function sailParticles() {
+  const sailCanvas = document.getElementById('sail-particle-canvas');
+  if (!sailCanvas || typeof sailCanvas.getContext !== 'function') return;
+  const pctx = sailCanvas.getContext('2d');
+  let pw, ph;
+  const sailParticlesArr = [];
+  const sailMouse = { x: -1000, y: -1000 };
+  /** Coral / gold / blue / green — matches page chart accents */
+  const SAIL_HUES = [22, 44, 207, 105];
+
+  function resizeParticles() {
+    pw = sailCanvas.width = window.innerWidth;
+    ph = sailCanvas.height = window.innerHeight;
+  }
+  resizeParticles();
+  window.addEventListener('resize', resizeParticles);
+  document.addEventListener('mousemove', (e) => {
+    sailMouse.x = e.clientX;
+    sailMouse.y = e.clientY;
+  });
+
+  class SailParticle {
+    constructor() {
+      this.reset();
+    }
+    reset() {
+      this.x = Math.random() * pw;
+      this.y = Math.random() * ph;
+      this.vx = (Math.random() - 0.5) * 0.25;
+      this.vy = (Math.random() - 0.5) * 0.25;
+      this.r = Math.random() * 1.5 + 0.3;
+      this.alpha = Math.random() * 0.38 + 0.06;
+      this.hue = SAIL_HUES[Math.floor(Math.random() * SAIL_HUES.length)];
+    }
+    update() {
+      const dx = sailMouse.x - this.x;
+      const dy = sailMouse.y - this.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 250) {
+        const f = 0.00006 * (1 - dist / 250);
+        this.vx += dx * f;
+        this.vy += dy * f;
+      }
+      this.x += this.vx;
+      this.y += this.vy;
+      this.vx *= 0.998;
+      this.vy *= 0.998;
+      if (this.x < 0 || this.x > pw) this.vx *= -1;
+      if (this.y < 0 || this.y > ph) this.vy *= -1;
+    }
+    draw() {
+      pctx.beginPath();
+      pctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      pctx.fillStyle = 'hsla(' + this.hue + ', 58%, 62%, ' + this.alpha + ')';
+      pctx.fill();
+    }
+  }
+
+  for (let i = 0; i < 100; i++) sailParticlesArr.push(new SailParticle());
+
+  function drawSailConnections() {
+    const maxD = 160;
+    for (let i = 0; i < sailParticlesArr.length; i++) {
+      for (let j = i + 1; j < sailParticlesArr.length; j++) {
+        const dx = sailParticlesArr[i].x - sailParticlesArr[j].x;
+        const dy = sailParticlesArr[i].y - sailParticlesArr[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < maxD) {
+          const t = 1 - dist / maxD;
+          pctx.beginPath();
+          pctx.moveTo(sailParticlesArr[i].x, sailParticlesArr[i].y);
+          pctx.lineTo(sailParticlesArr[j].x, sailParticlesArr[j].y);
+          pctx.strokeStyle = 'rgba(151, 178, 205, ' + 0.045 * t + ')';
+          pctx.lineWidth = 0.5;
+          pctx.stroke();
+        }
+      }
+    }
+  }
+
+  function animateSailParticles() {
+    pctx.clearRect(0, 0, pw, ph);
+    sailParticlesArr.forEach((p) => {
+      p.update();
+      p.draw();
+    });
+    drawSailConnections();
+    requestAnimationFrame(animateSailParticles);
+  }
+  animateSailParticles();
+})();
+
+</script>
+</body>
+</html>
