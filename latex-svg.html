@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>LaTeX Math to SVG | Eike S. Eberhard</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: {
+    packages: {'[+]': ['ams', 'boldsymbol', 'cancel', 'color']},
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']]
+  },
+  svg: {
+    fontCache: 'local'
+  }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.2.4/dist/svg2pdf.min.js"></script>
+<style>
+  :root {
+    --bg: #06080d;
+    --bg-card: #0c1018;
+    --bg-card-hover: #111822;
+    --bg-input: #080c12;
+    --text: #c8d4e6;
+    --text-dim: #5a6a82;
+    --text-bright: #e8f0fa;
+    --accent: #4fc3f7;
+    --accent2: #ab47bc;
+    --accent3: #66bb6a;
+    --border: #1a2438;
+    --border-focus: #4fc3f7;
+    --glow: rgba(79, 195, 247, 0.08);
+    --danger: #ef5350;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    padding-top: calc(64px + env(safe-area-inset-top));
+  }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: env(safe-area-inset-top) 3rem 0;
+    height: calc(64px + env(safe-area-inset-top));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(24px) saturate(1.2);
+    background: rgba(5, 7, 9, 0.6);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Manrope', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+  }
+
+  .nav-logo .dot { color: var(--accent); }
+
+  .nav-links { display: flex; gap: 0.3rem; }
+
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-family: 'DM Mono', monospace;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    padding: 0.45rem 0.9rem;
+    border-radius: 6px;
+    transition: all 0.3s;
+  }
+
+  .nav-links a:hover {
+    color: var(--text-bright);
+    background: rgba(255,255,255,0.04);
+  }
+
+  .page-header {
+    padding: 2.5rem 3rem 0;
+    flex-shrink: 0;
+  }
+
+  .page-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent2);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-tag::before { content: '▸ '; color: var(--accent); }
+
+  .page-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: clamp(2.2rem, 4.5vw, 3.2rem);
+    font-weight: 400;
+    color: var(--text-bright);
+    letter-spacing: -0.025em;
+    margin-bottom: 0.8rem;
+  }
+
+  .page-desc {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    max-width: 720px;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .options-row {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    padding: 0 3rem;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+  }
+
+  .option-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .option-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+  }
+
+  .chip-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    padding: 0.35rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-dim);
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.03em;
+  }
+
+  .chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .chip.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--glow);
+  }
+
+  .panes {
+    display: flex;
+    gap: 0;
+    flex: 1;
+    min-height: 0;
+    padding: 0 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .pane-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    margin-bottom: 0.4rem;
+  }
+
+  textarea {
+    flex: 1;
+    width: 100%;
+    border: 1px solid var(--border);
+    border-right: none;
+    border-radius: 6px 0 0 6px;
+    padding: 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    resize: none;
+    color: var(--text);
+    background: var(--bg-input);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus { border-color: var(--border-focus); }
+  textarea::placeholder { color: var(--text-dim); opacity: 0.4; }
+
+  .preview-pane {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 0 6px 6px 0;
+    padding: 1.5rem;
+    overflow: auto;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+  }
+
+  .preview-pane svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .preview-placeholder {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: #8a96a8;
+    opacity: 0.8;
+    text-align: center;
+  }
+
+  .preview-error {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--danger);
+    line-height: 1.5;
+    max-width: 100%;
+    word-break: break-word;
+  }
+
+  .btn-row {
+    padding: 0 3rem 1.5rem;
+    display: flex;
+    gap: 0.8rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  button {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.55rem 1.2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    cursor: pointer;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    transition: all 0.2s;
+  }
+
+  button:hover {
+    border-color: rgba(79,195,247,0.3);
+    color: var(--text);
+    background: var(--bg-card-hover);
+  }
+
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .primary-btn {
+    border-color: rgba(79,195,247,0.3);
+    color: var(--accent);
+    background: var(--glow);
+  }
+
+  .primary-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(79,195,247,0.12);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-bright);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    opacity: 0;
+    transition: transform 0.25s, opacity 0.25s;
+    pointer-events: none;
+    z-index: 200;
+  }
+
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 0 1.5rem; }
+    .nav-links a { font-size: 0.7rem; padding: 0.4rem 0.6rem; }
+    .page-header { padding: 1.5rem 1.5rem 0; }
+    .options-row { padding: 0 1.5rem; }
+    .panes { padding: 0 1.5rem; flex-direction: column; }
+    textarea { border-right: 1px solid var(--border); border-radius: 6px 6px 0 0; border-bottom: none; min-height: 180px; }
+    .preview-pane { border-radius: 0 0 6px 6px; min-height: 160px; }
+    .btn-row { padding: 0 1.5rem 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Eike S<span class="dot">.</span> Eberhard</a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="index.html#tools">Tools</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="page-tag">Tool</div>
+  <h1 class="page-title">LaTeX Math to SVG</h1>
+  <p class="page-desc">
+    Type LaTeX math and export a standalone SVG for slides, posters, figures, and web pages.
+    Supports AMS math, colors, and common macros. Delimiters like <code>$...$</code> are optional — paste the expression body directly.
+    Copy vector pastes a true vector graphic. Copy image uses a high-resolution PNG when vector clipboard is unavailable.
+  </p>
+</div>
+
+<div class="options-row">
+  <div class="option-group">
+    <span class="option-label">Mode</span>
+    <div class="chip-row">
+      <span class="chip active" data-mode="display" onclick="setMode(this)">Display</span>
+      <span class="chip" data-mode="inline" onclick="setMode(this)">Inline</span>
+    </div>
+  </div>
+  <div class="option-group">
+    <span class="option-label">Export color</span>
+    <div class="chip-row">
+      <span class="chip active" data-color="#000000" onclick="setColor(this)">Black</span>
+      <span class="chip" data-color="#ffffff" onclick="setColor(this)">White</span>
+      <span class="chip" data-color="#e8f0fa" onclick="setColor(this)">Light</span>
+    </div>
+  </div>
+</div>
+
+<div class="panes">
+  <div class="pane">
+    <div class="pane-label">LaTeX</div>
+    <textarea id="input" placeholder="e.g. \int_0^\infty e^{-x^2}\,dx = \frac{\sqrt{\pi}}{2}"></textarea>
+  </div>
+  <div class="pane">
+    <div class="pane-label">Preview</div>
+    <div class="preview-pane" id="preview">
+      <span class="preview-placeholder">SVG preview appears here</span>
+    </div>
+  </div>
+</div>
+
+<div class="btn-row">
+  <button class="primary-btn" id="copy-vector-btn" onclick="copyVector()" disabled>Copy vector</button>
+  <button id="copy-btn" onclick="copyImage()" disabled>Copy image</button>
+  <button id="download-btn" onclick="downloadSvg()" disabled>Download SVG</button>
+  <button onclick="clearAll()">Clear</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const input = document.getElementById('input');
+  const preview = document.getElementById('preview');
+  const downloadBtn = document.getElementById('download-btn');
+  const copyBtn = document.getElementById('copy-btn');
+  const copyVectorBtn = document.getElementById('copy-vector-btn');
+
+  let displayMode = true;
+  let exportColor = '#000000';
+  let currentSvg = null;
+  let renderTimer = null;
+
+  function setMode(el) {
+    document.querySelectorAll('[data-mode]').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    displayMode = el.dataset.mode === 'display';
+    scheduleRender();
+  }
+
+  function setColor(el) {
+    document.querySelectorAll('[data-color]').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    exportColor = el.dataset.color;
+    scheduleRender();
+  }
+
+  function clearAll() {
+    input.value = '';
+    currentSvg = null;
+    preview.innerHTML = '<span class="preview-placeholder">SVG preview appears here</span>';
+    downloadBtn.disabled = true;
+    copyBtn.disabled = true;
+    copyVectorBtn.disabled = true;
+  }
+
+  function stripDelimiters(text) {
+    const trimmed = text.trim();
+    if (trimmed.startsWith('$$') && trimmed.endsWith('$$')) return trimmed.slice(2, -2).trim();
+    if (trimmed.startsWith('\\[') && trimmed.endsWith('\\]')) return trimmed.slice(2, -2).trim();
+    if (trimmed.startsWith('$') && trimmed.endsWith('$') && trimmed.length > 1) return trimmed.slice(1, -1).trim();
+    if (trimmed.startsWith('\\(') && trimmed.endsWith('\\)')) return trimmed.slice(2, -2).trim();
+    return trimmed;
+  }
+
+  function buildSvg(latex) {
+    const node = MathJax.tex2svg(latex, { display: displayMode });
+    const svg = node.querySelector('svg');
+    if (!svg) throw new Error('MathJax did not produce an SVG element.');
+
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.style.color = exportColor;
+
+    return clone;
+  }
+
+  function getSvgMarkup(svg = currentSvg) {
+    if (!svg) return '';
+    return new XMLSerializer().serializeToString(svg);
+  }
+
+  function getExportSvgString(svg = currentSvg) {
+    const markup = getSvgMarkup(svg);
+    return markup ? `<?xml version="1.0" encoding="UTF-8"?>\n${markup}` : '';
+  }
+
+  function supportsClipboardType(type) {
+    return window.ClipboardItem
+      && typeof ClipboardItem.supports === 'function'
+      && ClipboardItem.supports(type);
+  }
+
+  function isSafari() {
+    return /^((?!chrome|android|crios|fxios|edgios|edg|opr).)*safari/i.test(navigator.userAgent);
+  }
+
+  function isMac() {
+    return /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
+  }
+
+  function getOfficeHtmlClipboard(svgMarkup) {
+    return `<!DOCTYPE html><html><body><!--StartFragment-->${svgMarkup}<!--EndFragment--></body></html>`;
+  }
+
+  function getSafariHtmlClipboard(svgMarkup) {
+    const dataUri = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgMarkup)}`;
+    const imgHtml = `<img src="${dataUri}" alt="equation">`;
+    return getOfficeHtmlClipboard(imgHtml);
+  }
+
+  function copySvgViaDomSelection(svg) {
+    const node = preview.querySelector('svg') || svg;
+    const wrapper = document.createElement('div');
+    wrapper.contentEditable = 'true';
+    wrapper.style.cssText = 'position:fixed;left:-10000px;top:0;overflow:hidden;';
+    const clone = node.cloneNode(true);
+    if (!clone.getAttribute('xmlns')) {
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    }
+    wrapper.appendChild(clone);
+    document.body.appendChild(wrapper);
+
+    const range = document.createRange();
+    range.selectNode(clone);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    const copied = document.execCommand('copy');
+    selection.removeAllRanges();
+    document.body.removeChild(wrapper);
+    return copied;
+  }
+
+  function copyViaCopyEvent(payload) {
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = (value) => {
+        if (settled) return;
+        settled = true;
+        resolve(value);
+      };
+
+      const onCopy = (event) => {
+        event.preventDefault();
+        let wrote = false;
+        for (const [type, content] of Object.entries(payload)) {
+          try {
+            event.clipboardData.setData(type, content);
+            wrote = true;
+          } catch {
+            // Ignore unsupported clipboard types in this browser.
+          }
+        }
+        finish(wrote);
+      };
+
+      document.addEventListener('copy', onCopy, { once: true, capture: true });
+
+      const anchor = document.createElement('div');
+      anchor.textContent = '\u00a0';
+      anchor.style.cssText = 'position:fixed;left:-10000px;top:0;';
+      document.body.appendChild(anchor);
+
+      const range = document.createRange();
+      range.selectNodeContents(anchor);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      const copied = document.execCommand('copy');
+      selection.removeAllRanges();
+      document.body.removeChild(anchor);
+
+      if (!copied) {
+        finish(false);
+        return;
+      }
+
+      setTimeout(() => finish(false), 0);
+    });
+  }
+
+  async function copyVectorSafari(svg) {
+    const svgMarkup = getSvgMarkup(svg);
+    const htmlVariants = [
+      getSafariHtmlClipboard(svgMarkup),
+      getOfficeHtmlClipboard(svgMarkup)
+    ];
+
+    if (copySvgViaDomSelection(svg)) {
+      return true;
+    }
+
+    for (const html of htmlVariants) {
+      if (await copyViaCopyEvent({ 'text/html': html })) {
+        return true;
+      }
+    }
+
+    if (navigator.clipboard && window.ClipboardItem && supportsClipboardType('text/html')) {
+      for (const html of htmlVariants) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              'text/html': Promise.resolve(new Blob([html], { type: 'text/html' }))
+            })
+          ]);
+          return true;
+        } catch {
+          // Try the next HTML representation.
+        }
+      }
+    }
+
+    return false;
+  }
+
+  function getSvgPixelSize(svg) {
+    const viewBox = svg.getAttribute('viewBox');
+    if (viewBox) {
+      const parts = viewBox.trim().split(/\s+/).map(Number);
+      if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
+        return { width: parts[2], height: parts[3] };
+      }
+    }
+
+    const width = parseFloat(svg.getAttribute('width'));
+    const height = parseFloat(svg.getAttribute('height'));
+    if (width > 0 && height > 0) {
+      return { width, height };
+    }
+
+    const rect = svg.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      return { width: rect.width, height: rect.height };
+    }
+
+    return { width: 800, height: 200 };
+  }
+
+  function prepareSvgForRaster(svg) {
+    const clone = svg.cloneNode(true);
+    const { width, height } = getSvgPixelSize(svg);
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.setAttribute('width', String(width));
+    clone.setAttribute('height', String(height));
+    return getExportSvgString(clone);
+  }
+
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Failed to rasterize SVG.'));
+      img.src = src;
+    });
+  }
+
+  async function svgToPngBlob(svg, scale = 3) {
+    const { width, height } = getSvgPixelSize(svg);
+    const svgString = prepareSvgForRaster(svg);
+    const img = await loadImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.ceil(width * scale);
+    canvas.height = Math.ceil(height * scale);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.drawImage(img, 0, 0, width, height);
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(blob => {
+        if (blob) resolve(blob);
+        else reject(new Error('PNG export failed.'));
+      }, 'image/png');
+    });
+  }
+
+  function applyPreview(svg) {
+    preview.innerHTML = '';
+    preview.appendChild(svg.cloneNode(true));
+  }
+
+  async function render() {
+    const raw = input.value;
+    const latex = stripDelimiters(raw);
+
+    if (!latex) {
+      clearAll();
+      return;
+    }
+
+    try {
+      await MathJax.startup.promise;
+      currentSvg = buildSvg(latex);
+      applyPreview(currentSvg);
+      downloadBtn.disabled = false;
+      copyBtn.disabled = false;
+      copyVectorBtn.disabled = false;
+    } catch (err) {
+      currentSvg = null;
+      preview.innerHTML = `<div class="preview-error">${escapeHtml(err.message || String(err))}</div>`;
+      downloadBtn.disabled = true;
+      copyBtn.disabled = true;
+      copyVectorBtn.disabled = true;
+    }
+  }
+
+  function scheduleRender() {
+    clearTimeout(renderTimer);
+    renderTimer = setTimeout(render, 180);
+  }
+
+  function escapeHtml(text) {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function downloadSvg() {
+    if (!currentSvg) return;
+    const svgString = getExportSvgString();
+    const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'equation.svg';
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('Downloaded equation.svg');
+  }
+
+  async function svgToPdfBlob(svg) {
+    if (!window.jspdf) throw new Error('PDF export library not loaded.');
+
+    const { jsPDF } = window.jspdf;
+    const { width, height } = getSvgPixelSize(svg);
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.style.position = 'fixed';
+    clone.style.left = '-9999px';
+    clone.style.top = '0';
+    document.body.appendChild(clone);
+
+    try {
+      const doc = new jsPDF({
+        unit: 'pt',
+        format: [width, height],
+        hotfixes: ['px_scaling']
+      });
+      await doc.svg(clone, { x: 0, y: 0, width, height });
+      return doc.output('blob');
+    } finally {
+      document.body.removeChild(clone);
+    }
+  }
+
+  async function copyVector() {
+    if (!currentSvg) return;
+
+    if (isSafari()) {
+      if (await copyVectorSafari(currentSvg)) {
+        showToast('Vector copied — paste into PowerPoint or Keynote');
+        return;
+      }
+      showToast('Vector copy failed — use Download SVG or Copy image');
+      return;
+    }
+
+    if (!navigator.clipboard || !window.ClipboardItem) {
+      if (await copyVectorSafari(currentSvg)) {
+        showToast('Vector copied — paste into PowerPoint or Keynote');
+        return;
+      }
+      showToast('Vector copy unavailable — use Download SVG or Copy image');
+      return;
+    }
+
+    async function copySvgVector() {
+      const markup = getSvgMarkup();
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'image/svg+xml': Promise.resolve(new Blob([markup], { type: 'image/svg+xml' }))
+        })
+      ]);
+      showToast('Vector SVG copied — paste into PowerPoint or Keynote');
+    }
+
+    async function copyPdfVector() {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'application/pdf': svgToPdfBlob(currentSvg)
+        })
+      ]);
+      showToast('Vector PDF copied — paste into PowerPoint or Keynote');
+    }
+
+    const attempts = isMac()
+      ? [
+          { type: 'application/pdf', run: copyPdfVector },
+          { type: 'image/svg+xml', run: copySvgVector }
+        ]
+      : [
+          { type: 'image/svg+xml', run: copySvgVector },
+          { type: 'application/pdf', run: copyPdfVector }
+        ];
+
+    for (const attempt of attempts) {
+      if (!supportsClipboardType(attempt.type)) continue;
+      try {
+        await attempt.run();
+        return;
+      } catch {
+        // Try the next vector format.
+      }
+    }
+
+    if (await copyVectorSafari(currentSvg)) {
+      showToast('Vector copied — paste into PowerPoint or Keynote');
+      return;
+    }
+
+    showToast('Vector clipboard not supported — use Copy image or Download SVG');
+  }
+
+  async function copyImage() {
+    if (!currentSvg) return;
+
+    if (!navigator.clipboard || !window.ClipboardItem || !supportsClipboardType('image/png')) {
+      showToast('Copy failed — try Download SVG instead');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'image/png': svgToPngBlob(currentSvg)
+        })
+      ]);
+      showToast('Image copied — paste into PowerPoint or Keynote');
+    } catch {
+      showToast('Copy failed — try Download SVG instead');
+    }
+  }
+
+  let toastTimer = null;
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+  }
+
+  input.addEventListener('input', scheduleRender);
+</script>
+</body>
+</html>
