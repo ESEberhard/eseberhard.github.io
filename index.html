@@ -305,7 +305,6 @@ nav.scrolled {
   object-fit: cover;
   object-position: center 24%;
   border: 1px solid rgba(255,255,255,0.08);
-  filter: grayscale(1) contrast(1.25);
 }
 
 .section-divider {
@@ -669,52 +668,6 @@ section {
   border: 1px solid rgba(52,211,153,0.2);
 }
 
-.pub-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  align-items: center;
-  margin-top: 1.15rem;
-  padding-top: 1.15rem;
-  border-top: 1px solid var(--border);
-}
-
-.pub-action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.52rem 1.05rem;
-  border-radius: 10px;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  text-decoration: none;
-  border: 1px solid var(--border-hover);
-  color: var(--text-bright);
-  transition: background 0.25s, border-color 0.25s, color 0.25s;
-}
-
-.pub-action-btn:hover {
-  background: rgba(96, 165, 250, 0.12);
-  border-color: rgba(96, 165, 250, 0.4);
-}
-
-.pub-action-btn--interactive {
-  border-color: rgba(251, 191, 36, 0.38);
-  color: #fbbf24;
-}
-
-.pub-action-btn--interactive:hover {
-  background: rgba(251, 191, 36, 0.1);
-  border-color: rgba(251, 191, 36, 0.55);
-}
-
-.pub-action-btn:focus-visible {
-  outline: 2px solid rgba(96, 165, 250, 0.65);
-  outline-offset: 3px;
-}
-
 .pub-item h3 {
   font-family: 'Manrope', sans-serif;
   font-size: 1.2rem;
@@ -924,15 +877,11 @@ footer .footer-links a:hover { color: var(--accent); }
       <div class="authors"><strong>Eike S. Eberhard</strong>, Luca A. Thiede, Abdul Aldossary, Andreas Burger, Nicholas Gao, Vignesh Bhethanabotla, Al&aacute;n Aspuru-Guzik, Stephan G&uuml;nnemann</div>
       <div class="venue">International Conference on Machine Learning &middot; 2026</div>
     </a>
-    <div class="pub-item fade-in">
+    <a href="https://arxiv.org/abs/2604.21657" class="pub-item fade-in" target="_blank" rel="noopener noreferrer">
       <h3>Transferable SCF-Acceleration through Solver-Aligned Initialization Learning</h3>
       <div class="authors"><strong>Eike S. Eberhard</strong>*, Viktor Kotsev*, Timm G&uuml;thle, Stephan G&uuml;nnemann</div>
       <div class="venue">Preprint &middot; 2026</div>
-      <div class="pub-actions">
-        <a href="https://arxiv.org/abs/2604.21657" class="pub-action-btn" target="_blank" rel="noopener noreferrer">Paper (arXiv)</a>
-        <a href="sail-results.html" class="pub-action-btn pub-action-btn--interactive">Interactive results</a>
-      </div>
-    </div>
+    </a>
     <a href="https://arxiv.org/html/2601.16955v1" class="pub-item fade-in" target="_blank" rel="noopener noreferrer">
       <h3>3D Molecule Generation from Rigid Motifs via SE(3) Flows</h3>
       <div class="authors">Roman Poletukhin, Marcel Kollovieh, <strong>Eike S. Eberhard</strong>, Stephan G&uuml;nnemann</div>
@@ -1003,6 +952,14 @@ footer .footer-links a:hover { color: var(--accent); }
             <div class="cv-role">PhD Candidate</div>
             <div class="cv-org">Data Analytics and Machine Learning Group @ TUM</div>
             <div class="cv-detail">Munich Data Science Institute (MDSI)</div>
+          </div>
+        </div>
+        <div class="cv-item">
+          <div class="cv-date">2026 Jun - Sep 2026</div>
+          <div>
+            <div class="cv-role">Research Stay</div>
+            <div class="cv-org">University of Toronto &middot; Vector Institute</div>
+            <div class="cv-detail">Research on ML-XC-functionals at the MatterLab (Prof. Aspuru-Guzik).</div>
           </div>
         </div>
         <div class="cv-item">
