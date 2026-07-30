@@ -691,6 +691,28 @@ section {
   border: 1px solid rgba(96,165,250,0.16);
 }
 
+.pub-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.9rem;
+}
+
+.pub-links a {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.pub-links a:hover {
+  color: var(--text-bright);
+  border-bottom-color: rgba(96,165,250,0.45);
+}
+
 footer {
   position: relative;
   z-index: 1;
@@ -882,11 +904,15 @@ footer .footer-links a:hover { color: var(--accent); }
       <div class="authors"><strong>Eike S. Eberhard</strong>*, Viktor Kotsev*, Timm G&uuml;thle, Stephan G&uuml;nnemann</div>
       <div class="venue">Preprint &middot; 2026</div>
     </a>
-    <a href="https://arxiv.org/html/2601.16955v1" class="pub-item fade-in" target="_blank" rel="noopener noreferrer">
+    <div class="pub-item fade-in">
       <h3>3D Molecule Generation from Rigid Motifs via SE(3) Flows</h3>
       <div class="authors">Roman Poletukhin, Marcel Kollovieh, <strong>Eike S. Eberhard</strong>, Stephan G&uuml;nnemann</div>
       <div class="venue">Preprint &middot; 2026</div>
-    </a>
+      <div class="pub-links">
+        <a href="https://arxiv.org/html/2601.16955v1" target="_blank" rel="noopener noreferrer">Paper</a>
+        <a href="https://github.com/rpoletukhin/MotiFlow" target="_blank" rel="noopener noreferrer">Code</a>
+      </div>
+    </div>
     <a href="https://pubs.acs.org/doi/10.1021/acs.nanolett.5c00306" class="pub-item fade-in" target="_blank" rel="noopener noreferrer">
       <h3>Force Generation by Enhanced Diffusion in Enzyme-Loaded Vesicles</h3>
       <div class="authors"><strong>Eike S. Eberhard</strong>*, Ludwig Burger*, C&eacute;sar L. Pastrana*, Hamid Seyed-Allaei, Giovanni Giunta, Ulrich Gerland</div>
