@@ -1,0 +1,1980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Optimizer Tuner | Eike S. Eberhard</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f8f7f4;
+    --bg-card: #f8f7f4;
+    --bg-input: #f8f7f4;
+    --text: #2a2a2a;
+    --text-dim: #777;
+    --text-bright: #222;
+    --accent: #222;
+    --accent2: #4a90d9;
+    --accent3: #50b86c;
+    --warn: #888;
+    --danger: #d94a4a;
+    --border: #e0dfdc;
+    --track: #e0dfdc;
+    --track-hover: #d0cfcc;
+    --muon: #4a90d9;
+    --adam: #222;
+    --paper: #f8f7f4;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    min-height: 100vh;
+    padding-top: calc(56px + env(safe-area-inset-top));
+  }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: env(safe-area-inset-top) 2rem 0;
+    height: calc(56px + env(safe-area-inset-top));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Manrope', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+  }
+  .nav-logo .dot { color: #555; }
+  .nav-links { display: flex; gap: 0.3rem; }
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-family: 'DM Mono', monospace;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    padding: 0.45rem 0.9rem;
+    border-radius: 6px;
+    transition: all 0.3s;
+  }
+  .nav-links a:hover { color: var(--text-bright); background: var(--track); }
+
+  .wrap {
+    width: 100%;
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 2rem 2.5rem 4rem;
+  }
+
+  .page-tag {
+    display: none;
+  }
+
+  .page-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 1.45rem;
+    font-weight: 500;
+    color: #222;
+    letter-spacing: -0.025em;
+    margin-bottom: 0.4rem;
+  }
+
+  .page-desc {
+    font-size: 0.92rem;
+    color: var(--text-dim);
+    max-width: 40rem;
+    margin-bottom: 0.85rem;
+    line-height: 1.65;
+  }
+
+  .presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem 1rem;
+    margin-bottom: 2rem;
+    align-items: baseline;
+  }
+
+  .chip {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    color: #aaa;
+    background: none;
+    cursor: pointer;
+    transition: color 0.15s;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .chip:hover { background: none; color: #555; }
+  .chip.active { background: none; color: #222; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  .sidebar { display: flex; flex-direction: column; gap: 1.6rem; }
+
+  .panel {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  .panel-h {
+    padding: 0 0 0.4rem;
+    border-bottom: 0;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.6rem;
+  }
+
+  .panel-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-transform: none;
+    color: #222;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .panel-title a.doc {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 13px;
+  }
+
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot.muon { background: var(--muon); }
+  .dot.adam { background: var(--adam); }
+  .dot.shared { background: var(--accent3); }
+
+  .panel-b { padding: 0; display: flex; flex-direction: column; gap: 0.65rem; }
+
+  .ctrl { display: flex; flex-direction: column; gap: 0.28rem; }
+
+  .ctrl-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .ctrl-label {
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: #888;
+  }
+
+  .ctrl-num {
+    width: 6.4rem;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    color: var(--text-bright);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 2px 0;
+    text-align: right;
+    outline: none;
+  }
+  .ctrl-num:focus { border-color: #222; }
+  .ctrl-num:disabled, input[type="range"]:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--track);
+    border-radius: 2px;
+    outline: none;
+    accent-color: #888;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #888;
+    cursor: pointer;
+    border: none;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #888;
+    cursor: pointer;
+    border: none;
+  }
+  .panel.muon input[type="range"]::-webkit-slider-thumb,
+  .panel.muon input[type="range"]::-moz-range-thumb { background: var(--muon); }
+  .panel.adam input[type="range"]::-webkit-slider-thumb,
+  .panel.adam input[type="range"]::-moz-range-thumb { background: var(--adam); }
+
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+
+  .toggle-row, .check-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0;
+    color: #888;
+  }
+  input[type="checkbox"] { accent-color: #222; }
+
+  .seg {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    background: none;
+    border-radius: 0;
+    overflow: visible;
+  }
+  .seg button {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #aaa;
+    cursor: pointer;
+    letter-spacing: 0;
+    text-transform: none;
+    transition: color 0.15s;
+  }
+  .seg button.active { background: none; color: #222; }
+  .seg button:not(.active):hover { background: none; color: #555; }
+
+  .mini-btn {
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #aaa;
+    border-radius: 0;
+    cursor: pointer;
+    letter-spacing: 0;
+    text-transform: none;
+    transition: color 0.15s;
+  }
+  .mini-btn:hover { background: none; color: #222; }
+
+  .hint {
+    font-size: 0.75rem;
+    color: #aaa;
+    line-height: 1.45;
+  }
+  .hint.static { display: none; }
+  .hint code {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: #888;
+  }
+
+  .details-btn {
+    width: auto;
+    background: none;
+    border: none;
+    color: #aaa;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0;
+    text-transform: none;
+    cursor: pointer;
+    text-align: left;
+    padding: 0.1rem 0;
+  }
+  .details-btn:hover { color: var(--text); }
+
+  .advanced { display: none; flex-direction: column; gap: 0.7rem; }
+  .advanced.open { display: flex; }
+
+  .main { display: flex; flex-direction: column; gap: 1.75rem; min-width: 0; }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem 2.5rem;
+  }
+
+  .metric-card {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .metric-card h3 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-transform: none;
+    color: #222;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .verdict {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0;
+    padding: 0;
+    border-radius: 0;
+    border: 0;
+  }
+  .verdict.ok { color: var(--accent3); }
+  .verdict.warn { color: var(--warn); }
+  .verdict.bad { color: var(--danger); }
+  .verdict.fine { color: #888; }
+
+  .kv {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.35rem 1rem;
+  }
+
+  .kv-item .k {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0;
+    color: #aaa;
+  }
+  .kv-item .v {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-bright);
+    font-weight: 400;
+  }
+
+  .plot-axes {
+    display: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 1.1rem;
+    margin: 0.15rem 0 0.55rem;
+  }
+  .chart-card.show-axes .plot-axes { display: flex; }
+  .plot-ax {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .plot-ax .lbl {
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: #aaa;
+    min-width: 0.7rem;
+  }
+  .plot-axes .seg button {
+    padding: 0;
+    font-size: 12px;
+  }
+  .ax-lim {
+    width: 4.2rem;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    color: var(--text-bright);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 2px 0;
+    outline: none;
+  }
+  .ax-lim:focus { border-color: #222; }
+  .ax-lim::placeholder { color: #ccc; }
+  .ax-dash { color: #ccc; font-size: 11px; }
+
+  .chart-card {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .chart-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.4rem;
+    gap: 0.8rem;
+  }
+
+  .chart-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-transform: none;
+    color: #222;
+  }
+
+  .chart-tools {
+    display: flex;
+    align-items: baseline;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .axes-toggle {
+    appearance: none;
+    border: 0;
+    background: none;
+    padding: 0;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    color: #aaa;
+    cursor: pointer;
+  }
+  .axes-toggle:hover,
+  .axes-toggle.active { color: #222; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .legend i {
+    display: inline-block;
+    width: 12px; height: 2px;
+    margin-right: 0.28rem;
+    vertical-align: middle;
+  }
+
+  .chart-note {
+    margin: 0 0 0.12rem;
+    font-size: 13px;
+    color: #777;
+    max-width: 44rem;
+    line-height: 1.45;
+  }
+  .chart-xy {
+    margin: 0 0 0.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: #666;
+  }
+
+  canvas.chart { width: 100%; height: 280px; display: block; }
+  .chart-card.hero canvas.chart { height: 380px; }
+  canvas.chart.sm { height: 190px; }
+  canvas.chart.heat { height: 260px; }
+
+  .split-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.75rem;
+  }
+
+  .code-fold {
+    border-top: 1px solid var(--border);
+    padding-top: 0.25rem;
+  }
+  .code-fold summary {
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #888;
+    list-style: none;
+  }
+  .code-fold summary::-webkit-details-marker { display: none; }
+  .code-fold[open] summary { margin-bottom: 0.7rem; color: #222; }
+
+  .code-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  pre {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    overflow-x: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    line-height: 1.65;
+    color: #777;
+  }
+
+  a.doc {
+    font-family: 'DM Mono', monospace;
+    color: #222;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  a.doc:hover { color: #555; }
+  .page-desc a.doc { font-size: 0.82em; }
+  .chart-title a.doc { font-size: inherit; letter-spacing: inherit; }
+
+  @media (max-width: 1100px) {
+    .layout, .metrics, .split-2, .code-grid { grid-template-columns: 1fr; }
+    .wrap { padding: 1.4rem 1.2rem 3rem; }
+    nav { padding: 0 1.5rem; }
+    .kv { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 550px) {
+    .nav-links a { font-size: 0.65rem; padding: 0.4rem 0.55rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Eike S<span class="dot">.</span> Eberhard</a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="index.html#tools">Tools</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1 class="page-title">Weight decay, EMA, and learning rate</h1>
+  <p class="page-desc">
+    How <em>η</em>, <em>λ</em>, and EMA set the weight scale for Muon and AdamW.
+    Defaults from
+    <a class="doc" href="https://optax.readthedocs.io/en/latest/api/generated/optax.adamw.html" target="_blank" rel="noopener noreferrer">optax.adamw</a>
+    and
+    <a class="doc" href="https://optax.readthedocs.io/en/latest/api/generated/optax.contrib.muon.html" target="_blank" rel="noopener noreferrer">optax.contrib.muon</a>.
+    <a class="doc" href="https://arxiv.org/abs/2502.16982" target="_blank" rel="noopener noreferrer">Liu et al. (2025)</a>
+    add decay and <code>consistent_rms = 0.2</code>.
+  </p>
+
+  <div class="presets" id="presets"></div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="panel">
+        <div class="panel-h">
+          <div class="panel-title"><span class="dot shared"></span>Shared run</div>
+        </div>
+        <div class="panel-b">
+          <div class="ctrl">
+            <div class="ctrl-head"><span class="ctrl-label">Steps T</span>
+              <input class="ctrl-num" id="T" type="number" step="1000" min="100"></div>
+            <input type="range" id="T_r" min="0" max="100">
+          </div>
+          <label class="check-row"><span>Couple decay steps to T</span>
+            <input type="checkbox" id="coupleDecay"></label>
+          <div class="ctrl" id="decay-wrap">
+            <div class="ctrl-head"><span class="ctrl-label">Decay steps</span>
+              <input class="ctrl-num" id="decaySteps" type="number" step="1000" min="1"></div>
+            <input type="range" id="decaySteps_r" min="0" max="100">
+          </div>
+          <div class="ctrl">
+            <div class="ctrl-head"><span class="ctrl-label">Init RMS s₀</span>
+              <input class="ctrl-num" id="s0" type="number" step="0.05" min="0.001"></div>
+            <input type="range" id="s0_r" min="0" max="100">
+          </div>
+          <div>
+            <div class="ctrl-label" style="margin-bottom:0.35rem">Schedule</div>
+            <div class="seg" id="sched"></div>
+          </div>
+          <div class="ctrl">
+            <div class="ctrl-head"><span class="ctrl-label">Warmup fraction</span>
+              <input class="ctrl-num" id="warmup" type="number" step="0.01" min="0" max="0.5"></div>
+            <input type="range" id="warmup_r" min="0" max="50">
+          </div>
+          <div class="ctrl" id="wsd-wrap" style="display:none">
+            <div class="ctrl-head"><span class="ctrl-label">WSD decay fraction</span>
+              <input class="ctrl-num" id="wsdDecay" type="number" step="0.01" min="0.02" max="0.8"></div>
+            <input type="range" id="wsdDecay_r" min="2" max="80">
+          </div>
+          <label class="check-row"><span>Couple λ to budget N</span>
+            <input type="checkbox" id="coupleBudget"></label>
+          <div class="ctrl" id="nstar-wrap">
+            <div class="ctrl-head"><span class="ctrl-label">Target N</span>
+              <input class="ctrl-num" id="Nstar" type="number" step="1" min="0.1"></div>
+            <input type="range" id="Nstar_r" min="0" max="100">
+          </div>
+          <p class="hint" id="coupleHint"></p>
+          <p class="hint static">Decay is Optax / PyTorch coupled: <code>λ</code> is multiplied by the learning rate.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h">
+          <div class="panel-title"><span class="dot shared"></span>Parameter EMA</div>
+          <button class="mini-btn" id="snapEma" type="button">last 10% of T</button>
+        </div>
+        <div class="panel-b">
+          <label class="check-row"><span>Track Polyak average</span>
+            <input type="checkbox" id="emaOn"></label>
+          <div class="ctrl">
+            <div class="ctrl-head"><span class="ctrl-label">Decay β</span>
+              <input class="ctrl-num" id="emaDecay" type="number" step="0.0001" min="0" max="0.99999"></div>
+            <input type="range" id="emaDecay_r" min="0" max="100">
+          </div>
+          <div class="check-row"><span>Debias (<a class="doc" href="https://optax.readthedocs.io/en/latest/api/generated/optax.ema.html" target="_blank" rel="noopener noreferrer">optax.ema</a> default)</span>
+            <input type="checkbox" id="emaDebias"></div>
+          <p class="hint" id="emaHint"></p>
+        </div>
+      </div>
+
+      <div class="panel muon">
+        <div class="panel-h">
+          <div class="panel-title"><span class="dot muon"></span><a class="doc" href="https://optax.readthedocs.io/en/latest/api/generated/optax.contrib.muon.html" target="_blank" rel="noopener noreferrer">optax.contrib.muon</a></div>
+          <button class="mini-btn" id="snapMuon" type="button">λ for N=10</button>
+        </div>
+        <div class="panel-b">
+          <label class="check-row"><span>Plot Muon</span><input type="checkbox" id="showMuon" checked></label>
+          <div class="ctrl">
+            <div class="ctrl-head"><span class="ctrl-label">η max</span>
+              <input class="ctrl-num" id="m_eta" type="number" step="0.001" min="0"></div>
+            <input type="range" id="m_eta_r" min="0" max="100">
+          </div>
+          <div class="ctrl">
+            <div class="ctrl-head"><span class="ctrl-label">λ weight decay</span>
+              <input class="ctrl-num" id="m_lambda" type="number" step="0.001" min="0"></div>
+            <input type="range" id="m_lambda_r" min="0" max="100">
+          </div>
+          <label class="check-row"><span>consistent_rms (None → width)</span>
+            <input type="checkbox" id="m_useRms"></label>
+          <div class="ctrl" id="m-rms-wrap">
+            <div class="ctrl-head"><span class="ctrl-label">consistent_rms</span>
+              <input class="ctrl-num" id="m_rms" type="number" step="0.01" min="0.01"></div>
+            <input type="range" id="m_rms_r" min="0" max="100">
+          </div>
+          <div class="row-2">
+            <div class="ctrl">
+              <div class="ctrl-head"><span class="ctrl-label">fan-in</span>
+                <input class="ctrl-num" id="fanIn" type="number" step="1" min="1"></div>
+            </div>
+            <div class="ctrl">
+              <div class="ctrl-head"><span class="ctrl-label">fan-out</span>
+                <input class="ctrl-num" id="fanOut" type="number" step="1" min="1"></div>
+            </div>
+          </div>
+          <p class="hint" id="muonRhoHint"></p>
+          <button class="details-btn" id="mAdvBtn" type="button">▸ Optax extras</button>
+          <div class="advanced" id="mAdv">
+            <div class="ctrl">
+              <div class="ctrl-head"><span class="ctrl-label">momentum β</span>
+                <input class="ctrl-num" id="m_beta" type="number" step="0.01" min="0" max="0.999"></div>
+              <input type="range" id="m_beta_r" min="0" max="100">
+            </div>
+            <label class="check-row"><span>nesterov</span><input type="checkbox" id="m_nesterov"></label>
+            <div class="row-2">
+              <div class="ctrl">
+                <div class="ctrl-head"><span class="ctrl-label">ns_steps</span>
+                  <input class="ctrl-num" id="m_ns" type="number" step="1" min="1" max="10"></div>
+              </div>
+              <div class="ctrl">
+                <div class="ctrl-head"><span class="ctrl-label">eps</span>
+                  <input class="ctrl-num" id="m_eps" type="number" step="1e-9" min="0"></div>
+              </div>
+            </div>
+            <div class="ctrl">
+              <div class="ctrl-head"><span class="ctrl-label">adam_weight_decay</span>
+                <input class="ctrl-num" id="m_adamWd" type="number" step="0.0001" min="0"></div>
+            </div>
+            <p class="hint static">Momentum, Newton–Schulz steps, and <code>eps</code> do not enter the RMS equilibrium. They change the direction buffer, not <code>s∞</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel adam">
+        <div class="panel-h">
+          <div class="panel-title"><span class="dot adam"></span><a class="doc" href="https://optax.readthedocs.io/en/latest/api/generated/optax.adamw.html" target="_blank" rel="noopener noreferrer">optax.adamw</a></div>
+          <button class="mini-btn" id="snapAdam" type="button">λ for N=10</button>
+        </div>
+        <div class="panel-b">
+          <label class="check-row"><span>Plot AdamW</span><input type="checkbox" id="showAdam" checked></label>
+          <div class="ctrl">
+            <div class="ctrl-head"><span class="ctrl-label">η max</span>
+              <input class="ctrl-num" id="a_eta" type="number" step="0.0001" min="0"></div>
+            <input type="range" id="a_eta_r" min="0" max="100">
+          </div>
+          <div class="ctrl">
+            <div class="ctrl-head"><span class="ctrl-label">λ weight decay</span>
+              <input class="ctrl-num" id="a_lambda" type="number" step="0.0001" min="0"></div>
+            <input type="range" id="a_lambda_r" min="0" max="100">
+          </div>
+          <div class="ctrl">
+            <div class="ctrl-head"><span class="ctrl-label">empirical update RMS ρ</span>
+              <input class="ctrl-num" id="a_rho" type="number" step="0.01" min="0.01"></div>
+            <input type="range" id="a_rho_r" min="0" max="100">
+          </div>
+          <p class="hint static">AdamW updates have theoretical RMS near 1 and empirical RMS around 0.2. The geometry model uses this ρ the same way Muon uses consistent RMS.</p>
+          <button class="details-btn" id="aAdvBtn" type="button">▸ Optax extras</button>
+          <div class="advanced" id="aAdv">
+            <div class="ctrl">
+              <div class="ctrl-head"><span class="ctrl-label">b1</span>
+                <input class="ctrl-num" id="a_b1" type="number" step="0.01" min="0" max="0.999"></div>
+              <input type="range" id="a_b1_r" min="0" max="100">
+            </div>
+            <div class="ctrl">
+              <div class="ctrl-head"><span class="ctrl-label">b2</span>
+                <input class="ctrl-num" id="a_b2" type="number" step="0.0001" min="0" max="0.9999"></div>
+              <input type="range" id="a_b2_r" min="0" max="100">
+            </div>
+            <div class="ctrl">
+              <div class="ctrl-head"><span class="ctrl-label">eps</span>
+                <input class="ctrl-num" id="a_eps" type="number" step="1e-9" min="0"></div>
+            </div>
+            <label class="check-row"><span>nesterov</span><input type="checkbox" id="a_nesterov"></label>
+            <p class="hint static">b1 / b2 set gradient-moment timescales. They do not change <code>s∞</code> under the constant-RMS model.</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <div class="chart-card hero">
+        <div class="chart-head">
+          <div class="chart-title">Weight RMS</div>
+          <div class="chart-tools">
+            <div class="legend" id="rmsLegend"></div>
+            <button type="button" class="axes-toggle">Axes</button>
+          </div>
+        </div>
+        <div class="plot-axes" data-plot="rms"></div>
+        <p class="chart-note">Does the live scale settle at s∞, or freeze once η has decayed?</p>
+        <p class="chart-xy">x: step t &nbsp;·&nbsp; y: weight RMS s</p>
+        <canvas class="chart" id="rmsChart"></canvas>
+      </div>
+
+      <div class="metrics">
+        <div class="metric-card" id="muonMetrics"></div>
+        <div class="metric-card" id="adamMetrics"></div>
+      </div>
+
+      <div class="split-2">
+        <div class="chart-card">
+          <div class="chart-head">
+            <div class="chart-title">Schedule</div>
+            <button type="button" class="axes-toggle">Axes</button>
+          </div>
+          <div class="plot-axes" data-plot="lr"></div>
+          <p class="chart-note">The shared η(t)/ηmax multiplier. Cosine and WSD shrink the remaining decay budget late in the run.</p>
+          <p class="chart-xy">x: step t &nbsp;·&nbsp; y: η(t) / ηmax</p>
+          <canvas class="chart sm" id="lrChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-head">
+            <div class="chart-title">Angular step</div>
+            <button type="button" class="axes-toggle">Axes</button>
+          </div>
+          <div class="plot-axes" data-plot="th"></div>
+          <p class="chart-note">θ = η ρ / s is the step size on the sphere of radius s. Large θ means a coarse update.</p>
+          <p class="chart-xy">x: step t &nbsp;·&nbsp; y: θ (rad / step)</p>
+          <canvas class="chart sm" id="thChart"></canvas>
+        </div>
+      </div>
+
+      <div class="split-2">
+        <div class="chart-card">
+          <div class="chart-head">
+            <div class="chart-title">Budget N(η, λ) · iso-N contours</div>
+            <div class="chart-tools">
+              <div class="legend">
+                <span><i style="background:#d94a4a"></i>N &lt; 1</span>
+                <span><i style="background:#888"></i>N ~ 10</span>
+                <span><i style="background:#50b86c"></i>N ≳ 10</span>
+              </div>
+              <button type="button" class="axes-toggle">Axes</button>
+            </div>
+          </div>
+          <div class="plot-axes" data-plot="heat"></div>
+          <p class="chart-note">N counts how many decay times fit in the run. Stay above the N=10 contour. Dots are the current (η, λ).</p>
+          <p class="chart-xy">x: weight decay λ &nbsp;·&nbsp; y: peak learning rate η</p>
+          <canvas class="chart heat" id="heatChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-head"><div class="chart-title">Timescales</div></div>
+          <p class="chart-note">Decay only matters if τ is shorter than T. EMA and momentum should be shorter still.</p>
+          <p class="chart-xy">bar length: steps</p>
+          <canvas class="chart heat" id="tauChart"></canvas>
+        </div>
+      </div>
+
+      <details class="code-fold">
+        <summary>Optax snippets</summary>
+        <div class="code-grid">
+          <div>
+            <div class="chart-title" style="margin-bottom:0.4rem"><a class="doc" href="https://optax.readthedocs.io/en/latest/api/generated/optax.contrib.muon.html" target="_blank" rel="noopener noreferrer">optax.contrib.muon</a></div>
+            <pre id="muonCode"></pre>
+          </div>
+          <div>
+            <div class="chart-title" style="margin-bottom:0.4rem"><a class="doc" href="https://optax.readthedocs.io/en/latest/api/generated/optax.adamw.html" target="_blank" rel="noopener noreferrer">optax.adamw</a> + parameter EMA</div>
+            <pre id="adamCode"></pre>
+          </div>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var LOG_T = [3, 7];
+  var LOG_ETA = [-5, Math.log10(0.2)];
+  var LOG_LAM = [-5, 0];
+  var LOG_S0 = [-2, Math.log10(3)];
+  var LOG_RHO = [-2, 0];
+  var LOG_N = [0, Math.log10(300)];
+  var COL = {
+    muon: '#4a90d9',
+    muonSoft: 'rgba(74,144,217,0.45)',
+    adam: '#222222',
+    adamSoft: 'rgba(34,34,34,0.45)',
+    adamFaint: 'rgba(34,34,34,0.3)',
+    ema: '#50b86c',
+    ink: '#222222',
+    dim: '#777777',
+    grid: '#e0dfdc',
+    paper: '#f8f7f4'
+  };
+
+  var S = {
+    T: 1e5,
+    schedule: 'cosine',
+    warmup: 0,
+    wsdDecay: 0.2,
+    decaySteps: 1e5,
+    coupleDecay: true,
+    coupleBudget: true,
+    Nstar: 10,
+    s0: 1,
+    emaOn: true,
+    emaDecay: 0.999,
+    emaDebias: true,
+    showMuon: true,
+    showAdam: true,
+    axes: {
+      rms: { logX: false, logY: false, xMin: '', xMax: '', yMin: '', yMax: '' },
+      lr: { logX: false, logY: false, xMin: '', xMax: '', yMin: '', yMax: '' },
+      th: { logX: false, logY: false, xMin: '', xMax: '', yMin: '', yMax: '' },
+      heat: { logX: true, logY: true, xMin: '', xMax: '', yMin: '', yMax: '' }
+    },
+    fanIn: 768,
+    fanOut: 768,
+    muon: {
+      eta: 0.02,
+      lambda: 0.01,
+      useRms: false,
+      rms: 0.2,
+      beta: 0.95,
+      nesterov: true,
+      ns: 5,
+      eps: 1e-8,
+      adamWd: 0
+    },
+    adam: {
+      eta: 1e-3,
+      lambda: 0.2,
+      rho: 0.2,
+      b1: 0.9,
+      b2: 0.999,
+      eps: 1e-8,
+      nesterov: false
+    }
+  };
+
+  var activePreset = null;
+
+  function applyOptax() {
+    S.T = 1e5; S.schedule = 'cosine'; S.warmup = 0; S.wsdDecay = 0.2; S.s0 = 1;
+    S.decaySteps = 1e5; S.coupleDecay = true; S.coupleBudget = false; S.Nstar = 10;
+    S.emaOn = true; S.emaDecay = 0.999; S.emaDebias = true;
+    S.muon = { eta: 0.02, lambda: 0, useRms: false, rms: 0.2, beta: 0.95, nesterov: true, ns: 5, eps: 1e-8, adamWd: 0 };
+    S.adam = { eta: 1e-3, lambda: 1e-4, rho: 0.2, b1: 0.9, b2: 0.999, eps: 1e-8, nesterov: false };
+  }
+
+  var PRESETS = [
+    { id: 'optax', label: 'Optax defaults', apply: applyOptax },
+    { id: 'moonlight', label: 'Moonlight defaults', apply: function () {
+      applyOptax();
+      S.warmup = 0.02;
+      S.muon.eta = 4.2e-4;
+      S.muon.lambda = 0.1;
+      S.muon.useRms = true;
+      S.muon.rms = 0.2;
+      S.muon.adamWd = 0.1;
+      S.adam.eta = 4.2e-4;
+      S.adam.lambda = 0.1;
+      S.adam.rho = 0.2;
+    }},
+    { id: 'rms', label: 'Muon + consistent_rms=0.2', apply: function () {
+      applyOptax();
+      S.muon.useRms = true;
+      S.muon.rms = 0.2;
+    }},
+    { id: 'short', label: 'short, λ=0', apply: function () {
+      applyOptax();
+      S.T = 5e3; S.muon.eta = 0.02; S.muon.lambda = 0; S.muon.useRms = true;
+    }},
+    { id: 'under', label: 'under-decayed', apply: function () {
+      applyOptax();
+      S.T = 2e4; S.muon.eta = 0.02; S.muon.lambda = 0.01; S.muon.useRms = true;
+    }},
+    { id: 'marg', label: 'marginal N=10', apply: function () {
+      applyOptax();
+      S.coupleBudget = true; S.Nstar = 10;
+      S.T = 1e5; S.muon.eta = 0.02; S.muon.useRms = true;
+    }},
+    { id: 'healthy', label: 'healthy N=100', apply: function () {
+      applyOptax();
+      S.coupleBudget = true; S.Nstar = 100;
+      S.T = 1e5; S.muon.eta = 0.02; S.muon.useRms = true;
+    }}
+  ];
+
+  function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function logLerp(a, b, u) { return Math.pow(10, lerp(a, b, u)); }
+  function invLog(x, a, b) {
+    var lx = Math.log10(Math.max(x, Math.pow(10, a)));
+    return clamp((lx - a) / (b - a), 0, 1) * 100;
+  }
+
+  function fmt(x) {
+    if (x == null || !isFinite(x)) return '∞';
+    if (x === 0) return '0';
+    var ax = Math.abs(x);
+    if (ax >= 1e4 || ax < 1e-3) return x.toExponential(2);
+    if (ax >= 100) return x.toFixed(1);
+    if (ax >= 10) return x.toFixed(2);
+    if (ax >= 1) return x.toFixed(3);
+    return x.toPrecision(3);
+  }
+
+  function fmtInt(x) {
+    if (!isFinite(x)) return '∞';
+    if (x >= 1e6) return (x / 1e6).toFixed(2) + 'M';
+    if (x >= 1e3) return (x / 1e3).toFixed(x >= 1e4 ? 0 : 1) + 'k';
+    return String(Math.round(x));
+  }
+
+  function muonRho() {
+    var m = Math.max(1, S.fanIn), n = Math.max(1, S.fanOut);
+    if (S.muon.useRms) return S.muon.rms;
+    return Math.sqrt(Math.max(1, n / m)) / Math.sqrt(Math.max(m, n));
+  }
+
+  function derivedDecaySteps() {
+    if (S.schedule === 'wsd') return Math.max(1, Math.round((S.wsdDecay || 0.2) * S.T));
+    return Math.max(1, Math.round(S.T * (1 - S.warmup)));
+  }
+
+  function lambdaForN(eta, N) {
+    var den = eta * meanEta() * S.T;
+    if (!(den > 0) || !(N > 0)) return 0;
+    return parseFloat(clamp(N / den, 0, 1).toPrecision(4));
+  }
+
+  function applyDecayCouple() {
+    if (S.coupleDecay) S.decaySteps = derivedDecaySteps();
+    else S.decaySteps = Math.max(1, Math.round(S.decaySteps));
+  }
+
+  function applyBudgetCouple() {
+    if (!S.coupleBudget) return;
+    S.Nstar = clamp(S.Nstar, 0.1, 1000);
+    S.muon.lambda = lambdaForN(S.muon.eta, S.Nstar);
+    S.adam.lambda = lambdaForN(S.adam.eta, S.Nstar);
+  }
+
+  function applyCouples() {
+    applyDecayCouple();
+    applyBudgetCouple();
+  }
+
+  function lrFrac(t) {
+    var T = S.T, tw = S.warmup * T;
+    var D = Math.max(1, S.decaySteps);
+    var warm = tw > 0 ? clamp(t / tw, 0, 1) : 1;
+    if (S.schedule === 'constant') return t < tw ? warm : 1;
+    if (S.schedule === 'cosine') {
+      if (t < tw) return warm;
+      var u = (t - tw) / D;
+      if (u >= 1) return 0;
+      return 0.5 * (1 + Math.cos(Math.PI * clamp(u, 0, 1)));
+    }
+    var decayStart = T - D;
+    if (t < tw) return warm;
+    if (t < decayStart) return 1;
+    var v = (t - decayStart) / D;
+    return 0.5 * (1 + Math.cos(Math.PI * clamp(v, 0, 1)));
+  }
+
+  function meanEta() {
+    var n = 400, acc = 0, i;
+    for (i = 0; i < n; i++) acc += lrFrac((i + 0.5) / n * S.T);
+    return acc / n;
+  }
+
+  function sInfOf(eta, lambda, rho) {
+    if (!(lambda > 0) || !(eta > 0)) return Infinity;
+    var den = 2 * lambda - eta * lambda * lambda;
+    return den > 0 ? rho * Math.sqrt(eta / den) : Infinity;
+  }
+
+  function thetaMax(eta, lambda) {
+    if (!(lambda > 0)) return 0;
+    return Math.sqrt(Math.max(0, 2 * eta * lambda));
+  }
+
+  function tauMax(eta, lambda) {
+    var p = eta * lambda;
+    return p > 0 ? 1 / p : Infinity;
+  }
+
+  function budgetN(eta, lambda) {
+    return lambda * eta * meanEta() * S.T;
+  }
+
+  function emaHalf() {
+    if (!S.emaOn || S.emaDecay >= 1) return Infinity;
+    if (S.emaDecay <= 0) return 0;
+    return Math.log(2) / -Math.log(S.emaDecay);
+  }
+
+  function emaWindow() {
+    if (!S.emaOn || S.emaDecay >= 1) return Infinity;
+    return 1 / Math.max(1e-12, 1 - S.emaDecay);
+  }
+
+  function simulate(etaMax, lambda, rho) {
+    var T = S.T;
+    var stride = Math.max(1, Math.ceil(T / 2400));
+    var s2 = S.s0 * S.s0;
+    var rawEma = S.s0;
+    var count = 0;
+    var pts = [];
+    var Nacc = 0;
+    var freezeStart = null;
+    var everClose = false;
+    var sPeakTarget = 0;
+    var t, eta, a, b, an, s, sInf, be, shown, theta, corr;
+
+    for (t = 0; t <= T; t += stride) {
+      eta = etaMax * lrFrac(t);
+      Nacc += lambda * eta * stride;
+      a = Math.pow(1 - eta * lambda, 2);
+      a = clamp(a, 0, 1);
+      b = eta * eta * rho * rho;
+      if (Math.abs(1 - a) < 1e-15) s2 += stride * b;
+      else {
+        an = Math.pow(a, stride);
+        s2 = an * s2 + b * (1 - an) / (1 - a);
+      }
+      s2 = Math.max(s2, 0);
+      s = Math.sqrt(s2);
+      sInf = sInfOf(eta, lambda, rho);
+      if (isFinite(sInf) && sInf > sPeakTarget) sPeakTarget = sInf;
+
+      be = Math.pow(S.emaDecay, stride);
+      rawEma = be * rawEma + (1 - be) * s;
+      count += stride;
+      shown = s;
+      if (S.emaOn) {
+        if (S.emaDebias && S.emaDecay < 1) {
+          corr = 1 - Math.pow(S.emaDecay, count);
+          shown = corr > 1e-12 ? rawEma / corr : s;
+        } else shown = rawEma;
+      }
+
+      theta = s > 1e-12 ? eta * rho / s : 0;
+      if (isFinite(sInf) && sInf > 0 && Math.abs(s - sInf) / sInf < 0.12) everClose = true;
+      if (everClose && t > 0.45 * T && isFinite(sInf) && sInf > 0 &&
+          Math.abs(s - sInf) / sInf > 0.18 && freezeStart == null) freezeStart = t;
+
+      pts.push({ t: t, eta: eta, s: s, sInf: sInf, ema: shown, theta: theta });
+    }
+
+    return {
+      pts: pts,
+      N: Nacc,
+      freezeStart: freezeStart,
+      sFinal: pts[pts.length - 1].s,
+      emaFinal: pts[pts.length - 1].ema,
+      sPeakTarget: sPeakTarget
+    };
+  }
+
+  function verdict(N, eta, lambda, rho) {
+    var drift = eta * rho * Math.sqrt(S.T);
+    if (!(lambda > 0)) {
+      if (drift < 0.35 * S.s0) return { cls: 'fine', text: 'fine · too short to drift' };
+      return { cls: 'warn', text: 'λ = 0 · norm random-walks' };
+    }
+    if (N < 1) return { cls: 'bad', text: 'inert · N ≪ 1' };
+    if (N < 10) return { cls: 'warn', text: 'under-decayed' };
+    if (N < 30) return { cls: 'warn', text: 'marginal' };
+    return { cls: 'ok', text: 'healthy' };
+  }
+
+  function kv(k, v) {
+    return '<div class="kv-item"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>';
+  }
+
+  function metricsHTML(name, cls, eta, lambda, rho, sim) {
+    var N = budgetN(eta, lambda);
+    var th = thetaMax(eta, lambda);
+    var tau = tauMax(eta, lambda);
+    var sInf = sInfOf(eta, lambda, rho);
+    var v = verdict(N, eta, lambda, rho);
+    return '<h3><span class="dot ' + cls + '"></span>' + name +
+      '<span class="verdict ' + v.cls + '">' + v.text + '</span></h3><div class="kv">' +
+      kv('N', fmt(N)) +
+      kv('τ', fmtInt(tau) + ' steps') +
+      kv('s∞', fmt(sInf)) +
+      kv('s(T)', fmt(sim.sFinal)) +
+      kv('EMA', S.emaOn ? fmt(sim.emaFinal) : 'off') +
+      kv('θ', th > 0 ? fmt(th) : '—') +
+      '</div>';
+  }
+
+  function box(canvas) {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var rect = canvas.getBoundingClientRect();
+    var w = Math.max(120, rect.width), h = Math.max(80, rect.height);
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+    }
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    return { ctx: ctx, w: w, h: h };
+  }
+
+  function logTicks(a, b) {
+    var ticks = [];
+    var start = Math.floor(Math.log10(a));
+    var end = Math.ceil(Math.log10(b));
+    var e, v;
+    for (e = start; e <= end; e++) {
+      v = Math.pow(10, e);
+      if (v >= a * 0.999 && v <= b * 1.001) ticks.push(v);
+    }
+    if (ticks.length < 2) return [a, b];
+    return ticks;
+  }
+
+  function linTicks(a, b, n) {
+    var ticks = [], i;
+    for (i = 0; i <= n; i++) ticks.push(lerp(a, b, i / n));
+    return ticks;
+  }
+
+  function niceTicks(a, b, n) {
+    if (!(b > a)) return [a, b];
+    var raw = (b - a) / Math.max(n, 1);
+    var pow = Math.pow(10, Math.floor(Math.log10(Math.abs(raw)) || 0));
+    var err = raw / pow;
+    var step = err >= 7.5 ? 10 * pow : err >= 3.5 ? 5 * pow : err >= 1.5 ? 2 * pow : pow;
+    var start = Math.ceil((a - step * 1e-9) / step) * step;
+    var ticks = [], k, v;
+    for (k = 0; k < 24; k++) {
+      v = start + k * step;
+      if (v > b + step * 1e-9) break;
+      if (v >= a - step * 1e-9) ticks.push(Math.abs(v) < step * 1e-9 ? 0 : v);
+    }
+    return ticks.length ? ticks : [a, b];
+  }
+
+  function axisUnit(v, a, b, log) {
+    if (log) {
+      if (!(v > 0) || !(a > 0) || !(b > 0)) return null;
+      return (Math.log10(v) - Math.log10(a)) / Math.max(Math.log10(b) - Math.log10(a), 1e-12);
+    }
+    return (v - a) / Math.max(b - a, 1e-12);
+  }
+
+  function parseLim(s) {
+    if (s === '' || s == null) return null;
+    var v = parseFloat(s);
+    return isFinite(v) ? v : null;
+  }
+
+  function finishRange(r, log) {
+    if (log) {
+      if (!(r.min > 0)) r.min = 1e-8;
+      if (!(r.max > r.min)) r.max = r.min * 10;
+    } else if (!(r.max > r.min)) {
+      r.max = r.min + 1;
+    }
+    return r;
+  }
+
+  function applyLimits(auto, ax, which) {
+    var lo = parseLim(which === 'x' ? ax.xMin : ax.yMin);
+    var hi = parseLim(which === 'x' ? ax.xMax : ax.yMax);
+    if (lo != null) auto.min = lo;
+    if (hi != null) auto.max = hi;
+    return finishRange(auto, which === 'x' ? ax.logX : ax.logY);
+  }
+
+  function xRange(ax) {
+    return applyLimits(ax.logX ? { min: 1, max: Math.max(S.T, 2) } : { min: 0, max: S.T }, ax, 'x');
+  }
+
+  function yRange(ax, vals, fallbackMax, linFixed) {
+    var auto, pos, mn, mx, lo, hi, mx2;
+    if (linFixed && !ax.logY && parseLim(ax.yMin) == null && parseLim(ax.yMax) == null) {
+      return finishRange({ min: linFixed.min, max: linFixed.max }, false);
+    }
+    pos = vals.filter(function (v) { return isFinite(v) && v > 0; });
+    if (ax.logY) {
+      if (!pos.length) auto = { min: 1e-3, max: fallbackMax || 1 };
+      else {
+        mn = Math.min.apply(null, pos);
+        mx = Math.max.apply(null, pos);
+        lo = Math.pow(10, Math.floor(Math.log10(mn * 0.9)));
+        hi = Math.pow(10, Math.ceil(Math.log10(mx * 1.15)));
+        if (lo >= hi) { lo = lo / 10; hi = hi * 10; }
+        auto = { min: Math.max(lo, 1e-8), max: hi };
+      }
+    } else {
+      mx2 = pos.length ? Math.max.apply(null, pos) : (fallbackMax || 1);
+      auto = { min: 0, max: Math.max(mx2 * 1.12, fallbackMax || 0.05) };
+    }
+    return applyLimits(auto, ax, 'y');
+  }
+
+  function tickLabel(v, log, asCount) {
+    if (v === 0) return '0';
+    if (asCount) return fmtInt(v);
+    var ax = Math.abs(v);
+    var p, n;
+    if (log && ax > 0) {
+      p = Math.round(Math.log10(ax));
+      n = Math.pow(10, p);
+      if (Math.abs(Math.log10(ax) - p) < 0.06) {
+        if (p >= 0 && p <= 3) return String(Math.round(n));
+        if (p === -1) return '0.1';
+        if (p === -2) return '0.01';
+        return '1e' + p;
+      }
+    }
+    if (ax >= 100) return String(Math.round(v));
+    if (ax >= 10) return String(Math.round(v * 10) / 10);
+    if (ax >= 1) return String(Math.round(v * 100) / 100);
+    return fmt(v);
+  }
+
+  function drawFrame(ctx, w, h, pad, xr, yr, xLabel, yLabel, logX, logY, opts) {
+    opts = opts || {};
+    var plotW = w - pad.l - pad.r;
+    var plotH = h - pad.t - pad.b;
+    var i, v, u, x, y, xt, yt, lab, tw, last;
+    xt = logX ? logTicks(xr.min, xr.max) : niceTicks(xr.min, xr.max, 4);
+    yt = logY ? logTicks(yr.min, yr.max) : niceTicks(yr.min, yr.max, 4);
+    ctx.strokeStyle = COL.grid;
+    ctx.lineWidth = 1;
+    if (opts.grid !== false) ctx.strokeRect(pad.l, pad.t, plotW, plotH);
+    ctx.font = '10px "DM Mono", monospace';
+    ctx.fillStyle = COL.dim;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    last = 1e9;
+    for (i = 0; i < yt.length; i++) {
+      v = yt[i];
+      u = axisUnit(v, yr.min, yr.max, logY);
+      if (u == null || u < -0.02 || u > 1.02) continue;
+      y = pad.t + (1 - u) * plotH;
+      if (Math.abs(y - last) < 13) continue;
+      last = y;
+      ctx.fillStyle = COL.dim;
+      ctx.fillText(tickLabel(v, logY, opts.yCount), pad.l - 8, y);
+      if (opts.grid !== false) {
+        ctx.strokeStyle = COL.grid;
+        ctx.beginPath();
+        ctx.moveTo(pad.l, y);
+        ctx.lineTo(w - pad.r, y);
+        ctx.stroke();
+      }
+    }
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    last = -1e9;
+    for (i = 0; i < xt.length; i++) {
+      v = xt[i];
+      u = axisUnit(v, xr.min, xr.max, logX);
+      if (u == null || u < -0.02 || u > 1.02) continue;
+      if (u < 0.045) continue;
+      x = pad.l + u * plotW;
+      lab = tickLabel(v, logX, opts.xCount);
+      tw = ctx.measureText(lab).width;
+      if (x - tw / 2 < last + 8) continue;
+      if (x - tw / 2 < pad.l - 4 || x + tw / 2 > w - 2) continue;
+      last = x + tw / 2;
+      ctx.fillStyle = COL.dim;
+      ctx.fillText(lab, x, h - pad.b + 5);
+    }
+    ctx.fillStyle = COL.dim;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(xLabel, pad.l + plotW / 2, h - 2);
+  }
+
+  function xmap(t, xr, pad, w, logX) {
+    var u = axisUnit(t, xr.min, xr.max, logX);
+    if (u == null || !isFinite(u)) return null;
+    return pad.l + u * (w - pad.l - pad.r);
+  }
+
+  function ymap(v, yr, pad, h, logY) {
+    var u = axisUnit(v, yr.min, yr.max, logY);
+    if (u == null || !isFinite(u)) return null;
+    return pad.t + (1 - u) * (h - pad.t - pad.b);
+  }
+
+  function strokeSeries(ctx, pts, key, color, xr, yr, pad, w, h, dash, logX, logY) {
+    var i, v, x, y, started = false;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(pad.l, pad.t, w - pad.l - pad.r, h - pad.t - pad.b);
+    ctx.clip();
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    if (dash) ctx.setLineDash(dash);
+    for (i = 0; i < pts.length; i++) {
+      v = pts[i][key];
+      x = xmap(pts[i].t, xr, pad, w, logX);
+      y = ymap(v, yr, pad, h, logY);
+      if (x == null || y == null) { started = false; continue; }
+      if (!started) { ctx.moveTo(x, y); started = true; }
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawRMS(mSim, aSim) {
+    var ax = S.axes.rms;
+    var c = box(document.getElementById('rmsChart'));
+    var pad = { l: 48, r: 16, t: 10, b: 36 };
+    var vals = [S.s0];
+    function collect(sim, on) {
+      if (!on || !sim) return;
+      sim.pts.forEach(function (p) {
+        vals.push(p.s);
+        if (isFinite(p.sInf)) vals.push(p.sInf);
+        if (S.emaOn) vals.push(p.ema);
+      });
+    }
+    collect(mSim, S.showMuon);
+    collect(aSim, S.showAdam);
+    var xr = xRange(ax);
+    var yr = yRange(ax, vals, 0.05);
+    drawFrame(c.ctx, c.w, c.h, pad, xr, yr, 'step t', 'weight RMS s', ax.logX, ax.logY, { xCount: !ax.logX });
+    if (S.showMuon && mSim.freezeStart != null) {
+      var x0 = xmap(mSim.freezeStart, xr, pad, c.w, ax.logX);
+      if (x0 != null) {
+        var xL = pad.l, xR = c.w - pad.r;
+        var a = clamp(x0, xL, xR);
+        if (a < xR) {
+          c.ctx.fillStyle = 'rgba(74,144,217,0.08)';
+          c.ctx.fillRect(a, pad.t, xR - a, c.h - pad.t - pad.b);
+        }
+      }
+    }
+    if (S.showMuon) {
+      strokeSeries(c.ctx, mSim.pts, 'sInf', COL.muonSoft, xr, yr, pad, c.w, c.h, [4, 4], ax.logX, ax.logY);
+      strokeSeries(c.ctx, mSim.pts, 's', COL.muon, xr, yr, pad, c.w, c.h, null, ax.logX, ax.logY);
+      if (S.emaOn) strokeSeries(c.ctx, mSim.pts, 'ema', COL.ema, xr, yr, pad, c.w, c.h, [2, 3], ax.logX, ax.logY);
+    }
+    if (S.showAdam) {
+      strokeSeries(c.ctx, aSim.pts, 'sInf', COL.adamSoft, xr, yr, pad, c.w, c.h, [4, 4], ax.logX, ax.logY);
+      strokeSeries(c.ctx, aSim.pts, 's', COL.adam, xr, yr, pad, c.w, c.h, null, ax.logX, ax.logY);
+      if (S.emaOn) strokeSeries(c.ctx, aSim.pts, 'ema', COL.ema, xr, yr, pad, c.w, c.h, [2, 3], ax.logX, ax.logY);
+    }
+  }
+
+  function drawLR() {
+    var ax = S.axes.lr;
+    var c = box(document.getElementById('lrChart'));
+    var pad = { l: 48, r: 16, t: 10, b: 36 };
+    var pts = [], i, t;
+    for (i = 0; i <= 200; i++) {
+      t = i / 200 * S.T;
+      pts.push({ t: t, f: lrFrac(t) });
+    }
+    var xr = xRange(ax);
+    var yr = yRange(ax, pts.map(function (p) { return p.f; }), 1, { min: 0, max: 1.05 });
+    drawFrame(c.ctx, c.w, c.h, pad, xr, yr, 'step t', 'η(t) / ηmax', ax.logX, ax.logY, { xCount: !ax.logX });
+    strokeSeries(c.ctx, pts, 'f', COL.ema, xr, yr, pad, c.w, c.h, null, ax.logX, ax.logY);
+  }
+
+  function drawTheta(mSim, aSim) {
+    var ax = S.axes.th;
+    var c = box(document.getElementById('thChart'));
+    var pad = { l: 48, r: 16, t: 10, b: 36 };
+    var vals = [];
+    if (S.showMuon) mSim.pts.forEach(function (p) { vals.push(p.theta); });
+    if (S.showAdam) aSim.pts.forEach(function (p) { vals.push(p.theta); });
+    var xr = xRange(ax);
+    var yr = yRange(ax, vals, 0.01);
+    drawFrame(c.ctx, c.w, c.h, pad, xr, yr, 'step t', 'θ (rad / step)', ax.logX, ax.logY, { xCount: !ax.logX });
+    if (S.showMuon) strokeSeries(c.ctx, mSim.pts, 'theta', COL.muon, xr, yr, pad, c.w, c.h, null, ax.logX, ax.logY);
+    if (S.showAdam) strokeSeries(c.ctx, aSim.pts, 'theta', COL.adam, xr, yr, pad, c.w, c.h, null, ax.logX, ax.logY);
+  }
+
+  function heatVal(u, lo, hi, log) {
+    if (log) return logLerp(Math.log10(lo), Math.log10(hi), u);
+    return lerp(lo, hi, u);
+  }
+
+  function heatColor(N) {
+    var x = Math.log10(Math.max(N, 1e-4));
+    var u = clamp((x + 2) / 4, 0, 1);
+    if (u < 0.45) {
+      var k = u / 0.45;
+      return [217 - 20 * k, 74 + 60 * k, 74 + 50 * k];
+    }
+    if (u < 0.62) {
+      var k2 = (u - 0.45) / 0.17;
+      return [136 - 20 * k2, 136 + 20 * k2, 136];
+    }
+    var k3 = (u - 0.62) / 0.38;
+    return [80 + 0 * k3, 150 + 34 * k3, 108];
+  }
+
+  function drawHeat() {
+    var ax = S.axes.heat;
+    var canvas = document.getElementById('heatChart');
+    var c = box(canvas);
+    var pad = { l: 48, r: 16, t: 10, b: 36 };
+    var pw = Math.floor(c.w - pad.l - pad.r);
+    var ph = Math.floor(c.h - pad.t - pad.b);
+    if (pw < 8 || ph < 8) return;
+    var xr = applyLimits({ min: Math.pow(10, LOG_LAM[0]), max: Math.pow(10, LOG_LAM[1]) }, ax, 'x');
+    var yr = applyLimits({ min: Math.pow(10, LOG_ETA[0]), max: Math.pow(10, LOG_ETA[1]) }, ax, 'y');
+    var img = c.ctx.createImageData(pw, ph);
+    var mean = meanEta();
+    var i, j, eta, lam, N, rgb, o, ux, uy, x, y, started, N0;
+    for (j = 0; j < ph; j++) {
+      eta = heatVal(1 - (j + 0.5) / ph, yr.min, yr.max, ax.logY);
+      for (i = 0; i < pw; i++) {
+        lam = heatVal((i + 0.5) / pw, xr.min, xr.max, ax.logX);
+        N = lam * eta * mean * S.T;
+        rgb = heatColor(N);
+        o = (j * pw + i) * 4;
+        img.data[o] = rgb[0];
+        img.data[o + 1] = rgb[1];
+        img.data[o + 2] = rgb[2];
+        img.data[o + 3] = 200;
+      }
+    }
+    var tmp = document.createElement('canvas');
+    tmp.width = pw; tmp.height = ph;
+    tmp.getContext('2d').putImageData(img, 0, 0);
+    c.ctx.drawImage(tmp, pad.l, pad.t, pw, ph);
+    c.ctx.strokeStyle = COL.grid;
+    c.ctx.strokeRect(pad.l, pad.t, pw, ph);
+    drawFrame(c.ctx, c.w, c.h, pad, xr, yr, 'λ', 'η', ax.logX, ax.logY, { grid: false });
+
+    [1, 10, 100].forEach(function (level) {
+      N0 = level;
+      c.ctx.beginPath();
+      c.ctx.strokeStyle = 'rgba(22,22,21,0.35)';
+      c.ctx.lineWidth = 1;
+      started = false;
+      var lx = null, ly = null;
+      for (i = 0; i < pw; i++) {
+        lam = heatVal((i + 0.5) / pw, xr.min, xr.max, ax.logX);
+        eta = N0 / Math.max(lam * mean * S.T, 1e-18);
+        uy = axisUnit(eta, yr.min, yr.max, ax.logY);
+        if (uy == null || uy < 0.06 || uy > 0.94) { started = false; continue; }
+        x = pad.l + i + 0.5;
+        y = pad.t + (1 - uy) * ph;
+        if (!started) { c.ctx.moveTo(x, y); started = true; }
+        else c.ctx.lineTo(x, y);
+        if (i > pw * 0.42 && i < pw * 0.55) { lx = x; ly = y; }
+      }
+      c.ctx.stroke();
+      if (lx != null) {
+        c.ctx.font = '10px "DM Mono", monospace';
+        c.ctx.fillStyle = 'rgba(22,22,21,0.7)';
+        c.ctx.textAlign = 'left';
+        c.ctx.textBaseline = 'bottom';
+        c.ctx.fillText('N=' + level, lx + 4, ly - 2);
+      }
+    });
+
+    function mark(eta0, lam0, color) {
+      if (!(eta0 > 0) || !(lam0 > 0)) return;
+      ux = axisUnit(lam0, xr.min, xr.max, ax.logX);
+      uy = axisUnit(eta0, yr.min, yr.max, ax.logY);
+      if (ux == null || uy == null || ux < 0 || ux > 1 || uy < 0 || uy > 1) return;
+      x = pad.l + ux * pw;
+      y = pad.t + (1 - uy) * ph;
+      c.ctx.beginPath();
+      c.ctx.fillStyle = color;
+      c.ctx.arc(x, y, 5, 0, Math.PI * 2);
+      c.ctx.fill();
+      c.ctx.strokeStyle = COL.ink;
+      c.ctx.lineWidth = 1.2;
+      c.ctx.stroke();
+    }
+    if (S.showMuon) mark(S.muon.eta, S.muon.lambda, COL.muon);
+    if (S.showAdam) mark(S.adam.eta, S.adam.lambda, COL.adam);
+  }
+
+  function drawTaus() {
+    var c = box(document.getElementById('tauChart'));
+    var rows = [{ name: 'T', v: S.T, col: COL.ink }];
+    if (S.showMuon) {
+      rows.push({ name: 'Muon τ', v: tauMax(S.muon.eta, S.muon.lambda), col: COL.muon });
+      rows.push({ name: 'Muon β', v: 1 / Math.max(1e-6, 1 - S.muon.beta), col: COL.muonSoft });
+    }
+    if (S.showAdam) {
+      rows.push({ name: 'AdamW τ', v: tauMax(S.adam.eta, S.adam.lambda), col: COL.adam });
+      rows.push({ name: 'Adam b1', v: 1 / Math.max(1e-6, 1 - S.adam.b1), col: COL.adamSoft });
+      rows.push({ name: 'Adam b2', v: 1 / Math.max(1e-6, 1 - S.adam.b2), col: COL.adamFaint });
+    }
+    if (S.emaOn) rows.push({ name: 'EMA', v: emaWindow(), col: COL.ema });
+    var finite = rows.map(function (r) { return isFinite(r.v) ? r.v : S.T * 20; });
+    var maxV = Math.max.apply(null, finite.concat([S.T]));
+    var pad = { l: 78, r: 52, t: 8, b: 24 };
+    var rowH = (c.h - pad.t - pad.b) / rows.length;
+    c.ctx.font = '10px "DM Mono", monospace';
+    rows.forEach(function (r, i) {
+      var y = pad.t + i * rowH + rowH * 0.25;
+      var h = rowH * 0.5;
+      var vis = isFinite(r.v) ? r.v : maxV;
+      var w = (vis / maxV) * (c.w - pad.l - pad.r);
+      c.ctx.fillStyle = r.col;
+      c.ctx.globalAlpha = 0.85;
+      c.ctx.fillRect(pad.l, y, Math.max(w, 2), h);
+      c.ctx.globalAlpha = 1;
+      c.ctx.fillStyle = COL.dim;
+      c.ctx.textAlign = 'right';
+      c.ctx.textBaseline = 'middle';
+      c.ctx.fillText(r.name, pad.l - 8, y + h / 2);
+      c.ctx.textAlign = 'left';
+      c.ctx.fillStyle = COL.ink;
+      c.ctx.fillText(fmtInt(r.v), pad.l + Math.max(w, 2) + 6, y + h / 2);
+    });
+    c.ctx.fillStyle = COL.dim;
+    c.ctx.textAlign = 'center';
+    c.ctx.textBaseline = 'bottom';
+    c.ctx.fillText('steps', pad.l + (c.w - pad.l - pad.r) / 2, c.h - 2);
+  }
+
+  var DOCS = {
+    muon: 'https://optax.readthedocs.io/en/latest/api/generated/optax.contrib.muon.html',
+    adamw: 'https://optax.readthedocs.io/en/latest/api/generated/optax.adamw.html',
+    ema: 'https://optax.readthedocs.io/en/latest/api/generated/optax.ema.html',
+    incr: 'https://optax.readthedocs.io/en/latest/api/generated/optax.incremental_update.html',
+    cosine: 'https://optax.readthedocs.io/en/latest/api/generated/optax.schedules.cosine_decay_schedule.html'
+  };
+
+  function docA(href, name) {
+    return '<a class="doc" href="' + href + '" target="_blank" rel="noopener noreferrer">' + name + '</a>';
+  }
+
+  function lrExpr(eta) {
+    if (S.schedule === 'constant') return String(eta);
+    if (S.schedule === 'wsd') return 'wsd_schedule(' + eta + ', T=' + Math.round(S.T) + ', decay_steps=' + Math.round(S.decaySteps) + ')';
+    return docA(DOCS.cosine, 'optax.cosine_decay_schedule') + '(' + eta + ', ' + Math.round(S.decaySteps) + ')';
+  }
+
+  function emitCode() {
+    var rms = S.muon.useRms ? S.muon.rms : 'None';
+    document.getElementById('muonCode').innerHTML =
+      'opt = ' + docA(DOCS.muon, 'optax.contrib.muon') + '(\n' +
+      '    learning_rate=' + lrExpr(S.muon.eta) + ',\n' +
+      '    weight_decay=' + S.muon.lambda + ',\n' +
+      '    beta=' + S.muon.beta + ',\n' +
+      '    nesterov=' + (S.muon.nesterov ? 'True' : 'False') + ',\n' +
+      '    ns_steps=' + S.muon.ns + ',\n' +
+      '    eps=' + S.muon.eps + ',\n' +
+      '    adam_weight_decay=' + S.muon.adamWd + ',\n' +
+      '    consistent_rms=' + rms + ',\n' +
+      ')';
+    document.getElementById('adamCode').innerHTML =
+      'opt = ' + docA(DOCS.adamw, 'optax.adamw') + '(\n' +
+      '    learning_rate=' + lrExpr(S.adam.eta) + ',\n' +
+      '    weight_decay=' + S.adam.lambda + ',\n' +
+      '    b1=' + S.adam.b1 + ',\n' +
+      '    b2=' + S.adam.b2 + ',\n' +
+      '    eps=' + S.adam.eps + ',\n' +
+      '    nesterov=' + (S.adam.nesterov ? 'True' : 'False') + ',\n' +
+      ')\n' +
+      'ema = params  # Polyak / ' + docA(DOCS.incr, 'incremental_update') + '\n' +
+      'ema = ' + docA(DOCS.incr, 'optax.incremental_update') + '(\n' +
+      '    params, ema, step_size=' + fmt(1 - S.emaDecay) + ',\n' +
+      ')';
+  }
+
+  function axesMarkup(xName, yName) {
+    function row(axis, name) {
+      return '<div class="plot-ax"><span class="lbl">' + name + '</span>' +
+        '<div class="seg ax-scale" data-axis="' + axis + '">' +
+          '<button type="button" data-v="0">lin</button>' +
+          '<button type="button" data-v="1">log</button>' +
+        '</div>' +
+        '<input class="ax-lim" data-lim="' + axis + 'Min" placeholder="auto" spellcheck="false">' +
+        '<span class="ax-dash">–</span>' +
+        '<input class="ax-lim" data-lim="' + axis + 'Max" placeholder="auto" spellcheck="false">' +
+        '</div>';
+    }
+    return row('x', xName) + row('y', yName);
+  }
+
+  function mountAxes() {
+    var labels = { rms: ['step t', 'RMS s'], lr: ['step t', 'η/ηmax'], th: ['step t', 'θ'], heat: ['λ', 'η'] };
+    Object.keys(labels).forEach(function (id) {
+      var el = document.querySelector('.plot-axes[data-plot="' + id + '"]');
+      if (el && !el.firstChild) el.innerHTML = axesMarkup(labels[id][0], labels[id][1]);
+    });
+  }
+
+  function syncAxes() {
+    ['rms', 'lr', 'th', 'heat'].forEach(function (id) {
+      var el = document.querySelector('.plot-axes[data-plot="' + id + '"]');
+      var ax = S.axes[id];
+      if (!el || !ax) return;
+      el.querySelectorAll('.ax-scale').forEach(function (seg) {
+        var log = seg.getAttribute('data-axis') === 'x' ? ax.logX : ax.logY;
+        seg.querySelectorAll('button').forEach(function (b) {
+          b.classList.toggle('active', (b.getAttribute('data-v') === '1') === log);
+        });
+      });
+      el.querySelectorAll('.ax-lim').forEach(function (inp) {
+        if (document.activeElement === inp) return;
+        inp.value = ax[inp.getAttribute('data-lim')] || '';
+      });
+    });
+  }
+
+  function setNum(id, v) {
+    var el = document.getElementById(id);
+    if (!el || document.activeElement === el) return;
+    if (v === 0) el.value = '0';
+    else if (Math.abs(v) > 0 && Math.abs(v) < 1e-3) el.value = v.toExponential(3);
+    else if (Math.abs(v) >= 1e4) el.value = String(Math.round(v));
+    else el.value = String(v);
+  }
+
+  function setRange(id, v) {
+    var el = document.getElementById(id);
+    if (el) el.value = String(v);
+  }
+
+  function sync() {
+    setNum('T', S.T); setRange('T_r', invLog(S.T, LOG_T[0], LOG_T[1]));
+    setNum('s0', S.s0); setRange('s0_r', invLog(S.s0, LOG_S0[0], LOG_S0[1]));
+    setNum('warmup', S.warmup); setRange('warmup_r', S.warmup * 100);
+    setNum('wsdDecay', S.wsdDecay); setRange('wsdDecay_r', S.wsdDecay * 100);
+    document.getElementById('coupleDecay').checked = S.coupleDecay;
+    document.getElementById('coupleBudget').checked = S.coupleBudget;
+    setNum('decaySteps', S.decaySteps); setRange('decaySteps_r', invLog(S.decaySteps, LOG_T[0], LOG_T[1]));
+    setNum('Nstar', S.Nstar); setRange('Nstar_r', invLog(S.Nstar, LOG_N[0], LOG_N[1]));
+    document.getElementById('decaySteps').disabled = S.coupleDecay;
+    document.getElementById('decaySteps_r').disabled = S.coupleDecay;
+    document.getElementById('m_lambda').disabled = S.coupleBudget;
+    document.getElementById('m_lambda_r').disabled = S.coupleBudget;
+    document.getElementById('a_lambda').disabled = S.coupleBudget;
+    document.getElementById('a_lambda_r').disabled = S.coupleBudget;
+    document.getElementById('decay-wrap').style.display = S.schedule === 'constant' ? 'none' : '';
+    document.getElementById('nstar-wrap').style.display = S.coupleBudget ? '' : 'none';
+    document.getElementById('coupleHint').textContent = S.coupleDecay || S.coupleBudget
+      ? 'Coupled values follow T (and η). Uncouple a lock to edit them by hand.'
+      : '';
+    document.getElementById('emaOn').checked = S.emaOn;
+    document.getElementById('emaDebias').checked = S.emaDebias;
+    setNum('emaDecay', S.emaDecay);
+    setRange('emaDecay_r', clamp((S.emaDecay - 0.9) / 0.09999, 0, 1) * 100);
+    document.getElementById('showMuon').checked = S.showMuon;
+    document.getElementById('showAdam').checked = S.showAdam;
+    setNum('m_eta', S.muon.eta); setRange('m_eta_r', invLog(S.muon.eta, LOG_ETA[0], LOG_ETA[1]));
+    setNum('m_lambda', S.muon.lambda);
+    setRange('m_lambda_r', S.muon.lambda > 0 ? invLog(S.muon.lambda, LOG_LAM[0], LOG_LAM[1]) : 0);
+    document.getElementById('m_useRms').checked = S.muon.useRms;
+    setNum('m_rms', S.muon.rms); setRange('m_rms_r', invLog(S.muon.rms, LOG_RHO[0], LOG_RHO[1]));
+    setNum('fanIn', S.fanIn); setNum('fanOut', S.fanOut);
+    setNum('m_beta', S.muon.beta); setRange('m_beta_r', S.muon.beta * 100);
+    document.getElementById('m_nesterov').checked = S.muon.nesterov;
+    setNum('m_ns', S.muon.ns); setNum('m_eps', S.muon.eps); setNum('m_adamWd', S.muon.adamWd);
+    setNum('a_eta', S.adam.eta); setRange('a_eta_r', invLog(S.adam.eta, LOG_ETA[0], LOG_ETA[1]));
+    setNum('a_lambda', S.adam.lambda);
+    setRange('a_lambda_r', S.adam.lambda > 0 ? invLog(S.adam.lambda, LOG_LAM[0], LOG_LAM[1]) : 0);
+    setNum('a_rho', S.adam.rho); setRange('a_rho_r', invLog(S.adam.rho, LOG_RHO[0], LOG_RHO[1]));
+    setNum('a_b1', S.adam.b1); setRange('a_b1_r', S.adam.b1 * 100);
+    setNum('a_b2', S.adam.b2); setRange('a_b2_r', clamp((S.adam.b2 - 0.9) / 0.0999, 0, 1) * 100);
+    setNum('a_eps', S.adam.eps);
+    document.getElementById('a_nesterov').checked = S.adam.nesterov;
+
+    document.getElementById('presets').innerHTML = PRESETS.map(function (p) {
+      return '<button type="button" class="chip' + (activePreset === p.id ? ' active' : '') + '" data-id="' + p.id + '">' + p.label + '</button>';
+    }).join('');
+
+    document.getElementById('sched').innerHTML = [
+      ['constant', 'constant'], ['cosine', 'cosine'], ['wsd', 'WSD']
+    ].map(function (s) {
+      return '<button type="button" data-v="' + s[0] + '" class="' + (S.schedule === s[0] ? 'active' : '') + '">' + s[1] + '</button>';
+    }).join('');
+    document.getElementById('wsd-wrap').style.display = (S.schedule === 'wsd' && S.coupleDecay) ? '' : 'none';
+    document.getElementById('m-rms-wrap').style.opacity = S.muon.useRms ? '1' : '0.45';
+    syncAxes();
+
+    var w = emaWindow();
+    document.getElementById('emaHint').innerHTML = S.emaOn
+      ? 'Window ≈ <code>' + fmtInt(w) + '</code> steps'
+      : 'EMA is off.';
+    document.getElementById('muonRhoHint').innerHTML = S.muon.useRms
+      ? 'consistent_rms = <code>' + S.muon.rms + '</code> → ρ = <code>' + fmt(muonRho()) + '</code> (shape-independent).'
+      : 'Width scaling on ' + S.fanIn + '×' + S.fanOut + ' → ρ = <code>' + fmt(muonRho()) + '</code>.';
+  }
+
+  function render() {
+    var mSim = simulate(S.muon.eta, S.muon.lambda, muonRho());
+    var aSim = simulate(S.adam.eta, S.adam.lambda, S.adam.rho);
+    document.getElementById('muonMetrics').innerHTML = metricsHTML('Muon', 'muon', S.muon.eta, S.muon.lambda, muonRho(), mSim);
+    document.getElementById('adamMetrics').innerHTML = metricsHTML('AdamW', 'adam', S.adam.eta, S.adam.lambda, S.adam.rho, aSim);
+    document.getElementById('rmsLegend').innerHTML =
+      (S.showMuon ? '<span><i style="background:' + COL.muon + '"></i>Muon s</span><span><i style="background:' + COL.muonSoft + '"></i>Muon s∞</span>' : '') +
+      (S.showAdam ? '<span><i style="background:' + COL.adam + '"></i>AdamW s</span><span><i style="background:' + COL.adamSoft + '"></i>AdamW s∞</span>' : '') +
+      (S.emaOn ? '<span><i style="background:' + COL.ema + '"></i>EMA</span>' : '');
+    drawRMS(mSim, aSim);
+    drawLR();
+    drawTheta(mSim, aSim);
+    drawHeat();
+    drawTaus();
+    emitCode();
+  }
+
+  function dirty() { applyCouples(); activePreset = null; sync(); render(); }
+
+  function num(id, fallback) {
+    var v = parseFloat(document.getElementById(id).value);
+    return isFinite(v) ? v : fallback;
+  }
+
+  function bind() {
+    document.getElementById('T').addEventListener('input', function () { S.T = Math.max(100, num('T', S.T)); dirty(); });
+    document.getElementById('T_r').addEventListener('input', function () {
+      S.T = Math.round(logLerp(LOG_T[0], LOG_T[1], this.value / 100)); dirty();
+    });
+    document.getElementById('s0').addEventListener('input', function () { S.s0 = Math.max(1e-4, num('s0', S.s0)); dirty(); });
+    document.getElementById('s0_r').addEventListener('input', function () {
+      S.s0 = logLerp(LOG_S0[0], LOG_S0[1], this.value / 100); dirty();
+    });
+    document.getElementById('warmup').addEventListener('input', function () { S.warmup = clamp(num('warmup', 0), 0, 0.5); dirty(); });
+    document.getElementById('warmup_r').addEventListener('input', function () { S.warmup = this.value / 100; dirty(); });
+    document.getElementById('wsdDecay').addEventListener('input', function () { S.wsdDecay = clamp(num('wsdDecay', 0.2), 0.02, 0.8); dirty(); });
+    document.getElementById('wsdDecay_r').addEventListener('input', function () { S.wsdDecay = this.value / 100; dirty(); });
+    document.getElementById('coupleDecay').addEventListener('change', function () {
+      S.coupleDecay = this.checked;
+      if (S.coupleDecay) S.decaySteps = derivedDecaySteps();
+      dirty();
+    });
+    document.getElementById('decaySteps').addEventListener('input', function () {
+      if (S.coupleDecay) return;
+      S.decaySteps = Math.max(1, Math.round(num('decaySteps', S.decaySteps)));
+      dirty();
+    });
+    document.getElementById('decaySteps_r').addEventListener('input', function () {
+      if (S.coupleDecay) return;
+      S.decaySteps = Math.round(logLerp(LOG_T[0], LOG_T[1], this.value / 100));
+      dirty();
+    });
+    document.getElementById('coupleBudget').addEventListener('change', function () {
+      S.coupleBudget = this.checked;
+      dirty();
+    });
+    document.getElementById('Nstar').addEventListener('input', function () {
+      S.Nstar = clamp(num('Nstar', S.Nstar), 0.1, 1000);
+      dirty();
+    });
+    document.getElementById('Nstar_r').addEventListener('input', function () {
+      S.Nstar = logLerp(LOG_N[0], LOG_N[1], this.value / 100);
+      dirty();
+    });
+
+    document.getElementById('sched').addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      S.schedule = b.getAttribute('data-v'); dirty();
+    });
+    document.querySelectorAll('.plot-axes').forEach(function (el) {
+      el.addEventListener('click', function (e) {
+        var b = e.target.closest('button');
+        if (!b) return;
+        var ax = S.axes[el.getAttribute('data-plot')];
+        var axis = b.parentElement.getAttribute('data-axis');
+        if (!ax || !axis) return;
+        if (axis === 'x') ax.logX = b.getAttribute('data-v') === '1';
+        else ax.logY = b.getAttribute('data-v') === '1';
+        sync(); render();
+      });
+      el.addEventListener('input', function (e) {
+        var inp = e.target.closest('.ax-lim');
+        if (!inp) return;
+        var ax = S.axes[el.getAttribute('data-plot')];
+        if (!ax) return;
+        ax[inp.getAttribute('data-lim')] = inp.value.trim();
+        render();
+      });
+    });
+    document.getElementById('presets').addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      var id = b.getAttribute('data-id');
+      var p = PRESETS.filter(function (x) { return x.id === id; })[0];
+      if (!p) return;
+      p.apply();
+      applyCouples();
+      activePreset = id;
+      sync(); render();
+    });
+
+    document.getElementById('emaOn').addEventListener('change', function () { S.emaOn = this.checked; dirty(); });
+    document.getElementById('emaDebias').addEventListener('change', function () { S.emaDebias = this.checked; dirty(); });
+    document.getElementById('emaDecay').addEventListener('input', function () { S.emaDecay = clamp(num('emaDecay', 0.999), 0, 0.99999); dirty(); });
+    document.getElementById('emaDecay_r').addEventListener('input', function () {
+      S.emaDecay = 0.9 + (this.value / 100) * 0.09999; dirty();
+    });
+    document.getElementById('snapEma').addEventListener('click', function () {
+      S.emaOn = true;
+      S.emaDecay = clamp(1 - 10 / S.T, 0.5, 0.99999);
+      dirty();
+    });
+
+    document.getElementById('showMuon').addEventListener('change', function () { S.showMuon = this.checked; dirty(); });
+    document.getElementById('showAdam').addEventListener('change', function () { S.showAdam = this.checked; dirty(); });
+    document.getElementById('m_eta').addEventListener('input', function () { S.muon.eta = Math.max(0, num('m_eta', S.muon.eta)); dirty(); });
+    document.getElementById('m_eta_r').addEventListener('input', function () {
+      S.muon.eta = logLerp(LOG_ETA[0], LOG_ETA[1], this.value / 100); dirty();
+    });
+    document.getElementById('m_lambda').addEventListener('input', function () { S.muon.lambda = Math.max(0, num('m_lambda', 0)); dirty(); });
+    document.getElementById('m_lambda_r').addEventListener('input', function () {
+      S.muon.lambda = this.value <= 0 ? 0 : logLerp(LOG_LAM[0], LOG_LAM[1], this.value / 100); dirty();
+    });
+    document.getElementById('m_useRms').addEventListener('change', function () { S.muon.useRms = this.checked; dirty(); });
+    document.getElementById('m_rms').addEventListener('input', function () { S.muon.rms = Math.max(0.01, num('m_rms', 0.2)); dirty(); });
+    document.getElementById('m_rms_r').addEventListener('input', function () {
+      S.muon.rms = logLerp(LOG_RHO[0], LOG_RHO[1], this.value / 100); dirty();
+    });
+    document.getElementById('fanIn').addEventListener('input', function () { S.fanIn = Math.max(1, Math.round(num('fanIn', 768))); dirty(); });
+    document.getElementById('fanOut').addEventListener('input', function () { S.fanOut = Math.max(1, Math.round(num('fanOut', 768))); dirty(); });
+    document.getElementById('m_beta').addEventListener('input', function () { S.muon.beta = clamp(num('m_beta', 0.95), 0, 0.999); dirty(); });
+    document.getElementById('m_beta_r').addEventListener('input', function () { S.muon.beta = this.value / 100; dirty(); });
+    document.getElementById('m_nesterov').addEventListener('change', function () { S.muon.nesterov = this.checked; dirty(); });
+    document.getElementById('m_ns').addEventListener('input', function () { S.muon.ns = Math.max(1, Math.round(num('m_ns', 5))); dirty(); });
+    document.getElementById('m_eps').addEventListener('input', function () { S.muon.eps = Math.max(0, num('m_eps', 1e-8)); dirty(); });
+    document.getElementById('m_adamWd').addEventListener('input', function () { S.muon.adamWd = Math.max(0, num('m_adamWd', 0)); dirty(); });
+    document.getElementById('snapMuon').addEventListener('click', function () {
+      if (S.coupleBudget) S.Nstar = 10;
+      else S.muon.lambda = lambdaForN(S.muon.eta, 10);
+      dirty();
+    });
+
+    document.getElementById('a_eta').addEventListener('input', function () { S.adam.eta = Math.max(0, num('a_eta', S.adam.eta)); dirty(); });
+    document.getElementById('a_eta_r').addEventListener('input', function () {
+      S.adam.eta = logLerp(LOG_ETA[0], LOG_ETA[1], this.value / 100); dirty();
+    });
+    document.getElementById('a_lambda').addEventListener('input', function () { S.adam.lambda = Math.max(0, num('a_lambda', 0)); dirty(); });
+    document.getElementById('a_lambda_r').addEventListener('input', function () {
+      S.adam.lambda = this.value <= 0 ? 0 : logLerp(LOG_LAM[0], LOG_LAM[1], this.value / 100); dirty();
+    });
+    document.getElementById('a_rho').addEventListener('input', function () { S.adam.rho = Math.max(0.01, num('a_rho', 0.2)); dirty(); });
+    document.getElementById('a_rho_r').addEventListener('input', function () {
+      S.adam.rho = logLerp(LOG_RHO[0], LOG_RHO[1], this.value / 100); dirty();
+    });
+    document.getElementById('a_b1').addEventListener('input', function () { S.adam.b1 = clamp(num('a_b1', 0.9), 0, 0.999); dirty(); });
+    document.getElementById('a_b1_r').addEventListener('input', function () { S.adam.b1 = this.value / 100; dirty(); });
+    document.getElementById('a_b2').addEventListener('input', function () { S.adam.b2 = clamp(num('a_b2', 0.999), 0, 0.9999); dirty(); });
+    document.getElementById('a_b2_r').addEventListener('input', function () {
+      S.adam.b2 = 0.9 + (this.value / 100) * 0.0999; dirty();
+    });
+    document.getElementById('a_eps').addEventListener('input', function () { S.adam.eps = Math.max(0, num('a_eps', 1e-8)); dirty(); });
+    document.getElementById('a_nesterov').addEventListener('change', function () { S.adam.nesterov = this.checked; dirty(); });
+    document.getElementById('snapAdam').addEventListener('click', function () {
+      if (S.coupleBudget) S.Nstar = 10;
+      else S.adam.lambda = lambdaForN(S.adam.eta, 10);
+      dirty();
+    });
+
+    document.getElementById('mAdvBtn').addEventListener('click', function () {
+      var el = document.getElementById('mAdv');
+      el.classList.toggle('open');
+      this.textContent = el.classList.contains('open') ? '▾ Optax extras' : '▸ Optax extras';
+    });
+    document.getElementById('aAdvBtn').addEventListener('click', function () {
+      var el = document.getElementById('aAdv');
+      el.classList.toggle('open');
+      this.textContent = el.classList.contains('open') ? '▾ Optax extras' : '▸ Optax extras';
+    });
+
+    document.querySelectorAll('.axes-toggle').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var card = btn.closest('.chart-card');
+        if (!card) return;
+        card.classList.toggle('show-axes');
+        btn.classList.toggle('active', card.classList.contains('show-axes'));
+      });
+    });
+
+    window.addEventListener('resize', function () { render(); });
+  }
+
+  mountAxes();
+  bind();
+  applyCouples();
+  sync();
+  render();
+})();
+
+</script>
+
+</body>
+</html>

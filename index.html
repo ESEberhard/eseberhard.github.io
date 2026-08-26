@@ -499,7 +499,7 @@ section {
 
 .tool-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1.2rem;
   width: 100%;
 }
@@ -1016,6 +1016,12 @@ footer .footer-links a:hover { color: var(--accent); }
       <div class="tool-type">LaTeX Utility</div>
       <h3>LaTeX Math to SVG</h3>
       <p>Render LaTeX equations to standalone SVG files for slides, posters, and figures — with live preview, color control, and one-click export.</p>
+      <div class="tool-link">Open Tool &rarr;</div>
+    </a>
+    <a href="optimizer-tuner.html" class="tool-card fade-in">
+      <div class="tool-type">Optimization</div>
+      <h3>Optimizer Tuner</h3>
+      <p>See how weight decay, parameter EMA, and learning rate couple for Muon and AdamW, starting from the current Optax defaults.</p>
       <div class="tool-link">Open Tool &rarr;</div>
     </a>
   </div>
