@@ -450,13 +450,13 @@ function fromHa(ha, unit) {
 }
 
 function toHaBohr(val, unit) {
-  const HB_EV_ANG = HA_TO_EV / BOHR_TO_ANG;
+  // dE/dx_Bohr = dE/dx_Å * (Å per Bohr)
   switch(unit) {
-    case 'ev_ang':    return val / HB_EV_ANG;
+    case 'ev_ang':    return val / HA_TO_EV * BOHR_TO_ANG;
     case 'ev_bohr':   return val / HA_TO_EV;
-    case 'mha_ang':   return val / 1000 / BOHR_TO_ANG;
+    case 'mha_ang':   return val / 1000 * BOHR_TO_ANG;
     case 'mha_bohr':  return val / 1000;
-    case 'kcal_ang':  return val / HA_TO_KCAL / BOHR_TO_ANG;
+    case 'kcal_ang':  return val / HA_TO_KCAL * BOHR_TO_ANG;
     case 'kcal_bohr': return val / HA_TO_KCAL;
     case 'ha_bohr':   return val;
     case 'ha_ang':    return val * BOHR_TO_ANG;
@@ -464,13 +464,12 @@ function toHaBohr(val, unit) {
 }
 
 function fromHaBohr(hb, unit) {
-  const HB_EV_ANG = HA_TO_EV / BOHR_TO_ANG;
   switch(unit) {
-    case 'ev_ang':    return hb * HB_EV_ANG;
+    case 'ev_ang':    return hb * HA_TO_EV / BOHR_TO_ANG;
     case 'ev_bohr':   return hb * HA_TO_EV;
-    case 'mha_ang':   return hb * 1000 * BOHR_TO_ANG;
+    case 'mha_ang':   return hb * 1000 / BOHR_TO_ANG;
     case 'mha_bohr':  return hb * 1000;
-    case 'kcal_ang':  return hb * HA_TO_KCAL * BOHR_TO_ANG;
+    case 'kcal_ang':  return hb * HA_TO_KCAL / BOHR_TO_ANG;
     case 'kcal_bohr': return hb * HA_TO_KCAL;
     case 'ha_bohr':   return hb;
     case 'ha_ang':    return hb / BOHR_TO_ANG;
