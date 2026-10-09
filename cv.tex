@@ -1,0 +1,179 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[default]{sourcesanspro}
+\usepackage[top=1.6cm,bottom=1.5cm,left=1.8cm,right=1.8cm]{geometry}
+\usepackage[table]{xcolor}
+\usepackage{microtype}
+\usepackage{titlesec}
+\usepackage[colorlinks,urlcolor=accent,linkcolor=accent]{hyperref}
+
+% ---------- colors ----------
+\definecolor{paperteal}{HTML}{006a98}
+\colorlet{accent}{paperteal}
+\definecolor{ink}{HTML}{111827}
+\definecolor{muted}{HTML}{6B7280}
+\definecolor{rule}{HTML}{D1D5DB}
+\color{ink}
+
+% ---------- layout ----------
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\renewcommand{\arraystretch}{1.0}
+
+\titleformat{\section}
+  {\color{accent}\normalfont\bfseries\large\scshape}
+  {}{0pt}{}
+  [\vspace{0.25em}{\color{rule}\titlerule[0.6pt]}]
+\titlespacing*{\section}{0pt}{1.3em}{0.7em}
+
+\newcommand{\datewidth}{2.9cm}
+
+% \entry{date}{content}
+\newcommand{\entry}[2]{%
+  \par\noindent
+  \begin{minipage}[t]{\datewidth}\raggedleft\small\textcolor{muted}{#1}\end{minipage}%
+  \hspace{1.1em}%
+  \begin{minipage}[t]{\dimexpr\linewidth-\datewidth-1.1em\relax}#2\end{minipage}%
+  \par\vspace{0.55em}}
+
+\newcommand{\role}[1]{\textbf{#1}}
+\newcommand{\org}[1]{\newline #1}
+\newcommand{\detail}[1]{\newline{\small\color{muted}#1}}
+\newcommand{\authors}[1]{\newline{\small #1}}
+\newcommand{\venue}[1]{\newline{\small\color{muted}#1}}
+\newcommand{\sep}{\;{\color{rule}\textbar}\;}
+
+\begin{document}
+
+% ---------- header ----------
+\begin{center}
+  {\fontsize{26}{30}\selectfont\bfseries Eike S.\ Eberhard}\\[0.5em]
+  {\large\color{muted} PhD Candidate in Machine Learning for Electronic Structure}\\[0.2em]
+  {\color{muted} Technical University of Munich \textperiodcentered{} Munich Data Science Institute}\\[0.9em]
+  {\small
+  \href{mailto:e.eberhard@tum.de}{e.eberhard@tum.de}\sep
+  \href{https://eseberhard.github.io}{eseberhard.github.io}\sep
+  \href{https://github.com/ESEberhard}{GitHub}\sep
+  \href{https://scholar.google.com/citations?user=FL38Be8AAAAJ}{Google Scholar}\sep
+  \href{https://www.semanticscholar.org/author/Eike-Eberhard/2142552062}{Semantic Scholar}\sep
+  \href{https://linkedin.com/in/eike-eberhard-23b170276}{LinkedIn}}
+\end{center}
+\vspace{0.3em}
+
+% ---------- introduction ----------
+{\small\setlength{\parskip}{0pt}\color{ink}
+Machine-learned force fields simulate complex chemistry at a fraction of the cost of quantum mechanics, but they are fundamentally bounded by their training data.
+That data is the bottleneck: gold-standard coupled cluster cannot scale past small molecules, while standard DFT trades away accuracy.
+I attack this bottleneck by rethinking DFT itself.
+I train neural exchange-correlation functionals end-to-end through the self-consistent field solver, unlocking hybrid-level accuracy where hybrids are computationally out of reach.
+Then I make these calculations fast.
+Learned initializations slash the iterations needed to converge, while direct density-matrix prediction bypasses the solver loop entirely.
+My goal is to make coupled-cluster-quality data cheap enough to generate at the scale modern force fields demand.\par}
+
+% ---------- publications ----------
+\section*{Key Publications}
+{\footnotesize\color{muted}\hfill $^*$\,equal contribution\par}
+\vspace{0.4em}
+
+\entry{2026 Oct}{%
+  \role{\href{https://arxiv.org/abs/2610.10298}{Physics-Aligned Electronic Ground-State Learning Improves Generalization}}
+  \authors{\textbf{E.\,S.\ Eberhard}$^*$, X.\ Kainz$^*$, V.\ Kotsev, A.\ Aldossary, S.\ G\"unnemann}
+  \venue{Preprint 2026 \textperiodcentered{} ROCKET, GROOT, ON-Loss}}
+
+\entry{2026 Jun}{%
+  \role{\href{https://arxiv.org/abs/2606.04279}{Derivative Informed Learning of Exchange-Correlation Functionals}}
+  \authors{\textbf{E.\,S.\ Eberhard}, L.\,A.\ Thiede, A.\ Aldossary, A.\ Burger, N.\ Gao, V.\ Bhethanabotla, A.\ Aspuru-Guzik, S.\ G\"unnemann}
+  \venue{ICML 2026 \textperiodcentered{} DI-XC, DI-Loss}}
+
+\entry{2026 Apr}{%
+  \role{\href{https://arxiv.org/abs/2604.21657}{Transferable SCF-Acceleration through Solver-Aligned Initialization Learning}}
+  \authors{\textbf{E.\,S.\ Eberhard}$^*$, V.\ Kotsev$^*$, T.\ G\"uthle, S.\ G\"unnemann}
+  \venue{NeurIPS 2026 \textperiodcentered{} SAIL, ERIC}}
+
+\entry{2026 Jan}{%
+  \role{\href{https://arxiv.org/abs/2601.16955}{3D Molecule Generation from Rigid Motifs via SE(3) Flows}}
+  \authors{R.\ Poletukhin, M.\ Kollovieh, \textbf{E.\,S.\ Eberhard}, S.\ G\"unnemann}
+  \venue{NeurIPS 2026 \textperiodcentered{} MotiFlow}}
+
+\entry{2025 Apr}{%
+  \role{\href{https://doi.org/10.1021/acs.nanolett.5c00306}{Force Generation by Enhanced Diffusion in Enzyme-Loaded Vesicles}}
+  \authors{\textbf{E.\,S.\ Eberhard}, L.\ Burger, C.\,L.\ Pastrana, H.\ Seyed-Allaei, G.\ Giunta, U.\ Gerland}
+  \venue{Nano Letters}}
+
+\entry{2024 Oct}{%
+  \role{\href{https://openreview.net/forum?id=FhBT596F1X}{Learning Equivariant Non-Local Electron Density Functionals}}
+  \authors{\textbf{E.\,S.\ Eberhard}$^*$, N.\ Gao$^*$, S.\ G\"unnemann}
+  \venue{ICLR 2025 (Spotlight) \textperiodcentered{} EG-XC}}
+
+% ---------- education ----------
+\section*{Education}
+{\footnotesize\color{muted}\hfill GPAs on the German scale from 1.0 (best) to 4.0 (passed).\par}
+\vspace{0.4em}
+
+\entry{2025 Jan -- present}{%
+  \role{PhD Candidate}
+  \org{Data Analytics and Machine Learning Group, TUM}
+  \detail{Munich Data Science Institute (MDSI)}}
+
+\entry{2026 Jun -- Sep}{%
+  \role{Research Stay}
+  \org{University of Toronto \& Vector Institute}
+  \detail{ML exchange-correlation functionals at the MatterLab (Prof.\ Aspuru-Guzik)}}
+
+\entry{2022 Oct -- 2024 Aug}{%
+  \role{M.\,Sc.\ Computer Science \& Engineering} \hfill GPA 1.1
+  \org{Technical University of Munich (TUM)}
+  \detail{Best of class 2024}
+  \detail{Thesis: \emph{Machine Learning for Density Functional Theory}, Data Analytics and Machine Learning Chair (Prof.\ G\"unnemann)}}
+
+\entry{2021 Oct -- 2023 Oct}{%
+  \role{M.\,Sc.\ Physics} \hfill GPA 1.2
+  \org{Technical University of Munich (TUM)}
+  \detail{Specialization in Theoretical Biophysics}
+  \detail{Thesis: \emph{Effects of Enhanced Diffusion in Enzyme-loaded Vesicles: A Multiscale Simulation Study}}}
+
+\entry{2017 Oct -- 2021 Oct}{%
+  \role{B.\,Sc.\ Physics} \hfill GPA 1.8
+  \org{Technical University of Munich (TUM)}
+  \detail{Thesis: \emph{Extending Dispersive Bounds to Include Sub-threshold Branch Cuts} (Mathematical Particle Physics)}}
+
+% ---------- work experience ----------
+\newpage
+\section*{Work Experience}
+
+\entry{2023 Nov -- 2024 Feb}{%
+  \role{Chair of Theory of Complex Biosystem}
+  \detail{Writing a paper on the results of my master's thesis and integrating my simulation code into JAX-MD}}
+
+\entry{2021 Sep -- 2022 Jun}{%
+  \role{Deloitte Consulting GmbH}
+  \detail{Industrial software development standards, and machine learning software for business applications (\emph{trufa})}}
+
+\entry{2020 Aug -- 2021 May}{%
+  \role{Chair of Theoretical Elementary Particle Physics}
+  \detail{Research in theoretical particle and high-energy physics}
+  \detail{Contributor to \href{https://doi.org/10.1140/epjc/s10052-022-10177-4}{EOS Software}}}
+
+\entry{2019 Jun -- 2020 Jan}{%
+  \role{Walter Schottky Institute}
+  \detail{Fundamental research on semiconductors}
+  \detail{Automated reproducible data analysis and independently developed software correlating multiple sources of experimental data}}
+
+% ---------- talks ----------
+\section*{Invited Talks}
+
+\entry{2026 Nov}{\role{Grimme Group}\detail{University of Bonn}}
+\entry{2026 Nov}{\role{Learning-Based Methods in Scientific Computing}\detail{RICAM, Linz}}
+\entry{2025 Nov}{\role{AMLab}\detail{Ensing \& Welling groups, University of Amsterdam}}
+\entry{2025 May}{\role{University of Heidelberg}}
+\entry{2024 Nov}{\role{Learning on Graphs Reading Group}\detail{MIT (online)}}
+
+% ---------- awards ----------
+\section*{Awards}
+
+\entry{2025 Nov}{\role{ChemAI Best Poster Award}\detail{Amsterdam, Netherlands}}
+\entry{2016 Jun}{\role{Abitur Award}\detail{German Physical Society}}
+
+\end{document}
