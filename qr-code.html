@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>QR Code Generator | Eike S. Eberhard</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+  :root {
+    --bg: #06080d;
+    --bg-card: #0c1018;
+    --bg-card-hover: #111822;
+    --bg-input: #080c12;
+    --text: #c8d4e6;
+    --text-dim: #5a6a82;
+    --text-bright: #e8f0fa;
+    --accent: #4fc3f7;
+    --accent2: #ab47bc;
+    --accent3: #66bb6a;
+    --border: #1a2438;
+    --border-focus: #4fc3f7;
+    --glow: rgba(79, 195, 247, 0.08);
+    --error: #ef5350;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    min-height: 100vh;
+    padding-top: calc(64px + env(safe-area-inset-top));
+  }
+
+  /* === NAV (match index.html) === */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: env(safe-area-inset-top) 3rem 0;
+    height: calc(64px + env(safe-area-inset-top));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(24px) saturate(1.2);
+    background: rgba(5, 7, 9, 0.6);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+  }
+
+  .nav-logo .dot { color: var(--accent); }
+
+  .nav-links { display: flex; gap: 0.3rem; }
+
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.06em;
+    padding: 0.45rem 0.9rem;
+    border-radius: 6px;
+    transition: all 0.3s;
+  }
+
+  .nav-links a:hover {
+    color: var(--text-bright);
+    background: rgba(255,255,255,0.04);
+  }
+
+  /* === HEADER === */
+  .page-header { padding: 2.5rem 3rem 0; }
+
+  .page-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent2);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-tag::before { content: '▸ '; color: var(--accent); }
+
+  .page-title {
+    font-size: clamp(2.2rem, 4.5vw, 3.2rem);
+    font-weight: 400;
+    color: var(--text-bright);
+    letter-spacing: -0.025em;
+    margin-bottom: 0.8rem;
+  }
+
+  .page-desc {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    max-width: 700px;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  /* === LAYOUT === */
+  .workspace {
+    display: grid;
+    grid-template-columns: minmax(280px, 380px) 1fr;
+    gap: 1.5rem;
+    padding: 0 3rem 3rem;
+    align-items: start;
+  }
+
+  .panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.2rem;
+  }
+
+  .field-label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    margin-bottom: 0.4rem;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 190px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.7;
+    resize: vertical;
+    color: var(--text);
+    background: var(--bg-input);
+    outline: none;
+    transition: border-color 0.2s;
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  textarea:focus, select:focus, input[type="number"]:focus, input[type="text"]:focus { border-color: var(--border-focus); }
+  textarea::placeholder { color: var(--text-dim); opacity: 0.4; }
+
+  .hint {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    margin-top: 0.4rem;
+    line-height: 1.5;
+  }
+
+  .options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+    margin-top: 1.2rem;
+  }
+
+  .option.full { grid-column: 1 / -1; }
+
+  select:disabled { opacity: 0.5; cursor: not-allowed; }
+  .hint[hidden] { display: none; }
+
+  .far-hint { margin: -0.4rem 0 1rem; max-width: 640px; }
+
+  .warnings:empty { display: none; }
+  .warnings { margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.4rem; }
+  .warn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: #ffb74d;
+    border: 1px solid rgba(255,183,77,0.35);
+    background: rgba(255,183,77,0.06);
+    border-radius: 4px;
+    padding: 0.5rem 0.8rem;
+  }
+
+  select, input[type="number"], input[type="text"] {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.45rem 0.6rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .color-field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  input[type="color"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 34px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-input);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  input[type="color"]::-webkit-color-swatch-wrapper { padding: 3px; }
+  input[type="color"]::-webkit-color-swatch { border: none; border-radius: 2px; }
+  input[type="color"]:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .color-hex {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.74rem;
+    color: var(--text-dim);
+  }
+
+  .themes-label { margin-top: 1.2rem; }
+
+  .themes { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.72rem;
+  }
+
+  .chip .dot-pair { display: inline-flex; }
+  .chip .dot-pair i {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .chip .dot-pair i + i { margin-left: -4px; }
+
+  .chip.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--glow);
+  }
+
+  .presets { display: flex; gap: 0.35rem; }
+
+  .swatch {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .swatch:hover:not(:disabled) { border-color: var(--accent); }
+  .swatch.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--glow), 0 0 0 3px var(--accent); }
+  /* repeat :hover so the generic button:hover background doesn't override the swatch fill */
+  .swatch[data-color="#000000"], .swatch[data-color="#000000"]:hover:not(:disabled) { background: #000000; }
+  .swatch[data-color="#ffffff"], .swatch[data-color="#ffffff"]:hover:not(:disabled) { background: #ffffff; }
+
+  .checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.74rem;
+    color: var(--text-dim);
+    cursor: pointer;
+    margin-top: 0.5rem;
+  }
+  .checkbox input { accent-color: var(--accent); cursor: pointer; }
+
+  /* === BUTTONS === */
+  button {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.55rem 1.2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    cursor: pointer;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    transition: all 0.2s;
+  }
+
+  button:hover:not(:disabled) {
+    border-color: rgba(79,195,247,0.3);
+    color: var(--text);
+    background: var(--bg-card-hover);
+  }
+
+  button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .primary {
+    border-color: rgba(79,195,247,0.3);
+    color: var(--accent);
+    background: var(--glow);
+  }
+
+  .primary:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(79,195,247,0.12);
+  }
+
+  .results-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .results-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+  }
+
+  /* === RESULTS === */
+  .results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 1rem;
+  }
+
+  .qr-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    min-width: 0;
+  }
+
+  .qr-card.invalid { border-color: rgba(239,83,80,0.4); background: rgba(239,83,80,0.05); }
+
+  .qr-preview {
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    /* checkerboard shows transparent backgrounds */
+    background-color: #fff;
+    background-image:
+      linear-gradient(45deg, #d9d9d9 25%, transparent 25%, transparent 75%, #d9d9d9 75%),
+      linear-gradient(45deg, #d9d9d9 25%, transparent 25%, transparent 75%, #d9d9d9 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 8px 8px;
+  }
+
+  .qr-preview svg { width: 100%; height: auto; display: block; }
+
+  .qr-url {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text);
+    word-break: break-all;
+    line-height: 1.5;
+    max-height: 4.5em;
+    overflow: hidden;
+  }
+
+  .qr-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .qr-error {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--error);
+  }
+
+  .qr-actions { display: flex; gap: 0.5rem; margin-top: auto; }
+  .qr-actions button { flex: 1; padding: 0.5rem 0.6rem; font-size: 0.72rem; }
+
+  .empty {
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 3rem 1rem;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
+
+  /* === MOBILE === */
+  @media (max-width: 900px) {
+    .workspace { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 0 1.5rem; }
+    .nav-links a { font-size: 0.7rem; padding: 0.4rem 0.6rem; }
+    .page-header { padding: 1.5rem 1.5rem 0; }
+    .workspace { padding: 0 1.5rem 2rem; }
+  }
+
+  @media (max-width: 550px) {
+    .nav-links a { font-size: 0.65rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Eike S<span class="dot">.</span> Eberhard</a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="index.html#tools">Tools</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="page-tag">Tool</div>
+  <h1 class="page-title">QR Code Generator</h1>
+  <p class="page-desc">
+    Turn links into QR codes and download them as standalone SVG files for slides, posters, and print.
+    Paste one link per line to generate several at once. Everything runs locally in your browser.
+  </p>
+</div>
+
+<div class="workspace">
+  <div class="panel">
+    <label class="field-label" for="input">Links (one per line)</label>
+    <textarea id="input" spellcheck="false" autocomplete="off" autocapitalize="off"
+      placeholder="https://eseberhard.github.io&#10;https://arxiv.org/abs/2410.07972 | EG-XC"></textarea>
+    <div class="hint">Add <code>| KEYWORD</code> after a link to add a keyword to its code. Links without a scheme (e.g. <code>example.com</code>) get <code>https://</code>.</div>
+
+    <div class="field-label themes-label">Style</div>
+    <div class="themes" id="themes"></div>
+
+    <div class="options">
+      <div class="option">
+        <label class="field-label" for="shape">Modules</label>
+        <select id="shape">
+          <option value="square">Square</option>
+          <option value="rounded" selected>Rounded</option>
+          <option value="dots">Dots</option>
+        </select>
+      </div>
+      <div class="option">
+        <label class="field-label" for="eyes">Corner eyes</label>
+        <select id="eyes">
+          <option value="square">Square</option>
+          <option value="rounded" selected>Rounded</option>
+          <option value="circle">Circle</option>
+        </select>
+      </div>
+      <div class="option">
+        <label class="field-label" for="ecc">Error correction</label>
+        <select id="ecc">
+          <option value="auto" selected>Auto · fewest modules</option>
+          <option value="L">L · ~7%</option>
+          <option value="M">M · ~15%</option>
+          <option value="Q">Q · ~25%</option>
+          <option value="H">H · ~30%</option>
+        </select>
+      </div>
+      <div class="option">
+        <label class="field-label" for="margin">Quiet zone (modules)</label>
+        <input type="number" id="margin" min="0" max="20" step="1" value="0">
+      </div>
+      <div class="option">
+        <label class="field-label" for="fg">Foreground</label>
+        <div class="color-field">
+          <input type="color" id="fg" value="#000000">
+          <div class="presets">
+            <button type="button" class="swatch" data-target="fg" data-color="#000000" title="Black" aria-label="Black"></button>
+            <button type="button" class="swatch" data-target="fg" data-color="#ffffff" title="White" aria-label="White"></button>
+          </div>
+          <span class="color-hex" id="fg-hex">#000000</span>
+        </div>
+      </div>
+      <div class="option">
+        <label class="field-label" for="bg">Background</label>
+        <div class="color-field">
+          <input type="color" id="bg" value="#ffffff">
+          <div class="presets">
+            <button type="button" class="swatch" data-target="bg" data-color="#000000" title="Black" aria-label="Black"></button>
+            <button type="button" class="swatch" data-target="bg" data-color="#ffffff" title="White" aria-label="White"></button>
+          </div>
+          <span class="color-hex" id="bg-hex">#ffffff</span>
+        </div>
+        <label class="checkbox"><input type="checkbox" id="transparent" checked> Transparent</label>
+        <label class="checkbox"><input type="checkbox" id="round-bg" checked> Rounded corners</label>
+      </div>
+      <div class="option">
+        <label class="field-label" for="fg2">Gradient to</label>
+        <div class="color-field">
+          <input type="color" id="fg2" value="#7b1fa2">
+          <span class="color-hex" id="fg2-hex">#7b1fa2</span>
+        </div>
+        <label class="checkbox"><input type="checkbox" id="grad-on"> Use gradient</label>
+      </div>
+      <div class="option">
+        <label class="field-label" for="eyec">Eye color</label>
+        <div class="color-field">
+          <input type="color" id="eyec" value="#1565c0">
+          <span class="color-hex" id="eyec-hex">#1565c0</span>
+        </div>
+        <label class="checkbox"><input type="checkbox" id="eye-on"> Custom eye color</label>
+      </div>
+      <div class="option full">
+        <label class="field-label" for="label-pos">Keyword position</label>
+        <select id="label-pos">
+          <option value="center" selected>Center badge</option>
+          <option value="above">Above the code</option>
+        </select>
+      </div>
+      <div class="option full">
+        <label class="field-label" for="label">Keyword for all other links (optional)</label>
+        <input type="text" id="label" maxlength="12" placeholder="e.g. SCAN ME" autocomplete="off" spellcheck="false">
+        <div class="hint" id="label-hint" hidden>Codes with a keyword use at least error correction Q so they stay scannable. Test the result with a phone.</div>
+      </div>
+      <div class="option full">
+        <label class="field-label" for="size">SVG width (px)</label>
+        <input type="number" id="size" min="32" max="4096" step="32" value="512">
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="results-bar">
+      <div class="results-count" id="count">No codes</div>
+      <button class="primary" id="download-all" disabled>Download all SVGs</button>
+    </div>
+    <div class="hint far-hint">
+      Built for slides: fewer, larger modules scan from further away. Rule of thumb, a code scans from about
+      10&times; its own width (a 30&nbsp;cm code on screen works at roughly 3&nbsp;m). A shorter link means fewer modules.
+    </div>
+    <div class="warnings" id="warnings"></div>
+    <div class="results" id="results"></div>
+  </div>
+</div>
+
+<script>
+  // Encode non-ASCII characters (e.g. IDN paths) as UTF-8 so scanners decode them correctly.
+  if (qrcode.stringToBytesFuncs && qrcode.stringToBytesFuncs['UTF-8']) {
+    qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
+  }
+
+  const $ = id => document.getElementById(id);
+  const input = $('input');
+  const resultsEl = $('results');
+  const downloadAllBtn = $('download-all');
+  let current = []; // [{ url, svg, filename }] for valid codes only
+
+  function normalizeLink(raw) {
+    const s = raw.trim();
+    if (!s) return '';
+    // Already has a scheme (https:, mailto:, tel:, ...)
+    if (/^[a-z][a-z0-9+.-]*:/i.test(s) && !/^[a-z0-9.-]+:\d+(\/|$)/i.test(s)) return s;
+    if (/\s/.test(s)) return s;
+    return 'https://' + s.replace(/^\/\//, '');
+  }
+
+  const MAX_LABEL = 12;
+
+  // One input line is "link" or "link | KEYWORD". The keyword is shown in the center of that code.
+  function parseLine(raw) {
+    const bar = raw.lastIndexOf('|');
+    const linkPart = bar === -1 ? raw : raw.slice(0, bar);
+    const label = bar === -1 ? '' : [...raw.slice(bar + 1).trim()].slice(0, MAX_LABEL).join('');
+    return { url: normalizeLink(linkPart), label };
+  }
+
+  function slugFor(url) {
+    let base = url.replace(/^[a-z][a-z0-9+.-]*:(\/\/)?/i, '').replace(/^www\./i, '');
+    base = base.replace(/[?#].*$/, '').replace(/\/+$/, '');
+    base = base.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase();
+    return (base || 'qr-code').slice(0, 60);
+  }
+
+  function escapeXml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // ---- SVG design -------------------------------------------------------------------------
+  // All geometry is in module units. Output stays plain paths/rects so it opens in any editor.
+  const num = v => +v.toFixed(3);
+
+  // Closed rounded-rectangle sub-path (clockwise). r is clamped to half the shorter side.
+  function rrect(x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    if (r <= 0) return `M${num(x)} ${num(y)}h${num(w)}v${num(h)}h${num(-w)}z`;
+    const a = `a${num(r)} ${num(r)} 0 0 1`;
+    return `M${num(x + r)} ${num(y)}h${num(w - 2 * r)}${a} ${num(r)} ${num(r)}` +
+      `v${num(h - 2 * r)}${a} ${num(-r)} ${num(r)}` +
+      `h${num(-(w - 2 * r))}${a} ${num(-r)} ${num(-r)}` +
+      `v${num(-(h - 2 * r))}${a} ${num(r)} ${num(-r)}z`;
+  }
+
+  // Finder pattern ("eye") = 7x7 ring + 3x3 core, drawn with the even-odd rule.
+  // Radii are [outer, hole, core]; they stay concentric so the ring keeps a constant thickness.
+  const EYE_RADII = { square: [0, 0, 0], rounded: [2, 1, 1], circle: [3.5, 2.5, 1.5] };
+  function eyePath(x, y, style) {
+    const [ro, ri, rc] = EYE_RADII[style];
+    return rrect(x, y, 7, 7, ro) + rrect(x + 1, y + 1, 5, 5, ri) + rrect(x + 2, y + 2, 3, 3, rc);
+  }
+
+  // Size the center badge. The filled badge counts as damage, so the cleared box is capped at a
+  // small share of the code (verified to scan for the small 33x33 codes, the tightest case).
+  // Width of a string in em, using rough Arial Bold advances so the text isn't stretched to fit.
+  function textEm(text) {
+    return [...text].reduce((sum, ch) => {
+      if (ch === ' ') return sum + 0.28;
+      if (/[ilj.,:;'|!]/.test(ch)) return sum + 0.3;
+      if (/[-()\[\]ftr]/.test(ch)) return sum + 0.36;
+      if (/[mwMW@%]/.test(ch)) return sum + 0.9;
+      if (/[A-Z]/.test(ch)) return sum + 0.72;
+      if (/[0-9]/.test(ch)) return sum + 0.56;
+      return sum + 0.6;
+    }, 0);
+  }
+
+  const LABEL_BUDGET = 0.085;
+  function labelLayout(n, text) {
+    const em = textEm(text);
+    // Round the cleared box up so it is centered on the module grid (same parity as n).
+    const fit = v => { let k = Math.ceil(v); if ((n - k) % 2 !== 0) k++; return k; };
+    const make = fontSize => {
+      const textW = em * fontSize;
+      const badgeW = textW + fontSize * 1.2;
+      const badgeH = fontSize * 1.9;
+      const bw = fit(badgeW + 1);
+      const bh = fit(badgeH + 1);
+      return { fontSize, textW, badgeW, badgeH, x0: (n - bw) / 2, y0: (n - bh) / 2, bw, bh };
+    };
+    let f = Math.min(n * 0.1, (n * 0.34) / em);
+    let lay = make(f);
+    while (lay.bw * lay.bh > LABEL_BUDGET * n * n && f > 1) lay = make((f -= 0.05));
+    return lay;
+  }
+
+  function luminance(hex) {
+    const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map(v => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+
+  function mixHex(a, b) {
+    return '#' + [1, 3, 5].map(i => Math.round((parseInt(a.slice(i, i + 2), 16) + parseInt(b.slice(i, i + 2), 16)) / 2)
+      .toString(16).padStart(2, '0')).join('');
+  }
+
+  // Corner radius of rounded modules and dot radius, in modules.
+  // Kept close to full squares / touching circles: more ink survives blur at a distance.
+  let ROUNDED_R = 0.4;
+  let DOT_R = 0.48;
+
+  function modulesPath(n, margin, shape, dark) {
+    let d = '';
+    if (shape === 'square') {
+      // Merge horizontal runs of dark modules into one path to keep the file small.
+      for (let r = 0; r < n; r++) {
+        let c = 0;
+        while (c < n) {
+          if (dark(r, c)) {
+            const start = c;
+            while (c < n && dark(r, c)) c++;
+            d += `M${start + margin} ${r + margin}h${c - start}v1h-${c - start}z`;
+          } else {
+            c++;
+          }
+        }
+      }
+    } else if (shape === 'dots') {
+      const rad = DOT_R;
+      for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+          if (!dark(r, c)) continue;
+          const cx = c + margin + 0.5, cy = r + margin + 0.5;
+          d += `M${num(cx - rad)} ${cy}a${rad} ${rad} 0 1 0 ${num(2 * rad)} 0a${rad} ${rad} 0 1 0 ${num(-2 * rad)} 0z`;
+        }
+      }
+    } else {
+      // Rounded: only outer corners (no dark neighbour on either adjacent side) are rounded,
+      // so neighbouring modules fuse into smooth, connected shapes.
+      const R = ROUNDED_R;
+      for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+          if (!dark(r, c)) continue;
+          const up = dark(r - 1, c), dn = dark(r + 1, c), lf = dark(r, c - 1), rt = dark(r, c + 1);
+          const tl = !up && !lf ? R : 0, tr = !up && !rt ? R : 0;
+          const br = !dn && !rt ? R : 0, bl = !dn && !lf ? R : 0;
+          const x = c + margin, y = r + margin;
+          d += `M${x + tl} ${y}H${x + 1 - tr}` + (tr ? `A${tr} ${tr} 0 0 1 ${x + 1} ${y + tr}` : '') +
+            `V${y + 1 - br}` + (br ? `A${br} ${br} 0 0 1 ${x + 1 - br} ${y + 1}` : '') +
+            `H${x + bl}` + (bl ? `A${bl} ${bl} 0 0 1 ${x} ${y + 1 - bl}` : '') +
+            `V${y + tl}` + (tl ? `A${tl} ${tl} 0 0 1 ${x + tl} ${y}` : '') + 'z';
+        }
+      }
+    }
+    return d;
+  }
+
+  function buildSvg(qr, o) {
+    const { margin, fg, bg, transparent, size, label, shape, eyes, gradient, eyeColor, roundBg, gid } = o;
+    const above = !!label && o.labelPos === 'above';
+    const n = qr.getModuleCount();
+    const dim = n + margin * 2;
+    // Keyword above the code: a header band on top, no modules removed.
+    let band = 0, header = '';
+    if (above) {
+      const em = textEm(label);
+      const f = Math.min(dim * 0.12, (dim * 0.96) / em);
+      const textW = em * f;
+      band = f * 1.25;
+      header = `<text x="${num(dim / 2)}" y="${num(f * 0.8)}" text-anchor="middle" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" ` +
+        `font-weight="700" font-size="${num(f)}" textLength="${num(textW)}" lengthAdjust="spacingAndGlyphs" ` +
+        `fill="${fg}">${escapeXml(label)}</text>`;
+    }
+    const total = dim + band;
+    const lay = label && !above ? labelLayout(n, label) : null;
+    const inLabel = (r, c) => lay && r >= lay.y0 && r < lay.y0 + lay.bh && c >= lay.x0 && c < lay.x0 + lay.bw;
+    const inEye = (r, c) => (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
+    const dark = (r, c) => r >= 0 && c >= 0 && r < n && c < n && qr.isDark(r, c) && !inEye(r, c) && !inLabel(r, c);
+
+    const fillMod = gradient ? `url(#${gid})` : fg;
+    const fillEye = eyeColor || fillMod;
+    const defs = gradient
+      ? `<defs><linearGradient id="${gid}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${dim}" y2="${dim}">` +
+        `<stop offset="0" stop-color="${fg}"/><stop offset="1" stop-color="${gradient}"/></linearGradient></defs>`
+      : '';
+    const rx = roundBg ? Math.min(2.5, margin * 0.75) : 0;
+    const bgRect = transparent ? '' : `<rect width="${dim}" height="${num(total)}"${rx ? ` rx="${num(rx)}"` : ''} fill="${bg}"/>`;
+
+    const crisp = s => (s === 'square' ? ' shape-rendering="crispEdges"' : '');
+    const modules = `<path fill="${fillMod}"${crisp(shape)} d="${modulesPath(n, margin, shape, dark)}"/>`;
+    const eyeD = [[0, 0], [0, n - 7], [n - 7, 0]].map(([r, c]) => eyePath(c + margin, r + margin, eyes)).join('');
+    const eyePaths = `<path fill="${fillEye}" fill-rule="evenodd"${crisp(eyes)} d="${eyeD}"/>`;
+
+    let badge = '';
+    if (lay) {
+      const cx = dim / 2, cy = dim / 2;
+      // Text color follows the badge color so it always has contrast, whatever the background.
+      const badgeColor = gradient ? mixHex(fg, gradient) : fg;
+      const ink = luminance(badgeColor) > 0.4 ? '#000000' : '#ffffff';
+      // textLength pins the text to its box even if the viewer substitutes a different font.
+      badge = `<rect x="${num(cx - lay.badgeW / 2)}" y="${num(cy - lay.badgeH / 2)}" width="${num(lay.badgeW)}" height="${num(lay.badgeH)}" ` +
+        `rx="${num(lay.badgeH / 2)}" fill="${fillMod}"/>` +
+        `<text x="${cx}" y="${cy}" dy="0.35em" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" ` +
+        `font-weight="700" font-size="${num(lay.fontSize)}" textLength="${num(lay.textW)}" lengthAdjust="spacingAndGlyphs" ` +
+        `fill="${ink}">${escapeXml(label)}</text>`;
+    }
+    const code = modules + eyePaths + badge;
+    const body = band ? header + `<g transform="translate(0 ${num(band)})">${code}</g>` : code;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${num(size * total / dim)}" viewBox="0 0 ${dim} ${num(total)}">` +
+      defs + bgRect + body + `</svg>`;
+  }
+
+  function getOptions() {
+    const clamp = (v, lo, hi, def) => {
+      const x = parseInt(v, 10);
+      return Number.isFinite(x) ? Math.min(hi, Math.max(lo, x)) : def;
+    };
+    return {
+      ecc: $('ecc').value,
+      margin: clamp($('margin').value, 0, 20, 0),
+      size: clamp($('size').value, 32, 4096, 512),
+      fg: $('fg').value,
+      bg: $('bg').value,
+      transparent: $('transparent').checked,
+      label: $('label').value.trim(),
+      labelPos: $('label-pos').value,
+      shape: $('shape').value,
+      eyes: $('eyes').value,
+      gradient: $('grad-on').checked ? $('fg2').value : null,
+      eyeColor: $('eye-on').checked ? $('eyec').value : null,
+      roundBg: $('round-bg').checked
+    };
+  }
+
+  // One-click looks. Background and transparency are left alone unless a theme sets them.
+  const THEMES = [
+    { name: 'Classic', shape: 'square',  eyes: 'square',  fg: '#000000' },
+    { name: 'Soft',    shape: 'rounded', eyes: 'rounded', fg: '#000000' },
+    { name: 'Dots',    shape: 'dots',    eyes: 'circle',  fg: '#000000' },
+    { name: 'Ocean',   shape: 'rounded', eyes: 'rounded', fg: '#0d47a1', fg2: '#00838f', eye: '#0d47a1' },
+    { name: 'Sunset',  shape: 'dots',    eyes: 'circle',  fg: '#e53935', fg2: '#8e24aa', eye: '#8e24aa' },
+    { name: 'Night',   shape: 'rounded', eyes: 'rounded', fg: '#ffffff', bg: '#0b0f19', transparent: false }
+  ];
+
+  function themeMatches(t) {
+    const o = getOptions();
+    return o.shape === t.shape && o.eyes === t.eyes && o.fg === t.fg &&
+      (o.gradient || null) === (t.fg2 || null) && (o.eyeColor || null) === (t.eye || null) &&
+      (!t.bg || (o.bg === t.bg && !o.transparent));
+  }
+
+  let savedBg = null;
+
+  function applyTheme(t) {
+    $('shape').value = t.shape;
+    $('eyes').value = t.eyes;
+    $('fg').value = t.fg;
+    $('grad-on').checked = !!t.fg2;
+    if (t.fg2) $('fg2').value = t.fg2;
+    $('eye-on').checked = !!t.eye;
+    if (t.eye) $('eyec').value = t.eye;
+    if (t.bg) {
+      // Remember the background the user had so other styles can bring it back.
+      if (!savedBg) savedBg = { bg: $('bg').value, transparent: $('transparent').checked };
+      $('bg').value = t.bg;
+      if (t.transparent !== undefined) $('transparent').checked = t.transparent;
+    } else if (savedBg) {
+      $('bg').value = savedBg.bg;
+      $('transparent').checked = savedBg.transparent;
+      savedBg = null;
+    }
+    render();
+  }
+
+  const themesEl = $('themes');
+  THEMES.forEach(t => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip';
+    b.dataset.theme = t.name;
+    const dots = document.createElement('span');
+    dots.className = 'dot-pair';
+    [t.fg, t.fg2 || t.eye || t.fg].forEach(c => {
+      const i = document.createElement('i');
+      i.style.background = c;
+      dots.appendChild(i);
+    });
+    b.append(dots, t.name);
+    b.onclick = () => applyTheme(t);
+    themesEl.appendChild(b);
+  });
+
+  function download(svg, filename) {
+    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  // ---- Clipboard --------------------------------------------------------------------------
+  const clipboardSupports = type => !!window.ClipboardItem &&
+    typeof ClipboardItem.supports === 'function' && ClipboardItem.supports(type);
+
+  // Rasterize the SVG (transparency is kept) so it can be pasted as a picture anywhere.
+  function svgToPngBlob(svg, px = 1024) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        // The image can be taller than wide when the keyword sits above the code.
+        const ratio = (img.naturalHeight || img.height) / (img.naturalWidth || img.width) || 1;
+        canvas.width = px;
+        canvas.height = Math.round(px * ratio);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(b => (b ? resolve(b) : reject(new Error('PNG export failed'))), 'image/png');
+      };
+      img.onerror = () => reject(new Error('Could not rasterize SVG'));
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    });
+  }
+
+  // One clipboard entry with several formats: apps pick the best one they understand.
+  // SVG where the browser allows it (stays vector), PNG everywhere else.
+  async function copyImage(svg) {
+    if (!navigator.clipboard || !window.ClipboardItem) throw new Error('Clipboard images not supported');
+    // Pass the PNG as a promise right away so Safari keeps the click's permission to write.
+    const png = svgToPngBlob(svg);
+    const withSvg = { 'image/png': png };
+    if (clipboardSupports('image/svg+xml')) {
+      withSvg['image/svg+xml'] = new Blob([svg], { type: 'image/svg+xml' });
+    }
+    try {
+      await navigator.clipboard.write([new ClipboardItem(withSvg)]);
+    } catch (e) {
+      if (!('image/svg+xml' in withSvg)) throw e;
+      // Some browsers advertise SVG but reject it; fall back to PNG only.
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]);
+    }
+  }
+
+  // Fewer modules = bigger modules at the same size = scans from further away. "Auto" therefore
+  // picks the lowest error correction that is safe: L for plain codes, at least Q when a center
+  // badge removes modules (measured: Q needs ~20% less width than H for the same scan reliability).
+  const ECC_ORDER = ['L', 'M', 'Q', 'H'];
+  function effectiveEcc(selected, hasLabel) {
+    const base = selected === 'auto' ? 'L' : selected;
+    return hasLabel && ECC_ORDER.indexOf(base) < ECC_ORDER.indexOf('Q') ? 'Q' : base;
+  }
+
+  function contrastRatio(a, b) {
+    const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  }
+
+  function scanWarnings(o) {
+    const out = [];
+    if (!o.transparent) {
+      const colors = [o.fg, o.gradient, o.eyeColor].filter(Boolean);
+      const worst = Math.min(...colors.map(c => contrastRatio(c, o.bg)));
+      if (worst < 4) {
+        out.push(`Low contrast (${worst.toFixed(1)}:1). Pick a darker code color or a lighter background so it scans from afar.`);
+      }
+      if (o.margin < 2 && luminance(o.bg) < 0.2) {
+        out.push('Dark background with no quiet zone. Set the quiet zone to 2 or more so scanners can find the edges.');
+      }
+    }
+    if (o.shape === 'dots') {
+      out.push('Dots carry less ink than squares and blur together at a distance. Use Square or Rounded for far-away scans.');
+    }
+    return out;
+  }
+
+  function render() {
+    const parsed = input.value.split('\n').map(parseLine).filter(p => p.url);
+    const fallbackLabel = $('label').value.trim();
+    const hasLabel = fallbackLabel !== '' || parsed.some(p => p.label);
+    $('label-hint').hidden = !(hasLabel && $('label-pos').value === 'center' && ['auto', 'L', 'M'].includes($('ecc').value));
+
+    const opts = getOptions();
+    $('warnings').replaceChildren(...scanWarnings(opts).map(text => {
+      const w = document.createElement('div');
+      w.className = 'warn';
+      w.textContent = text;
+      return w;
+    }));
+    $('fg-hex').textContent = $('fg').value;
+    $('bg-hex').textContent = $('bg').value;
+    $('bg').disabled = opts.transparent;
+    $('bg-hex').style.opacity = opts.transparent ? 0.3 : 1;
+    // Rounded background corners need a quiet zone to round into.
+    $('round-bg').disabled = opts.transparent || opts.margin === 0;
+    // Optional colors are dimmed until their checkbox is on.
+    [['fg2', 'grad-on'], ['eyec', 'eye-on']].forEach(([c, on]) => {
+      $(c + '-hex').textContent = $(c).value;
+      $(c).disabled = !$(on).checked;
+      $(c + '-hex').style.opacity = $(on).checked ? 1 : 0.3;
+    });
+    document.querySelectorAll('.chip').forEach(ch => {
+      ch.classList.toggle('active', themeMatches(THEMES.find(t => t.name === ch.dataset.theme)));
+    });
+    document.querySelectorAll('.swatch').forEach(s => {
+      s.classList.toggle('active', $(s.dataset.target).value.toLowerCase() === s.dataset.color);
+      if (s.dataset.target === 'bg') s.disabled = opts.transparent;
+    });
+
+    const lines = parsed;
+    const used = new Map();
+    let gradientId = 0; // unique per code so inline previews don't share gradient definitions
+    current = [];
+    resultsEl.textContent = '';
+
+    if (!lines.length) {
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.style.gridColumn = '1 / -1';
+      empty.textContent = 'Paste a link to generate a QR code.';
+      resultsEl.appendChild(empty);
+      $('count').textContent = 'No codes';
+      downloadAllBtn.disabled = true;
+      return;
+    }
+
+    lines.forEach(({ url, label: lineLabel }) => {
+      const card = document.createElement('div');
+      card.className = 'qr-card';
+      const label = lineLabel || fallbackLabel;
+
+      let svg = null, modules = 0, error = null, eccUsed = '';
+      try {
+        // Only a center badge removes modules, so only it needs the stronger error correction.
+        eccUsed = effectiveEcc(opts.ecc, !!label && opts.labelPos !== 'above');
+        const qr = qrcode(0, eccUsed);
+        qr.addData(url, 'Byte');
+        qr.make();
+        modules = qr.getModuleCount();
+        svg = buildSvg(qr, { ...opts, label, gid: `qrg${gradientId++}` });
+      } catch (e) {
+        error = /overflow/i.test(String(e)) ? 'Too long to encode at this error-correction level.' : 'Could not encode this link.';
+      }
+
+      const urlEl = document.createElement('div');
+      urlEl.className = 'qr-url';
+      urlEl.textContent = url;
+      urlEl.title = url;
+
+      if (error) {
+        card.classList.add('invalid');
+        const err = document.createElement('div');
+        err.className = 'qr-error';
+        err.textContent = error;
+        card.append(urlEl, err);
+      } else {
+        // Prefer the keyword for the file name (eg-xc.svg) since it is what you recognise.
+        let name = label ? slugFor(label) : slugFor(url);
+        const seen = used.get(name) || 0;
+        used.set(name, seen + 1);
+        const filename = (seen ? `${name}-${seen + 1}` : name) + '.svg';
+        current.push({ url, svg, filename });
+
+        const preview = document.createElement('div');
+        preview.className = 'qr-preview';
+        // Safe: SVG is built only from numbers and validated #rrggbb colours.
+        preview.innerHTML = svg.replace(/ width="\d+" height="\d+"/, '');
+
+        const meta = document.createElement('div');
+        meta.className = 'qr-meta';
+        meta.textContent = `${modules}×${modules} modules · ECC ${eccUsed} · ${filename}`;
+        if (label) urlEl.textContent = `${label} · ${url}`;
+
+        const actions = document.createElement('div');
+        actions.className = 'qr-actions';
+        const dl = document.createElement('button');
+        dl.className = 'primary';
+        dl.textContent = 'Download SVG';
+        dl.onclick = () => download(svg, filename);
+        const copy = document.createElement('button');
+        copy.textContent = 'Copy image';
+        copy.title = 'Copy as an image you can paste into Slides, Keynote, PowerPoint, Figma, ...';
+        copy.onclick = async () => {
+          try {
+            await copyImage(svg);
+            copy.textContent = 'Copied';
+          } catch (_) {
+            copy.textContent = 'Failed';
+          }
+          setTimeout(() => (copy.textContent = 'Copy image'), 1200);
+        };
+        actions.append(dl, copy);
+
+        card.append(preview, urlEl, meta, actions);
+      }
+      resultsEl.appendChild(card);
+    });
+
+    const failed = lines.length - current.length;
+    $('count').textContent = `${current.length} code${current.length === 1 ? '' : 's'}` + (failed ? ` · ${failed} failed` : '');
+    downloadAllBtn.disabled = current.length === 0;
+    downloadAllBtn.textContent = current.length > 1 ? 'Download all SVGs' : 'Download SVG';
+  }
+
+  downloadAllBtn.addEventListener('click', () => {
+    // Browsers may ask once to allow multiple downloads; stagger to keep them all.
+    current.forEach((c, i) => setTimeout(() => download(c.svg, c.filename), i * 250));
+  });
+
+  ['input', 'change'].forEach(evt => {
+    document.querySelectorAll('input, select, textarea').forEach(el => el.addEventListener(evt, render));
+  });
+
+  document.querySelectorAll('.swatch').forEach(s => s.addEventListener('click', () => {
+    $(s.dataset.target).value = s.dataset.color;
+    render();
+  }));
+
+  // Default: one code per paper on the Publications section of index.html, keyed by its nickname.
+  // Keep in sync with index.html when adding papers. The Nano Letters paper has no nickname.
+  input.value = [
+    'https://arxiv.org/abs/2610.10298 | ROCKET',
+    'https://arxiv.org/abs/2606.04279 | DI-XC',
+    'https://arxiv.org/abs/2604.21657 | SAIL',
+    'https://arxiv.org/html/2601.16955v1 | MotiFlow',
+    'https://pubs.acs.org/doi/10.1021/acs.nanolett.5c00306',
+    'https://arxiv.org/abs/2410.07972 | EG-XC'
+  ].join('\n');
+  render();
+</script>
+</body>
+</html>
