@@ -338,6 +338,10 @@
         <div class="field-unit">eV</div>
       </div>
       <div class="field">
+        <input type="number" id="mev" placeholder="0" step="any" data-unit="mev">
+        <div class="field-unit">meV</div>
+      </div>
+      <div class="field">
         <input type="number" id="mha" placeholder="0" step="any" data-unit="mha">
         <div class="field-unit">mHa / mE<sub style="font-size:9px">h</sub></div>
       </div>
@@ -430,6 +434,7 @@ const BOHR_TO_ANG = 0.529177210903;
 function toHa(val, unit) {
   switch(unit) {
     case 'ev':    return val / HA_TO_EV;
+    case 'mev':   return val / (HA_TO_EV * 1000);
     case 'mha':   return val / 1000;
     case 'ha':    return val;
     case 'kcal':  return val / HA_TO_KCAL;
@@ -441,6 +446,7 @@ function toHa(val, unit) {
 function fromHa(ha, unit) {
   switch(unit) {
     case 'ev':    return ha * HA_TO_EV;
+    case 'mev':   return ha * HA_TO_EV * 1000;
     case 'mha':   return ha * 1000;
     case 'ha':    return ha;
     case 'kcal':  return ha * HA_TO_KCAL;
@@ -476,7 +482,7 @@ function fromHaBohr(hb, unit) {
   }
 }
 
-const ENERGY_UNITS = ['ev','mha','ha','kcal','kjmol','cm1'];
+const ENERGY_UNITS = ['ev','mev','mha','ha','kcal','kjmol','cm1'];
 const FORCE_UNITS  = ['ev_ang','ev_bohr','mha_ang','mha_bohr','kcal_ang','kcal_bohr','ha_bohr','ha_ang'];
 
 function fmt(v) {
