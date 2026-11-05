@@ -172,6 +172,15 @@
     </div>
     <div class="hint" style="margin-top:-10px;">Defaults to below the full rotation bounding sphere so no atom or orbital clips into the floor.</div>
     <div class="toggle-row"><span>Auto-Rotate</span><label class="toggle-switch"><input type="checkbox" id="autoRotateToggle" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+    <div class="section-label" style="margin-top:8px;">Export</div>
+    <label>Background</label>
+    <div class="panel-seg" id="exportBgSeg">
+      <button type="button" data-bg="solid">Solid color</button>
+      <button type="button" data-bg="transparent" class="active">Transparent</button>
+    </div>
+    <div class="color-row" id="exportBgColorRow" style="display:none;"><label for="exportBgColor">Background Color</label><input type="color" id="exportBgColor" class="color-swatch" value="#ffffff"></div>
+    <div class="range-row"><label>Margin (px)</label><input type="range" id="exportPadRange" min="0" max="200" step="5" value="40"><span class="range-val" id="exportPadVal">40</span></div>
+    <div class="hint" style="margin-top:-10px;">All exported views share one identical size, cropped tightly around the union of all views at the current rotation.</div>
     <div class="section-label" style="margin-top:8px;">Molecule Structure</div>
     <label for="panelPresetSelect">Preset Molecule</label>
     <select id="panelPresetSelect" class="panel-select"></select>
@@ -639,74 +648,84 @@ async function computeMinaoDensity(atoms,basisName,source,maxPoints,tok,onStatus
   const nx=Math.ceil(Lx/h)+1, ny=Math.ceil(Ly/h)+1, nz=Math.ceil(Lz/h)+1;
   const vals=new Float32Array(nx*ny*nz);
   const hb=h*B, oxb=ox*B, oyb=oy*B, ozb=oz*B;
-  const BS=8;
-  const nbx=Math.ceil(nx/BS), nby=Math.ceil(ny/BS), nbz=Math.ceil(nz/BS);
-  const totalBlocks=nbx*nby*nbz;
-  let doneBlocks=0, integral=0;
   const ang=new Float64Array(7);
   const idxBuf=new Int32Array(8192), valBuf=new Float64Array(8192);
-  let t0=performance.now();
-  status('Evaluating density on grid…');
   const act=[];
-  for(let bk=0;bk<nbz;bk++) for(let bj=0;bj<nby;bj++) for(let bi=0;bi<nbx;bi++){
-    const i0=bi*BS,j0=bj*BS,k0=bk*BS;
-    const i1=Math.min(nx-1,i0+BS-1), j1=Math.min(ny-1,j0+BS-1), k1=Math.min(nz-1,k0+BS-1);
-    const lox=oxb+i0*hb, hix=oxb+i1*hb, loy=oyb+j0*hb, hiy=oyb+j1*hb, loz=ozb+k0*hb, hiz=ozb+k1*hb;
-    act.length=0;
-    for(const s of shells){
-      const ex=Math.max(lox-s.x,0,s.x-hix), ey=Math.max(loy-s.y,0,s.y-hiy), ez=Math.max(loz-s.z,0,s.z-hiz);
-      if(ex*ex+ey*ey+ez*ez<=s.cut2) act.push(s);
-    }
-    doneBlocks++;
-    if(act.length===0) continue;
-    for(let k=k0;k<=k1;k++){
-      const z=ozb+k*hb;
-      for(let j=j0;j<=j1;j++){
-        const y=oyb+j*hb;
-        for(let i=i0;i<=i1;i++){
-          const x=oxb+i*hb;
-          let cnt=0;
-          for(let q=0;q<act.length;q++){
-            const s=act[q];
-            const dx=x-s.x, dy=y-s.y, dz=z-s.z, r2=dx*dx+dy*dy+dz*dz;
-            if(r2>s.cut2) continue;
-            let rad=0;
-            for(let p=0;p<s.np;p++) rad+=s.C[p]*Math.exp(-s.E[p]*r2);
-            if(rad===0) continue;
-            densEvalAng(s.l,dx,dy,dz,ang);
-            for(let m=0;m<s.nf;m++){ idxBuf[cnt]=s.off+m; valBuf[cnt]=rad*ang[m]; cnt++; }
-          }
-          let rho=0;
-          if(wDiag){
-            for(let a=0;a<cnt;a++) rho+=wDiag[idxBuf[a]]*valBuf[a]*valBuf[a];
-          } else {
-            for(let a=0;a<cnt;a++){
-              const va=valBuf[a], row=idxBuf[a]*n;
-              let s=P[row+idxBuf[a]]*va;
-              for(let b=0;b<a;b++) s+=2*P[row+idxBuf[b]]*valBuf[b];
-              rho+=va*s;
+  let tYield=performance.now();
+  // Evaluate rho on an arbitrary regular lattice (origin/spacing in bohr) into out (x fastest)
+  async function evalLattice(oxb,oyb,ozb,hb,nx,ny,nz,out,progress){
+    const BS=8;
+    const nbx=Math.ceil(nx/BS), nby=Math.ceil(ny/BS), nbz=Math.ceil(nz/BS);
+    const totalBlocks=nbx*nby*nbz;
+    let doneBlocks=0;
+    for(let bk=0;bk<nbz;bk++) for(let bj=0;bj<nby;bj++) for(let bi=0;bi<nbx;bi++){
+      const i0=bi*BS,j0=bj*BS,k0=bk*BS;
+      const i1=Math.min(nx-1,i0+BS-1), j1=Math.min(ny-1,j0+BS-1), k1=Math.min(nz-1,k0+BS-1);
+      const lox=oxb+i0*hb, hix=oxb+i1*hb, loy=oyb+j0*hb, hiy=oyb+j1*hb, loz=ozb+k0*hb, hiz=ozb+k1*hb;
+      act.length=0;
+      for(const s of shells){
+        const ex=Math.max(lox-s.x,0,s.x-hix), ey=Math.max(loy-s.y,0,s.y-hiy), ez=Math.max(loz-s.z,0,s.z-hiz);
+        if(ex*ex+ey*ey+ez*ez<=s.cut2) act.push(s);
+      }
+      doneBlocks++;
+      if(act.length>0){
+        for(let k=k0;k<=k1;k++){
+          const z=ozb+k*hb;
+          for(let j=j0;j<=j1;j++){
+            const y=oyb+j*hb;
+            for(let i=i0;i<=i1;i++){
+              const x=oxb+i*hb;
+              let cnt=0;
+              for(let q=0;q<act.length;q++){
+                const s=act[q];
+                const dx=x-s.x, dy=y-s.y, dz=z-s.z, r2=dx*dx+dy*dy+dz*dz;
+                if(r2>s.cut2) continue;
+                let rad=0;
+                for(let p=0;p<s.np;p++) rad+=s.C[p]*Math.exp(-s.E[p]*r2);
+                if(rad===0) continue;
+                densEvalAng(s.l,dx,dy,dz,ang);
+                for(let m=0;m<s.nf;m++){ idxBuf[cnt]=s.off+m; valBuf[cnt]=rad*ang[m]; cnt++; }
+              }
+              let rho=0;
+              if(wDiag){
+                for(let a=0;a<cnt;a++) rho+=wDiag[idxBuf[a]]*valBuf[a]*valBuf[a];
+              } else {
+                for(let a=0;a<cnt;a++){
+                  const va=valBuf[a], row=idxBuf[a]*n;
+                  let s=P[row+idxBuf[a]]*va;
+                  for(let b=0;b<a;b++) s+=2*P[row+idxBuf[b]]*valBuf[b];
+                  rho+=va*s;
+                }
+              }
+              out[i+nx*(j+ny*k)]=rho;
             }
           }
-          vals[i+nx*(j+ny*k)]=rho;
         }
       }
+      if(performance.now()-tYield>40){
+        if(progress) progress(doneBlocks/totalBlocks);
+        await densYield(); tYield=performance.now(); if(tok.cancelled) return false;
+      }
     }
-    if(performance.now()-t0>40){
-      status('Evaluating density on grid… '+Math.round(100*doneBlocks/totalBlocks)+'%');
-      await densYield(); t0=performance.now(); if(tok.cancelled) return null;
-    }
+    return true;
   }
+  status('Evaluating density on grid…');
+  const okMain=await evalLattice(oxb,oyb,ozb,hb,nx,ny,nz,vals,p=>status('Evaluating density on grid… '+Math.round(100*p)+'%'));
+  if(!okMain) return null;
+  let integral=0;
   let sum=0; for(let i=0;i<vals.length;i++) sum+=vals[i];
   integral=sum*hb*hb*hb;
-  return {nx,ny,nz,h,ox,oy,oz,vals,integral,nElec,nBasis:n,source,maxRho:vals.reduce((m,v)=>v>m?v:m,0)};
+  const evalAt=(oxA,oyA,ozA,hA,n1,n2,n3,out)=>evalLattice(oxA*B,oyA*B,ozA*B,hA*B,n1,n2,n3,out,null);
+  return {nx,ny,nz,h,ox,oy,oz,vals,integral,nElec,nBasis:n,source,maxRho:vals.reduce((m,v)=>v>m?v:m,0),evalAt,fine:null};
 }
 
 // ---- Marching tetrahedra ----
 const DENS_CORNER=[[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,0,1],[1,0,1],[1,1,1],[0,1,1]];
 const DENS_TETS=[[0,5,1,6],[0,1,2,6],[0,2,3,6],[0,3,7,6],[0,7,4,6],[0,4,5,6]];
 
-function densIsoMesh(grid,iso){
+function densIsoMesh(grid,iso,range){
   const {nx,ny,nz,h,ox,oy,oz,vals}=grid;
+  const R=range||{i0:0,i1:nx-1,j0:0,j1:ny-1,k0:0,k1:nz-1};
   let pos=new Float32Array(30000), nrm=new Float32Array(30000), nv=0;
   function ensure(extra){
     if((nv+extra)*3>pos.length){
@@ -728,7 +747,8 @@ function densIsoMesh(grid,iso){
   function edge(p,q,i,j,k){
     // p inside, q outside (any order); returns writes vertex at vp/vn[ne]
     const a=cv[p], b=cv[q];
-    let t=(iso-a)/(b-a); if(!(t>=0)) t=0; else if(t>1) t=1;
+    // density decays ~exponentially, so interpolate log(rho) when possible
+    let t=(a>0&&b>0&&a!==b)?(Math.log(iso/a)/Math.log(b/a)):(iso-a)/(b-a); if(!(t>=0)) t=0; else if(t>1) t=1;
     const pi=cci[p],pj=ccj[p],pk=cck[p],qi=cci[q],qj=ccj[q],qk=cck[q];
     vp[ne*3]=ox+h*(pi+t*(qi-pi)); vp[ne*3+1]=oy+h*(pj+t*(qj-pj)); vp[ne*3+2]=oz+h*(pk+t*(qk-pk));
     grad(pi,pj,pk,g1); grad(qi,qj,qk,g2);
@@ -750,7 +770,7 @@ function densIsoMesh(grid,iso){
       nv++;
     }
   }
-  for(let k=0;k<nz-1;k++) for(let j=0;j<ny-1;j++) for(let i=0;i<nx-1;i++){
+  for(let k=R.k0;k<R.k1;k++) for(let j=R.j0;j<R.j1;j++) for(let i=R.i0;i<R.i1;i++){
     const base=i+nx*(j+ny*k);
     let mn=Infinity,mx=-Infinity;
     for(let c=0;c<8;c++){
@@ -778,6 +798,67 @@ function densIsoMesh(grid,iso){
     }
   }
   return {pos:pos.slice(0,nv*3),nrm:nrm.slice(0,nv*3),count:nv};
+}
+
+// ---- Adaptive near-core refinement ----
+// Sparse blocks of C^3 fine cells (plus a 1-sample ghost layer) at spacing h/f, only where the coarse density is high.
+const DENS_FINE_T=0.08;      // coarse rho above which blocks are refined
+const DENS_FINE_MIN_ISO=0.1;  // isolevels >= this are extracted from the refined blocks
+async function densRefine(grid,tok,status){
+  const C=16, n=C+3, T=DENS_FINE_T;
+  const {nx,ny,nz,h,ox,oy,oz,vals}=grid;
+  function plan(f){
+    const nbx=Math.ceil((nx-1)*f/C), nby=Math.ceil((ny-1)*f/C), nbz=Math.ceil((nz-1)*f/C);
+    const list=[];
+    for(let bk=0;bk<nbz;bk++) for(let bj=0;bj<nby;bj++) for(let bi=0;bi<nbx;bi++){
+      const ci0=Math.max(0,Math.floor((bi*C-1)/f)-1), ci1=Math.min(nx-1,Math.ceil(((bi+1)*C+1)/f)+1);
+      const cj0=Math.max(0,Math.floor((bj*C-1)/f)-1), cj1=Math.min(ny-1,Math.ceil(((bj+1)*C+1)/f)+1);
+      const ck0=Math.max(0,Math.floor((bk*C-1)/f)-1), ck1=Math.min(nz-1,Math.ceil(((bk+1)*C+1)/f)+1);
+      let hit=false;
+      for(let k=ck0;k<=ck1&&!hit;k++) for(let j=cj0;j<=cj1&&!hit;j++){
+        const row=nx*(j+ny*k);
+        for(let i=ci0;i<=ci1;i++) if(vals[row+i]>=T){ hit=true; break; }
+      }
+      if(hit) list.push([bi,bj,bk]);
+    }
+    return list;
+  }
+  let f=3, list=plan(3);
+  if(list.length*n*n*n>8e6){ f=2; list=plan(2); }
+  if(list.length*n*n*n>8e6){ list.length=Math.floor(8e6/(n*n*n)); }
+  const hf=h/f, blocks=[];
+  let t0=performance.now();
+  for(let q=0;q<list.length;q++){
+    const [bi,bj,bk]=list[q];
+    const sx=ox+(bi*C-1)*hf, sy=oy+(bj*C-1)*hf, sz=oz+(bk*C-1)*hf;
+    const out=new Float32Array(n*n*n);
+    const ok=await grid.evalAt(sx,sy,sz,hf,n,n,n,out);
+    if(!ok||tok.cancelled) return null;
+    blocks.push({ox:sx,oy:sy,oz:sz,vals:out});
+    if(performance.now()-t0>80){
+      if(status) status('Refining core regions… '+Math.round(100*q/list.length)+'%');
+      await densYield(); t0=performance.now(); if(tok.cancelled) return null;
+    }
+  }
+  return {f,h:hf,C,n,blocks};
+}
+
+function densIsoMeshFine(fine,iso){
+  const {n,C,h,blocks}=fine, parts=[];
+  let total=0;
+  const range={i0:1,i1:C+1,j0:1,j1:C+1,k0:1,k1:C+1};
+  for(const b of blocks){
+    const v=b.vals;
+    let mn=Infinity,mx=-Infinity;
+    for(let i=0;i<v.length;i++){ const x=v[i]; if(x<mn)mn=x; if(x>mx)mx=x; }
+    if(mx<iso||mn>=iso) continue;
+    const m=densIsoMesh({nx:n,ny:n,nz:n,h,ox:b.ox,oy:b.oy,oz:b.oz,vals:v},iso,range);
+    if(m.count){ parts.push(m); total+=m.count; }
+  }
+  const pos=new Float32Array(total*3), nrm=new Float32Array(total*3);
+  let o=0;
+  for(const m of parts){ pos.set(m.pos,o*3); nrm.set(m.nrm,o*3); o+=m.count; }
+  return {pos,nrm,count:total};
 }
 // ===== END DENSITY MODULE =====
 
@@ -1460,61 +1541,150 @@ function solveRadialIso(radInfo,target){
   return (lo+frac)*GTO_DR;
 }
 
-function setSingleGTOVertices(geo,dirs,angVals,radInfo,iso,positive){
-  const posAttr=geo.attributes.position;
-  const {valPeak}=radInfo;
-  let maxR=0;
-  for(let vi=0;vi<posAttr.count;vi++){
-    const {nx,ny,nz}=dirs[vi];
-    const y=angVals[vi];
-    const rel=positive?y:-y;
-    let rNew=0;
-    if(rel>1e-6 && iso>0 && rel*valPeak>iso){
-      const rAng=solveRadialIso(radInfo,iso/rel);
-      rNew=gtoScale*rAng;
-      if(rNew>maxR) maxR=rNew;
-    }
-    posAttr.setXYZ(vi, nx*rNew, ny*rNew, nz*rNew);
+// Welded unit-sphere template (shared seam/pole vertices) so smooth normals have no seams.
+function makeSphereTemplate(res){
+  const g=new THREE.SphereGeometry(1,res,res);
+  const p=g.attributes.position, idx=g.index.array;
+  const map=new Map(), canon=new Int32Array(p.count), dirs=[];
+  for(let i=0;i<p.count;i++){
+    const x=p.getX(i),y=p.getY(i),z=p.getZ(i);
+    const key=Math.round(x*1e5)+','+Math.round(y*1e5)+','+Math.round(z*1e5);
+    let id=map.get(key);
+    if(id===undefined){ id=dirs.length; map.set(key,id); const r=Math.sqrt(x*x+y*y+z*z)||1e-10; dirs.push({nx:x/r,ny:y/r,nz:z/r}); }
+    canon[i]=id;
   }
-  posAttr.needsUpdate=true;
-  geo.computeVertexNormals();
-  geo.userData.maxR=maxR;
+  const tris=[];
+  for(let t=0;t<idx.length;t+=3){
+    const a=canon[idx[t]],b=canon[idx[t+1]],c=canon[idx[t+2]];
+    if(a===b||b===c||a===c) continue;
+    tris.push(a,b,c);
+  }
+  g.dispose();
+  return {dirs,tris:Uint32Array.from(tris)};
 }
 
-function setLCAOGTOVertices(geo,dirs,shellAngs,shellTables,iso,positive){
-  const posAttr=geo.attributes.position;
-  const nSh=shellTables.length;
-  let maxR=0;
-  for(let vi=0;vi<posAttr.count;vi++){
-    const {nx,ny,nz}=dirs[vi];
-    const angs=shellAngs[vi];
-    let rNew=0;
-    if(iso>0 && nSh>0){
-      // Scan from outer radius inward to find outermost isosurface crossing
-      let prevVal=0;
-      for(let ir=GTO_NR-1;ir>=0;ir--){
+// Inner crossing of R(r)=target on the rising flank [0, r_peak]
+function solveRadialInner(radInfo,target){
+  const {table,iPeak,valPeak}=radInfo;
+  if(target<=0||target>=valPeak) return 0;
+  if(table[0]>=target) return 0;
+  let lo=0, hi=iPeak;
+  while(hi-lo>1){
+    const mid=(lo+hi)>>1;
+    if(table[mid]>=target) hi=mid; else lo=mid;
+  }
+  const v0=table[lo], v1=table[hi];
+  const frac=(v1>v0)?(target-v0)/(v1-v0):0;
+  return (lo+frac)*GTO_DR;
+}
+
+// Per-vertex lobe data for a given isovalue: g>0 inside angular support, rOut/rIn in Angstrom (unscaled)
+function gtoLobeRadii(item,iso){
+  const n=item.dirs.length;
+  const g=new Float32Array(n), rOut=new Float32Array(n), rIn=new Float32Array(n);
+  const sgn=item.positive?1:-1;
+  if(item.type==='lcao'){
+    const nSh=item.shellTables.length;
+    const rel=new Float64Array(GTO_NR);
+    for(let vi=0;vi<n;vi++){
+      const angs=item.shellAngs[vi];
+      let gmax=-Infinity;
+      for(let ir=0;ir<GTO_NR;ir++){
         let f=0;
-        for(let s=0;s<nSh;s++) f+=angs[s]*shellTables[s].table[ir];
-        const rel=positive?f:-f;
-        if(rel>=iso){
-          if(ir===GTO_NR-1){
-            rNew=gtoScale*GTO_RMAX;
-          } else {
-            const denom=rel-prevVal;
-            const frac=denom>1e-9?(rel-iso)/denom:0;
-            rNew=gtoScale*((ir+frac)*GTO_DR);
-          }
-          if(rNew>maxR) maxR=rNew;
+        for(let s=0;s<nSh;s++) f+=angs[s]*item.shellTables[s].table[ir];
+        f*=sgn; rel[ir]=f; if(f>gmax) gmax=f;
+      }
+      g[vi]=gmax-iso;
+      if(gmax<iso||iso<=0) continue;
+      // outermost crossing
+      let ro=0, ri=0;
+      for(let ir=GTO_NR-1;ir>=0;ir--){
+        if(rel[ir]>=iso){
+          if(ir===GTO_NR-1) ro=GTO_RMAX;
+          else { const d=rel[ir]-rel[ir+1]; ro=(ir+(d!==0?(rel[ir]-iso)/d:0))*GTO_DR; }
           break;
         }
-        prevVal=rel;
+      }
+      // innermost crossing
+      for(let ir=0;ir<GTO_NR;ir++){
+        if(rel[ir]>=iso){
+          if(ir===0) ri=0;
+          else { const d=rel[ir]-rel[ir-1]; ri=(ir-(d!==0?(rel[ir]-iso)/d:0))*GTO_DR; }
+          break;
+        }
+      }
+      rOut[vi]=ro; rIn[vi]=ri;
+    }
+  } else {
+    const {valPeak}=item.radInfo;
+    for(let vi=0;vi<n;vi++){
+      const y=sgn*item.angVals[vi];
+      g[vi]=y*valPeak-iso;
+      if(y>1e-6&&iso>0&&y*valPeak>iso){
+        rOut[vi]=solveRadialIso(item.radInfo,iso/y);
+        rIn[vi]=solveRadialInner(item.radInfo,iso/y);
       }
     }
-    posAttr.setXYZ(vi, nx*rNew, ny*rNew, nz*rNew);
   }
-  posAttr.needsUpdate=true;
+  return {g,rOut,rIn};
+}
+
+// Closed, clipped lobe surface: outer shell, inner shell and a smooth fold at the angular-support rim
+function gtoLobeGeometry(item,iso){
+  const tpl=item.tpl, dirs=item.dirs, scale=gtoScale;
+  const {g,rOut,rIn}=gtoLobeRadii(item,iso);
+  const n=dirs.length;
+  let needInner=false;
+  for(let i=0;i<n;i++) if(g[i]>0&&rIn[i]*scale>0.12){ needInner=true; break; }
+  const pos=[]; const idx=[];
+  const outer=new Int32Array(n).fill(-1), inner=new Int32Array(n).fill(-1);
+  const rim=new Map();
+  let maxR=0;
+  const addV=(v,r)=>{ const d=dirs[v]; pos.push(d.nx*r*scale,d.ny*r*scale,d.nz*r*scale); return pos.length/3-1; };
+  const O=v=>{ if(outer[v]<0){ outer[v]=addV(v,rOut[v]); if(rOut[v]*scale>maxR) maxR=rOut[v]*scale; } return outer[v]; };
+  const I=v=>{ if(inner[v]<0) inner[v]=addV(v,rIn[v]); return inner[v]; };
+  const R=(p,q,lay)=>{ // rim vertex on edge p(inside)-q(outside); separate copies per layer so normals are not mixed across the fold
+    const key=(p<q?p*n+q:q*n+p)*2+lay; let id=rim.get(key);
+    if(id!==undefined) return id;
+    const inV=g[p]>0?p:q, outV=inV===p?q:p;
+    const gi=g[inV], go=g[outV];
+    const t=gi/(gi-go||1e-9);
+    const a=dirs[inV], b=dirs[outV];
+    let x=a.nx*(1-t)+b.nx*t, y=a.ny*(1-t)+b.ny*t, z=a.nz*(1-t)+b.nz*t;
+    const l=Math.hypot(x,y,z)||1; x/=l;y/=l;z/=l;
+    const r=0.5*(rOut[inV]+rIn[inV])*scale;
+    pos.push(x*r,y*r,z*r); id=pos.length/3-1; rim.set(key,id); return id;
+  };
+  const T=tpl.tris;
+  for(let t=0;t<T.length;t+=3){
+    let a=T[t],b=T[t+1],c=T[t+2];
+    const ia=g[a]>0, ib=g[b]>0, ic=g[c]>0;
+    const cnt=(ia?1:0)+(ib?1:0)+(ic?1:0);
+    if(cnt===0) continue;
+    if(cnt===3){
+      idx.push(O(a),O(b),O(c));
+      if(needInner) idx.push(I(a),I(c),I(b));
+    } else if(cnt===1){
+      // rotate so lone inside vertex is first
+      let X=a,Y=b,Z=c;
+      if(ib){X=b;Y=c;Z=a;} else if(ic){X=c;Y=a;Z=b;}
+      idx.push(O(X),R(X,Y,0),R(Z,X,0));
+      if(needInner) idx.push(I(X),R(Z,X,1),R(X,Y,1));
+    } else {
+      // rotate so lone outside vertex is last
+      let X=a,Y=b,Z=c;
+      if(!ia){X=b;Y=c;Z=a;} else if(!ib){X=c;Y=a;Z=b;}
+      idx.push(O(X),O(Y),R(Y,Z,0), O(X),R(Y,Z,0),R(Z,X,0));
+      if(needInner) idx.push(I(X),R(Y,Z,1),I(Y), I(X),R(Z,X,1),R(Y,Z,1));
+    }
+  }
+  const geo=new THREE.BufferGeometry();
+  if(pos.length===0){ pos.push(0,0,0); }
+  geo.setAttribute('position',new THREE.BufferAttribute(Float32Array.from(pos),3));
+  geo.setIndex(new THREE.BufferAttribute(Uint32Array.from(idx),1));
   geo.computeVertexNormals();
   geo.userData.maxR=maxR;
+  return geo;
 }
 
 function shellPassesFilter(sh){
@@ -1580,17 +1750,10 @@ function buildGTO(az,pos,cx,cy,cz){
       new THREE.MeshStandardMaterial({color:0xbbbbbb,roughness:0.5,transparent:true,opacity:0.32}),gtoGroup);
   });
 
-  // Sphere template
-  const gtoRes=(gtoMode==='all_m')?44:56;
-  const templateGeo=new THREE.SphereGeometry(1,gtoRes,gtoRes);
-  const tPos=templateGeo.attributes.position;
-  const baseDirs=[];
-  for(let vi=0;vi<tPos.count;vi++){
-    const x=tPos.getX(vi), y=tPos.getY(vi), z=tPos.getZ(vi);
-    const r0=Math.sqrt(x*x+y*y+z*z)||1e-10;
-    baseDirs.push({nx:x/r0, ny:y/r0, nz:z/r0});
-  }
-  templateGeo.dispose();
+  // Welded sphere template (no seam/pole duplicates) used for clipped lobe surfaces
+  const gtoRes=(gtoMode==='all_m')?64:88;
+  const tpl=makeSphereTemplate(gtoRes);
+  const baseDirs=tpl.dirs;
 
   const frames=computeAtomLocalFrames(az,npos,bonds);
 
@@ -1650,8 +1813,8 @@ function buildGTO(az,pos,cx,cy,cz){
         }
       }
       [true,false].forEach(positive=>{
-        const geo=new THREE.SphereGeometry(1,gtoRes,gtoRes);
-        setLCAOGTOVertices(geo,localAngles,shellAngs,shellTables,gtoIsovalue,positive);
+        const lobeItem={type:'lcao',positive,dirs:localAngles,shellAngs,shellTables,tpl};
+        const geo=gtoLobeGeometry(lobeItem,gtoIsovalue);
         const col=positive?SH_POS_COLOR:SH_NEG_COLOR;
         const mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({
           color:col, roughness:0.25, metalness:0.08,
@@ -1661,7 +1824,7 @@ function buildGTO(az,pos,cx,cy,cz){
         mesh.castShadow=true;
         mesh.renderOrder=2;
         gtoGroup.add(mesh);
-        gtoLobeMeshes.push({mesh,type:'lcao',positive,dirs:localAngles,shellAngs,shellTables});
+        gtoLobeMeshes.push({mesh,...lobeItem});
       });
     } else {
       // 'shells' (1 representative m per shell) or 'all_m' (all 2l+1 m values per shell)
@@ -1698,8 +1861,8 @@ function buildGTO(az,pos,cx,cy,cz){
           const angVals=localAngles.map(({theta,phi})=>realSH(sh.l,m,theta,phi));
           const signs=(sh.l===0)?[true]:[true,false];
           signs.forEach(positive=>{
-            const geo=new THREE.SphereGeometry(1,gtoRes,gtoRes);
-            setSingleGTOVertices(geo,localAngles,angVals,radInfo,gtoIsovalue,positive);
+            const lobeItem={type:'single',positive,dirs:localAngles,angVals,radInfo,tpl,sameLIdx,l:sh.l,core:sh.core,hasHigherL};
+            const geo=gtoLobeGeometry(lobeItem,gtoIsovalue);
             const col=getShellLobeColor(sh,positive,sameLIdx);
             const mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({
               color:col, roughness:0.24, metalness:0.08,
@@ -1710,7 +1873,7 @@ function buildGTO(az,pos,cx,cy,cz){
             mesh.castShadow=true;
             mesh.renderOrder=(sh.l>0?5:1)+orderIdx;
             gtoGroup.add(mesh);
-            gtoLobeMeshes.push({mesh,type:'single',positive,dirs:localAngles,angVals,radInfo,sameLIdx,l:sh.l,core:sh.core,hasHigherL});
+            gtoLobeMeshes.push({mesh,...lobeItem});
           });
         });
       });
@@ -1778,12 +1941,9 @@ function buildGTO(az,pos,cx,cy,cz){
 
 function updateGTOIsosurfaces(){
   gtoLobeMeshes.forEach(item=>{
-    if(item.type==='lcao'){
-      setLCAOGTOVertices(item.mesh.geometry,item.dirs,item.shellAngs,item.shellTables,gtoIsovalue,item.positive);
-    } else {
-      const mult=item.isoMult||1.0;
-      setSingleGTOVertices(item.mesh.geometry,item.dirs,item.angVals,item.radInfo,gtoIsovalue*mult,item.positive);
-    }
+    const old=item.mesh.geometry;
+    item.mesh.geometry=gtoLobeGeometry(item,gtoIsovalue*(item.isoMult||1.0));
+    old.dispose();
   });
 }
 
@@ -1937,7 +2097,7 @@ function rebuildDensityMeshes(){
   const levels=densNested?[densIso,densIso*6,densIso*36]:[densIso];
   levels.forEach((lv,i)=>{
     if(lv>=densGrid.maxRho*0.98) return;
-    const m=densIsoMesh(densGrid,lv);
+    const m=(densGrid.fine&&lv>=DENS_FINE_MIN_ISO)?densIsoMeshFine(densGrid.fine,lv):densIsoMesh(densGrid,lv);
     if(!m.count) return;
     const geo=new THREE.BufferGeometry();
     geo.setAttribute('position',new THREE.BufferAttribute(m.pos,3));
@@ -1973,10 +2133,21 @@ async function ensureDensity(){
     await densYield();
     const grid=await computeMinaoDensity(densAtoms(),currentBasis,densSource,DENS_RES_POINTS[densRes],tok,setDensStatus);
     if(tok.cancelled||!grid) return;
-    densGrid=grid; densGridKey=key; densBusyKey=''; densToken=null;
+    densGrid=grid; densGridKey=key; densBusyKey='';
     rebuildDensityMeshes();
-    fitCamera();
-    setDensStatus(`${densSource==='ano'?grid.nBasis+' ANO functions':grid.nBasis+' basis functions'} · grid ${grid.nx}×${grid.ny}×${grid.nz} (h = ${grid.h.toFixed(2)} Å) · ${Math.round(performance.now()-t0)} ms`);
+    const baseStatus=(`${densSource==='ano'?grid.nBasis+' ANO functions':grid.nBasis+' basis functions'} · grid ${grid.nx}×${grid.ny}×${grid.nz} (h = ${grid.h.toFixed(2)} Å) · ${Math.round(performance.now()-t0)} ms`);
+    setDensStatus(baseStatus+' · refining cores…');
+    // adaptive near-core refinement (keeps the same token so a new request cancels it)
+    try{
+      const fine=await densRefine(grid,tok,s=>setDensStatus(baseStatus+' · '+s.charAt(0).toLowerCase()+s.slice(1)));
+      if(tok.cancelled||!fine) return;
+      grid.fine=fine; densToken=null;
+      rebuildDensityMeshes();
+      setDensStatus(baseStatus+' · cores refined to '+fine.h.toFixed(3)+' Å');
+    }catch(e2){
+      console.warn('density refinement failed',e2);
+      densToken=null; setDensStatus(baseStatus);
+    }
   }catch(e){
     if(tok.cancelled) return;
     densBusyKey=''; densToken=null; densError=e.message||String(e);
@@ -2088,7 +2259,7 @@ function setView(mode){
   document.getElementById('quickMatExtras').style.display=(mode==='matrix')?'flex':'none';
   syncBasisUI();
   syncVizPanelSection(mode);
-  updateLegend(); fitCamera();
+  updateLegend(); updateFloorPosition();
   if(mode==='density') ensureDensity();
 }
 
@@ -2288,12 +2459,12 @@ function updateFloorPosition(){
   keyLight.shadow.camera.updateProjectionMatrix();
 }
 
+// Camera distance depends only on the molecule (not on the active view), so switching tabs never changes the zoom.
+// A fixed halo around the atoms leaves room for orbital lobes and density surfaces; zoom out for anything larger.
 function fitCamera(){
-  const maxExtent=computeBoundingRadius();
   let maxAtomCenter=0;
   atomMeshes.forEach(m=>{const d=m.position.length();if(d>maxAtomCenter)maxAtomCenter=d;});
-  // Density surfaces are large smooth blobs, so the camera needs extra distance to avoid cropping them
-  camBaseDist=Math.max(maxAtomCenter*3.5, maxExtent*(viewMode==='density'?3.6:2.45), 5);
+  camBaseDist=Math.max(maxAtomCenter*3.5, (maxAtomCenter+2.0)*2.8, 5);
   targetZoom=1; zoom=1;
   updateFloorPosition();
 }
@@ -2700,8 +2871,15 @@ document.getElementById('loadMolecule').addEventListener('click',()=>{
 // ═══════════════════════════════════════════
 // Export all views
 // ═══════════════════════════════════════════
-function renderCroppedDataURL(){
-  const scale=3,pad=40,ew=W*scale,eh=H*scale;
+let exportBg='transparent';  // 'solid' | 'transparent'
+let exportBgColor='#ffffff';
+let exportPad=40;            // px margin around the shared tight crop
+let exporting=false;
+
+// Render the currently visible groups at export resolution on a transparent background
+// and return a full-frame canvas copy (no cropping).
+function renderFullFrameCanvas(){
+  const scale=3,ew=W*scale,eh=H*scale;
   renderer.setClearColor(0x000000,0); scene.background=null;
   renderer.setSize(ew,eh); renderer.setPixelRatio(1);
   camera.aspect=W/H; camera.updateProjectionMatrix(); camera.updateMatrixWorld();
@@ -2734,54 +2912,155 @@ function renderCroppedDataURL(){
   }
 
   renderer.render(scene,camera);
-  const gl=renderer.getContext();
-  const px=new Uint8Array(ew*eh*4);
-  gl.readPixels(0,0,ew,eh,gl.RGBA,gl.UNSIGNED_BYTE,px);
-  let mnX=ew,mnY=eh,mxX=0,mxY=0;
-  for(let y=0;y<eh;y++)for(let x=0;x<ew;x++){if(px[(y*ew+x)*4+3]>0){const fy=eh-1-y;if(x<mnX)mnX=x;if(x>mxX)mxX=x;if(fy<mnY)mnY=fy;if(fy>mxY)mxY=fy;}}
-  mnX=Math.max(0,mnX-pad);mnY=Math.max(0,mnY-pad);mxX=Math.min(ew-1,mxX+pad);mxY=Math.min(eh-1,mxY+pad);
-  const cW=mxX-mnX+1,cH=mxY-mnY+1;
-  const fc=document.createElement('canvas');fc.width=ew;fc.height=eh;fc.getContext('2d').drawImage(renderer.domElement,0,0);
-  const cc=document.createElement('canvas');cc.width=cW;cc.height=cH;
-  cc.getContext('2d').drawImage(fc,mnX,mnY,cW,cH,0,0,cW,cH);
-  return cc.toDataURL('image/png');
+  const fc=document.createElement('canvas'); fc.width=ew; fc.height=eh;
+  fc.getContext('2d').drawImage(renderer.domElement,0,0);
+  return fc;
 }
+
+// Bounding box of non-transparent pixels
+function canvasAlphaBounds(cv){
+  const w=cv.width,h=cv.height;
+  const d=cv.getContext('2d').getImageData(0,0,w,h).data;
+  let mnX=w,mnY=h,mxX=-1,mxY=-1;
+  for(let y=0;y<h;y++){
+    const row=y*w*4;
+    for(let x=0;x<w;x++){
+      if(d[row+x*4+3]>2){
+        if(x<mnX)mnX=x; if(x>mxX)mxX=x; if(y<mnY)mnY=y; if(y>mxY)mxY=y;
+      }
+    }
+  }
+  return mxX<0?null:{mnX,mnY,mxX,mxY};
+}
+
+function setOnlyVisible(spec){
+  molGroup.visible=!!spec.mol; gnnGroup.visible=!!spec.gnn; gnnFeatGroup.visible=!!spec.gnnFeat;
+  matGroup.visible=!!spec.mat; matBlocksGroup.visible=!!spec.matBlocks; shGroup.visible=!!spec.sh;
+  gtoGroup.visible=!!spec.gto; gtoCardGroup.visible=!!spec.gtoCards; densGroup.visible=!!spec.dens;
+}
+
 function dlURL(url,fn){const l=document.createElement('a');l.download=fn;l.href=url;l.click();}
 
-document.getElementById('exportBtn').addEventListener('click',()=>{
+// Minimal ZIP writer (stored, no compression; PNGs are already compressed)
+const _crcTable=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c>>>0;}return t;})();
+function crc32(u8){let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=_crcTable[(c^u8[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function makeZip(files){ // files: [{name, data:Uint8Array}] -> Blob
+  const enc=new TextEncoder(), parts=[], central=[];
+  const d=new Date();
+  const dosTime=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1);
+  const dosDate=(((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate());
+  let offset=0;
+  files.forEach(f=>{
+    const name=enc.encode(f.name), crc=crc32(f.data), size=f.data.length;
+    const lh=new DataView(new ArrayBuffer(30));
+    lh.setUint32(0,0x04034b50,true); lh.setUint16(4,20,true); lh.setUint16(6,0x0800,true); lh.setUint16(8,0,true);
+    lh.setUint16(10,dosTime,true); lh.setUint16(12,dosDate,true); lh.setUint32(14,crc,true);
+    lh.setUint32(18,size,true); lh.setUint32(22,size,true); lh.setUint16(26,name.length,true); lh.setUint16(28,0,true);
+    parts.push(lh.buffer,name,f.data);
+    const ch=new DataView(new ArrayBuffer(46));
+    ch.setUint32(0,0x02014b50,true); ch.setUint16(4,20,true); ch.setUint16(6,20,true); ch.setUint16(8,0x0800,true); ch.setUint16(10,0,true);
+    ch.setUint16(12,dosTime,true); ch.setUint16(14,dosDate,true); ch.setUint32(16,crc,true);
+    ch.setUint32(20,size,true); ch.setUint32(24,size,true); ch.setUint16(28,name.length,true);
+    ch.setUint32(42,offset,true);
+    central.push(ch.buffer,name);
+    offset+=30+name.length+size;
+  });
+  let csize=0; central.forEach(c=>{csize+=c.byteLength;});
+  const end=new DataView(new ArrayBuffer(22));
+  end.setUint32(0,0x06054b50,true); end.setUint16(8,files.length,true); end.setUint16(10,files.length,true);
+  end.setUint32(12,csize,true); end.setUint32(16,offset,true);
+  return new Blob([...parts,...central,end.buffer],{type:'application/zip'});
+}
+function dataURLToBytes(u){const b=atob(u.split(',')[1]);const a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
+
+async function exportAllViews(){
+  if(exporting) return;
+  exporting=true;
+  const btn=document.getElementById('exportBtn');
+  const label=btn.textContent;
   const prev=viewMode;
-  // Molecule
-  densGroup.visible=false;
-  molGroup.visible=true;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=false;matBlocksGroup.visible=false;shGroup.visible=false;gtoGroup.visible=false;gtoCardGroup.visible=false;
-  const molURL=renderCroppedDataURL();
-  // GNN
-  molGroup.visible=false;gnnGroup.visible=true;gnnFeatGroup.visible=showFeatures;matGroup.visible=false;matBlocksGroup.visible=false;shGroup.visible=false;gtoGroup.visible=false;gtoCardGroup.visible=false;
-  const gnnURL=renderCroppedDataURL();
-  // Matrix
-  molGroup.visible=false;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=true;matBlocksGroup.visible=showMatrixBlocks;shGroup.visible=false;gtoGroup.visible=false;gtoCardGroup.visible=false;
-  const matURL=renderCroppedDataURL();
-  // SH
-  molGroup.visible=false;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=false;matBlocksGroup.visible=false;shGroup.visible=true;gtoGroup.visible=false;gtoCardGroup.visible=false;
-  const shURL=renderCroppedDataURL();
-  // GTO
-  molGroup.visible=false;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=false;matBlocksGroup.visible=showGtoMatrixOverlay;shGroup.visible=false;gtoGroup.visible=true;gtoCardGroup.visible=showGtoCards;
-  const gtoURL=renderCroppedDataURL();
-  // Density (only if already computed, otherwise skipped)
-  let densURL=null;
-  if(densGrid&&densMeshes.length){
-    molGroup.visible=false;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=false;matBlocksGroup.visible=false;shGroup.visible=false;gtoGroup.visible=false;gtoCardGroup.visible=false;densGroup.visible=true;
-    densURL=renderCroppedDataURL();
+  try{
+    // Make sure the density is available so it can be exported together with the other views
+    if(!(densGrid&&densMeshes.length)){
+      btn.textContent='Computing density…';
+      setView('density');
+      const t0=performance.now();
+      while((densBusyKey!==''||!densGrid)&&!densError&&performance.now()-t0<60000) await densYield();
+      await densYield();
+    }
+    btn.textContent='Exporting…';
+    await densYield();
+
+    const views=[
+      {name:'molecule.png',      spec:{mol:true}},
+      {name:'molecule_gnn.png',  spec:{gnn:true,gnnFeat:showFeatures}},
+      {name:`molecule_matrix_${currentBasis}.png`, spec:{mat:true,matBlocks:showMatrixBlocks}},
+      {name:'molecule_sh.png',   spec:{sh:true}},
+      {name:`molecule_gto_${currentBasis}.png`,    spec:{gto:true,gtoCards:showGtoCards,matBlocks:showGtoMatrixOverlay}}
+    ];
+    if(densGrid&&densMeshes.length){
+      views.push({name:`molecule_density_${densSource==='ano'?'ano':currentBasis}.png`, spec:{dens:true}});
+    }
+
+    // 1) render every view full-frame (same camera, rotation and size)
+    views.forEach(v=>{ setOnlyVisible(v.spec); v.canvas=renderFullFrameCanvas(); });
+
+    // 2) one shared tight crop: union of all non-transparent bounds plus margin
+    let U=null;
+    views.forEach(v=>{
+      const b=canvasAlphaBounds(v.canvas);
+      if(!b) return;
+      U=U?{mnX:Math.min(U.mnX,b.mnX),mnY:Math.min(U.mnY,b.mnY),mxX:Math.max(U.mxX,b.mxX),mxY:Math.max(U.mxY,b.mxY)}:b;
+    });
+    const ew=views[0].canvas.width, eh=views[0].canvas.height;
+    if(!U) U={mnX:0,mnY:0,mxX:ew-1,mxY:eh-1};
+    const x0=Math.max(0,U.mnX-exportPad), y0=Math.max(0,U.mnY-exportPad);
+    const x1=Math.min(ew-1,U.mxX+exportPad), y1=Math.min(eh-1,U.mxY+exportPad);
+    const cW=x1-x0+1, cH=y1-y0+1;
+
+    // 3) compose with the chosen background and download
+    views.forEach(v=>{
+      const out=document.createElement('canvas'); out.width=cW; out.height=cH;
+      const ctx=out.getContext('2d');
+      if(exportBg==='solid'){ ctx.fillStyle=exportBgColor; ctx.fillRect(0,0,cW,cH); }
+      ctx.drawImage(v.canvas,x0,y0,cW,cH,0,0,cW,cH);
+      v.url=out.toDataURL('image/png');
+      v.canvas=null;
+    });
+
+    // Restore the interactive renderer
+    renderer.setClearColor(BG_COLOR,1); scene.background=new THREE.Color(BG_COLOR);
+    renderer.setSize(W,H); renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    setView(prev);
+    // Pack all images into one folder inside a single ZIP download
+    const folder=('molecule_'+(currentPresetKey||'custom')).replace(/[^A-Za-z0-9_.-]+/g,'_')+'_views';
+    const zip=makeZip(views.map(v=>({name:folder+'/'+v.name,data:dataURLToBytes(v.url)})));
+    const zurl=URL.createObjectURL(zip);
+    dlURL(zurl,folder+'.zip');
+    setTimeout(()=>URL.revokeObjectURL(zurl),10000);
+  }catch(err){
+    console.error(err);
+    renderer.setClearColor(BG_COLOR,1); scene.background=new THREE.Color(BG_COLOR);
+    renderer.setSize(W,H); renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    setView(prev);
+  }finally{
+    btn.textContent=label;
+    exporting=false;
   }
-  // Restore
-  renderer.setClearColor(BG_COLOR,1);scene.background=new THREE.Color(BG_COLOR);
-  renderer.setSize(W,H);renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  setView(prev);
-  dlURL(molURL,'molecule.png');
-  setTimeout(()=>dlURL(gnnURL,'molecule_gnn.png'),400);
-  setTimeout(()=>dlURL(matURL,`molecule_matrix_${currentBasis}.png`),800);
-  setTimeout(()=>dlURL(shURL,'molecule_sh.png'),1200);
-  setTimeout(()=>dlURL(gtoURL,`molecule_gto_${currentBasis}.png`),1600);
-  if(densURL) setTimeout(()=>dlURL(densURL,`molecule_density_${densSource==='ano'?'ano':currentBasis}.png`),2000);
+}
+
+document.getElementById('exportBtn').addEventListener('click',exportAllViews);
+document.querySelectorAll('#exportBgSeg button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    exportBg=b.dataset.bg;
+    document.querySelectorAll('#exportBgSeg button').forEach(x=>x.classList.toggle('active',x===b));
+    document.getElementById('exportBgColorRow').style.display=(exportBg==='solid')?'flex':'none';
+  });
+});
+document.getElementById('exportBgColor').addEventListener('input',e=>{exportBgColor=e.target.value;});
+document.getElementById('exportPadRange').addEventListener('input',e=>{
+  exportPad=parseInt(e.target.value,10);
+  document.getElementById('exportPadVal').textContent=String(exportPad);
 });
 
 // ═══════════════════════════════════════════
