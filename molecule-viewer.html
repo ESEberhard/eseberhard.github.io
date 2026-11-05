@@ -23,16 +23,25 @@
   .legend { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
   .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #777; }
   .legend-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.08); }
-  .btn { background: #222; color: #f8f7f4; border: none; padding: 8px 18px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: background 0.2s; }
+  .btn { background: #222; color: #f8f7f4; border: none; padding: 8px 18px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: background 0.2s; border-radius: 4px; }
   .btn:hover { background: #444; }
+  .btn-outline { background: #e0dfdc; color: #333; }
+  .btn-outline:hover { background: #d0cfcc; }
+  .btn-outline.active { background: #222; color: #f8f7f4; }
   .view-toggle { display: flex; background: #e0dfdc; border-radius: 4px; overflow: hidden; }
   .view-toggle button { background: transparent; color: #888; border: none; padding: 8px 14px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
   .view-toggle button.active { background: #222; color: #f8f7f4; }
   .view-toggle button:not(.active):hover { background: #d0cfcc; }
   .bottom-bar { position: absolute; bottom: 20px; right: 28px; z-index: 10; display: flex; gap: 8px; }
-  .side-panel { position: absolute; top: 0; left: 0; width: 420px; max-width: 90vw; height: 100vh; background: rgba(34,34,34,0.96); color: #ddd; z-index: 15; transform: translateX(-100%); transition: transform 0.3s ease; display: flex; flex-direction: column; padding: 24px; overflow-y: auto; }
+  .side-panel { position: absolute; top: 0; left: 0; width: 400px; max-width: 90vw; height: 100vh; background: rgba(34,34,34,0.96); color: #ddd; z-index: 25; transform: translateX(-100%); transition: transform 0.28s ease; display: flex; flex-direction: column; padding: 24px; overflow-y: auto; box-shadow: 4px 0 24px rgba(0,0,0,0.18); }
   .side-panel.open { transform: translateX(0); }
-  .side-panel h2 { font-size: 11px; font-weight: 400; letter-spacing: 3px; text-transform: uppercase; color: #999; margin-bottom: 16px; }
+  .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .panel-header h2 { font-size: 11px; font-weight: 400; letter-spacing: 3px; text-transform: uppercase; color: #ccc; margin: 0; }
+  .panel-close-x { background: transparent; border: none; color: #888; font-family: 'DM Mono', monospace; font-size: 16px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 3px; }
+  .panel-close-x:hover { color: #fff; background: rgba(255,255,255,0.1); }
+  .viz-section { display: none; flex-direction: column; }
+  .viz-section.active { display: flex; }
+  .viz-badge { display: inline-block; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #eee; background: rgba(255,255,255,0.12); padding: 3px 8px; border-radius: 3px; }
   .side-panel label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #888; margin-bottom: 6px; display: block; }
   .side-panel textarea { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #ccc; font-family: 'DM Mono', monospace; font-size: 12px; padding: 12px; border-radius: 4px; resize: vertical; margin-bottom: 16px; line-height: 1.6; }
   .side-panel textarea:focus { outline: none; border-color: rgba(255,255,255,0.3); }
@@ -64,6 +73,26 @@
   .range-row label { margin-bottom: 0; flex-shrink: 0; }
   .range-row input[type=range] { flex: 1; accent-color: #888; height: 4px; }
   .range-val { font-size: 11px; color: #aaa; min-width: 32px; text-align: right; }
+  .sub-controls { display: none; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .sub-controls.visible { display: flex; }
+  .sub-toggle { display: flex; background: #e0dfdc; border-radius: 4px; overflow: hidden; }
+  .sub-toggle button { background: transparent; color: #777; border: none; padding: 5px 10px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; }
+  .sub-toggle button.active { background: #222; color: #f8f7f4; }
+  .sub-toggle button:not(.active):hover { background: #d0cfcc; }
+  .panel-seg { display: flex; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 4px; overflow: hidden; margin-bottom: 14px; }
+  .panel-seg button { flex: 1; background: transparent; color: #888; border: none; padding: 7px 6px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; }
+  .panel-seg button.active { background: rgba(255,255,255,0.22); color: #f8f7f4; }
+  .panel-seg button:not(.active):hover { background: rgba(255,255,255,0.1); }
+  .radial-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 10px; margin-bottom: 14px; }
+  .radial-box canvas { width: 100%; height: 120px; display: block; }
+  .basis-summary { font-size: 10px; color: #aaa; line-height: 1.6; margin-top: 6px; }
+  .basis-summary b { color: #eee; font-weight: 400; }
+  .preset-select { background: #e0dfdc; color: #222; border: none; border-radius: 4px; padding: 8px 28px 8px 12px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23444' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; transition: background-color 0.2s; }
+  .preset-select:hover { background-color: #d0cfcc; }
+  .preset-select:focus { outline: none; }
+  .panel-select { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #ddd; font-family: 'DM Mono', monospace; font-size: 12px; padding: 9px 28px 9px 12px; border-radius: 4px; margin-bottom: 16px; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23aaa' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+  .panel-select:focus { outline: none; border-color: rgba(255,255,255,0.3); }
+  .panel-select option { background: #222; color: #ddd; }
 </style>
 </head>
 <body>
@@ -71,11 +100,43 @@
   <div class="top-left">
     <div class="top-left-buttons">
       <button class="btn" id="panelBtn">Edit Molecule</button>
+      <select id="presetSelect" class="preset-select" aria-label="Preconfigured molecule"></select>
       <div class="view-toggle">
         <button id="viewMol" class="active">Molecule</button>
         <button id="viewGNN">GNN</button>
         <button id="viewMatrix">Matrix</button>
         <button id="viewSH">Harmonics</button>
+        <button id="viewGTO">GTOs</button>
+      </div>
+      <button class="btn btn-outline" id="vizPanelBtn">View Options</button>
+    </div>
+    <div class="sub-controls" id="basisQuickBar">
+      <div class="sub-toggle" id="quickBasisToggle">
+        <button data-basis="sto-3g" class="active">STO-3G</button>
+        <button data-basis="def2-svp">def2-SVP</button>
+        <button data-basis="def2-svpd">def2-SVPD</button>
+        <button data-basis="def2-tzvp">def2-TZVP</button>
+      </div>
+      <div class="sub-toggle" id="quickGtoMode" style="display:none;">
+        <button data-mode="shells" class="active" title="One oriented orbital per (n,ℓ) shell">Shells</button>
+        <button data-mode="all_m" title="All (2ℓ+1) magnetic sub-orbitals per shell">2ℓ+1</button>
+        <button data-mode="lcao" title="Linear combination of atomic orbitals">LCAO</button>
+        <button data-mode="minao" title="Projected MINAO initial-guess electron density in selected basis">MINAO ρ</button>
+      </div>
+      <div class="sub-toggle" id="quickGtoFilter" style="display:none;">
+        <button data-filter="all" class="active">All</button>
+        <button data-filter="valence">Valence</button>
+        <button data-filter="s">s</button>
+        <button data-filter="p">p</button>
+        <button data-filter="d">d</button>
+        <button data-filter="f">f</button>
+      </div>
+      <div class="sub-toggle" id="quickGtoExtras" style="display:none;">
+        <button id="quickCardsBtn" class="active" title="Toggle per-atom shell breakdown cards">Cards</button>
+      </div>
+      <div class="sub-toggle" id="quickMatExtras" style="display:none;">
+        <button id="quickMatBlocksBtn" class="active" title="Toggle per-atom matrix row blocks">Blocks</button>
+        <button id="quickMatMinaoBtn" title="Color diagonal blocks by projected MINAO density matrix values">MINAO P</button>
       </div>
     </div>
   </div>
@@ -90,16 +151,31 @@
   <div class="bottom-bar">
     <button class="btn" id="exportBtn">Export All PNGs</button>
   </div>
+
+  <!-- Global Settings & Molecule Geometry Panel -->
   <div class="side-panel" id="sidePanel">
-    <h2>Molecule Input</h2>
-    <div class="toggle-row"><span>Show Bonds</span><label class="toggle-switch"><input type="checkbox" id="bondsToggle" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+    <div class="panel-header">
+      <h2>Edit Molecule</h2>
+      <button type="button" class="panel-close-x" id="closePanelX" aria-label="Close">&times;</button>
+    </div>
+    <div class="section-label">Global Scene</div>
     <div class="toggle-row"><span>Floor Shadow</span><label class="toggle-switch"><input type="checkbox" id="shadowToggle" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
-    <hr class="divider">
+    <div class="range-row">
+      <label>Floor Y</label>
+      <input type="range" id="floorYRange" min="-12.0" max="0.0" step="0.05" value="-2.0">
+      <span class="range-val" id="floorYVal">-2.00</span>
+      <button type="button" class="btn btn-light" id="floorAutoBtn" style="padding:4px 8px;font-size:9px;letter-spacing:1px;">Auto</button>
+    </div>
+    <div class="hint" style="margin-top:-10px;">Defaults to below the full rotation bounding sphere so no atom or orbital clips into the floor.</div>
+    <div class="toggle-row"><span>Auto-Rotate</span><label class="toggle-switch"><input type="checkbox" id="autoRotateToggle" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+    <div class="section-label" style="margin-top:8px;">Molecule Structure</div>
+    <label for="panelPresetSelect">Preset Molecule</label>
+    <select id="panelPresetSelect" class="panel-select"></select>
     <label for="atomZInput">atom_z (atomic numbers)</label>
     <textarea id="atomZInput" rows="3" spellcheck="false">np.array([6, 6, 8, 1, 1, 1, 1, 1, 1])</textarea>
-    <div class="hint">Accepts: np.array([6, 6, 8, ...]) or just [6, 6, 8, ...] or 6, 6, 8, ...</div>
-    <label for="nucPosInput">nuc_pos (positions)</label>
-    <textarea id="nucPosInput" rows="14" spellcheck="false">np.array([
+    <div class="hint">Accepts: np.array([6, 6, 8, ...]) or [6, 6, 8, ...] or 6, 6, 8, ...</div>
+    <label for="nucPosInput">nuc_pos (positions in Å)</label>
+    <textarea id="nucPosInput" rows="12" spellcheck="false">np.array([
   [-0.14365933, -0.11813374, -0.56843375],
   [-0.17613, 1.28513285, -0.00859315],
   [0.21953989, -1.07718569, 0.51279995],
@@ -111,38 +187,148 @@
   [1.18606471, -0.96054634, 0.66677837],
 ])</textarea>
     <div class="hint">Accepts numpy-style or plain nested arrays. One [x, y, z] per atom.</div>
-    <hr class="divider">
-    <div class="section-label">GNN Options</div>
-    <div class="range-row"><label>Cutoff (Å)</label><input type="range" id="cutoffRange" min="0.5" max="6.0" step="0.1" value="2.0"><span class="range-val" id="cutoffVal">2.0</span></div>
-    <div class="hint">Atoms within this distance are connected by edges.</div>
-    <div class="toggle-row"><span>Show Features</span><label class="toggle-switch"><input type="checkbox" id="featuresToggle"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
-    <div class="toggle-row"><span>Curved Arrows</span><label class="toggle-switch"><input type="checkbox" id="curvedToggle"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
-    <div class="toggle-row"><span>Monochrome Nodes</span><label class="toggle-switch"><input type="checkbox" id="monoToggle"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
-    <div class="range-row"><label>Edge Thickness</label><input type="range" id="thicknessRange" min="0.005" max="0.08" step="0.005" value="0.03"><span class="range-val" id="thicknessVal">0.03</span></div>
-    <div class="range-row"><label>Edge Opacity</label><input type="range" id="opacityRange" min="0.05" max="1.0" step="0.05" value="0.5"><span class="range-val" id="opacityVal">0.50</span></div>
-    <div class="color-row"><label>Arrow Color</label><input type="color" id="arrowColorPicker" class="color-swatch" value="#222222"></div>
-    <hr class="divider">
-    <div class="section-label">Harmonics Options</div>
-    <div class="range-row"><label>Isovalue</label><input type="range" id="shIsoRange" min="0.01" max="0.60" step="0.01" value="0.15"><span class="range-val" id="shIsoVal">0.15</span></div>
-    <div class="hint">Isosurface threshold. Lower values reveal more of the SH lobes, higher values isolate dominant features.</div>
-    <div class="range-row"><label>Lobe Scale</label><input type="range" id="shScaleRange" min="0.1" max="1.5" step="0.05" value="0.55"><span class="range-val" id="shScaleVal">0.55</span></div>
-    <div class="range-row"><label>Opacity</label><input type="range" id="shOpacityRange" min="0.1" max="1.0" step="0.05" value="0.82"><span class="range-val" id="shOpacityVal">0.82</span></div>
     <div id="errorMsg" class="error-msg"></div>
     <div class="panel-actions">
-      <button class="btn btn-light" id="closePanel">Cancel</button>
-      <button class="btn" id="loadMolecule">Load Molecule</button>
+      <button class="btn btn-light" id="closePanel">Close</button>
+      <button class="btn" id="loadMolecule">Apply Geometry</button>
+    </div>
+  </div>
+
+  <!-- Adaptive Visualization Options Panel -->
+  <div class="side-panel" id="vizPanel">
+    <div class="panel-header">
+      <h2>Visualization Options</h2>
+      <span class="viz-badge" id="vizModeBadge">Molecule</span>
+      <button type="button" class="panel-close-x" id="closeVizPanelX" aria-label="Close">&times;</button>
+    </div>
+
+    <!-- 1. Molecule View Options -->
+    <div class="viz-section active" id="vizSec-molecule">
+      <div class="toggle-row"><span>Show Covalent Bonds</span><label class="toggle-switch"><input type="checkbox" id="bondsToggle" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+      <div class="range-row"><label>Atom Scale</label><input type="range" id="molAtomScaleRange" min="0.4" max="1.8" step="0.05" value="1.0"><span class="range-val" id="molAtomScaleVal">1.00</span></div>
+      <div class="range-row"><label>Bond Radius</label><input type="range" id="molBondRadRange" min="0.02" max="0.18" step="0.01" value="0.08"><span class="range-val" id="molBondRadVal">0.08</span></div>
+      <div class="hint">Ball-and-stick representation with covalent radii and automatic bond detection.</div>
+    </div>
+
+    <!-- 2. GNN View Options -->
+    <div class="viz-section" id="vizSec-gnn">
+      <div class="range-row"><label>Cutoff (Å)</label><input type="range" id="cutoffRange" min="0.5" max="6.0" step="0.1" value="2.0"><span class="range-val" id="cutoffVal">2.0</span></div>
+      <div class="hint">Atoms within this radial cutoff are connected by directed message-passing edges.</div>
+      <div class="toggle-row"><span>Show Node Features</span><label class="toggle-switch"><input type="checkbox" id="featuresToggle"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+      <div class="toggle-row"><span>Curved Directed Edges</span><label class="toggle-switch"><input type="checkbox" id="curvedToggle"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+      <div class="toggle-row"><span>Monochrome Nodes</span><label class="toggle-switch"><input type="checkbox" id="monoToggle"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+      <div class="range-row"><label>Edge Thickness</label><input type="range" id="thicknessRange" min="0.005" max="0.08" step="0.005" value="0.03"><span class="range-val" id="thicknessVal">0.030</span></div>
+      <div class="range-row"><label>Edge Opacity</label><input type="range" id="opacityRange" min="0.05" max="1.0" step="0.05" value="0.5"><span class="range-val" id="opacityVal">0.50</span></div>
+      <div class="color-row"><label>Arrow Color</label><input type="color" id="arrowColorPicker" class="color-swatch" value="#222222"></div>
+    </div>
+
+    <!-- 3. Matrix View Options -->
+    <div class="viz-section" id="vizSec-matrix">
+      <div class="toggle-row"><span>Show Matrix Blocks</span><label class="toggle-switch"><input type="checkbox" id="matBlocksToggle" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+      <div class="toggle-row"><span>Sub-Orbital Grid Lines</span><label class="toggle-switch"><input type="checkbox" id="matGridToggle" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+      <div class="toggle-row"><span>Show Sparse Off-Diag</span><label class="toggle-switch"><input type="checkbox" id="matSparseToggle" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+      <label>Matrix Block Values</label>
+      <div class="panel-seg" id="matColorModeSeg">
+        <button type="button" data-matmode="shell" class="active">Shell Structure</button>
+        <button type="button" data-matmode="minao">MINAO Density P<sub>μν</sub></button>
+      </div>
+      <label>Basis Set</label>
+      <div class="panel-seg" id="matBasisSeg">
+        <button type="button" data-basis="sto-3g" class="active">STO-3G</button>
+        <button type="button" data-basis="def2-svp">def2-SVP</button>
+        <button type="button" data-basis="def2-svpd">def2-SVPD</button>
+        <button type="button" data-basis="def2-tzvp">def2-TZVP</button>
+      </div>
+      <div class="range-row"><label>Block Scale</label><input type="range" id="matScaleRange" min="0.5" max="2.0" step="0.05" value="1.0"><span class="range-val" id="matScaleVal">1.00</span></div>
+      <div class="hint">Each atom carries its row-slice of the molecular matrix in the selected AO basis. Switch to MINAO Density to inspect the projected ANO initial-guess density matrix elements P<sub>μν</sub>.</div>
+    </div>
+
+    <!-- 4. Spherical Harmonics Options -->
+    <div class="viz-section" id="vizSec-sh">
+      <div class="range-row"><label>Isovalue</label><input type="range" id="shIsoRange" min="0.01" max="0.60" step="0.01" value="0.15"><span class="range-val" id="shIsoVal">0.15</span></div>
+      <div class="hint">Isosurface threshold. Lower values reveal more of the SH lobes; higher values isolate dominant angular features.</div>
+      <div class="range-row"><label>Lobe Scale</label><input type="range" id="shScaleRange" min="0.1" max="1.5" step="0.05" value="0.55"><span class="range-val" id="shScaleVal">0.55</span></div>
+      <div class="range-row"><label>Opacity</label><input type="range" id="shOpacityRange" min="0.1" max="1.0" step="0.05" value="0.82"><span class="range-val" id="shOpacityVal">0.82</span></div>
+    </div>
+
+    <!-- 5. GTOs View Options -->
+    <div class="viz-section" id="vizSec-gto">
+      <label>Basis Set</label>
+      <div class="panel-seg" id="panelBasisSeg">
+        <button type="button" data-basis="sto-3g" class="active">STO-3G</button>
+        <button type="button" data-basis="def2-svp">def2-SVP</button>
+        <button type="button" data-basis="def2-svpd">def2-SVPD</button>
+        <button type="button" data-basis="def2-tzvp">def2-TZVP</button>
+      </div>
+      <label>3D GTO Display Mode</label>
+      <div class="panel-seg" id="panelGtoModeSeg">
+        <button type="button" data-mode="shells" class="active">Shells</button>
+        <button type="button" data-mode="all_m">2ℓ+1</button>
+        <button type="button" data-mode="lcao">LCAO</button>
+        <button type="button" data-mode="minao">MINAO Density</button>
+      </div>
+      <label>Shell Filter</label>
+      <div class="panel-seg" id="panelGtoFilterSeg">
+        <button type="button" data-filter="all" class="active">All</button>
+        <button type="button" data-filter="valence">Valence</button>
+        <button type="button" data-filter="s">s</button>
+        <button type="button" data-filter="p">p</button>
+        <button type="button" data-filter="d">d</button>
+        <button type="button" data-filter="f">f</button>
+      </div>
+      <label>Color &amp; Card Scheme</label>
+      <div class="panel-seg" id="panelGtoColorSeg">
+        <button type="button" data-color="shell" class="active">By Shell</button>
+        <button type="button" data-color="phase">By Phase (+/−)</button>
+        <button type="button" data-color="minao">MINAO P<sub>μμ</sub></button>
+      </div>
+      <div class="toggle-row"><span>Show Shell Cards</span><label class="toggle-switch"><input type="checkbox" id="gtoCardsToggle" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+      <div class="toggle-row"><span>Overlay Matrix Blocks</span><label class="toggle-switch"><input type="checkbox" id="gtoMatrixOverlayToggle"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+      <div class="range-row"><label>Isovalue</label><input type="range" id="gtoIsoRange" min="0.01" max="0.35" step="0.005" value="0.10"><span class="range-val" id="gtoIsoVal">0.100</span></div>
+      <div class="hint">Threshold |χ(r,θ,φ)| = c (in a₀⁻³ᐟ²). Lower values show diffuse outer split-valence tails; higher values isolate tight inner shells.</div>
+      <div class="range-row"><label>Lobe Scale</label><input type="range" id="gtoScaleRange" min="0.20" max="1.20" step="0.05" value="0.46"><span class="range-val" id="gtoScaleVal">0.46</span></div>
+      <div class="range-row"><label>Opacity</label><input type="range" id="gtoOpacityRange" min="0.15" max="1.0" step="0.05" value="0.78"><span class="range-val" id="gtoOpacityVal">0.78</span></div>
+      <label>Radial Contractions |R<sub>nℓ</sub>(r)| vs r (Å)</label>
+      <div class="radial-box">
+        <canvas id="radialCanvas" width="340" height="120"></canvas>
+        <div class="basis-summary" id="basisSummaryText"></div>
+      </div>
+    </div>
+
+    <div class="panel-actions" style="margin-top:auto; padding-top:12px;">
+      <button class="btn btn-light" id="closeVizPanel">Close</button>
     </div>
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // ═══════════════════════════════════════════
-// Elements
+// Elements & Basis Sets (STO-3G and def2-SVP)
 // ═══════════════════════════════════════════
-const ELEMENTS={1:{symbol:'H',name:'Hydrogen',color:0xe8e8e8,radius:0.25,covalent:0.31,nBasis:1},2:{symbol:'He',name:'Helium',color:0xd9ffff,radius:0.20,covalent:0.28,nBasis:1},6:{symbol:'C',name:'Carbon',color:0x404040,radius:0.38,covalent:0.76,nBasis:5},7:{symbol:'N',name:'Nitrogen',color:0x3050f8,radius:0.34,covalent:0.71,nBasis:5},8:{symbol:'O',name:'Oxygen',color:0xcc3333,radius:0.35,covalent:0.66,nBasis:5},9:{symbol:'F',name:'Fluorine',color:0x90e050,radius:0.30,covalent:0.57,nBasis:5},15:{symbol:'P',name:'Phosphorus',color:0xff8000,radius:0.36,covalent:1.07,nBasis:9},16:{symbol:'S',name:'Sulfur',color:0xffff30,radius:0.36,covalent:1.05,nBasis:9},17:{symbol:'Cl',name:'Chlorine',color:0x1ff01f,radius:0.34,covalent:1.02,nBasis:9}};
+const ELEMENTS={1:{symbol:'H',name:'Hydrogen',color:0xe8e8e8,radius:0.25,covalent:0.31,nBasis:1},2:{symbol:'He',name:'Helium',color:0xd9ffff,radius:0.20,covalent:0.28,nBasis:1},3:{symbol:'Li',name:'Lithium',color:0xcc80ff,radius:0.36,covalent:1.28,nBasis:5},4:{symbol:'Be',name:'Beryllium',color:0xc2ff00,radius:0.32,covalent:0.96,nBasis:5},5:{symbol:'B',name:'Boron',color:0xffb5b5,radius:0.35,covalent:0.84,nBasis:5},6:{symbol:'C',name:'Carbon',color:0x404040,radius:0.38,covalent:0.76,nBasis:5},7:{symbol:'N',name:'Nitrogen',color:0x3050f8,radius:0.34,covalent:0.71,nBasis:5},8:{symbol:'O',name:'Oxygen',color:0xcc3333,radius:0.35,covalent:0.66,nBasis:5},9:{symbol:'F',name:'Fluorine',color:0x90e050,radius:0.30,covalent:0.57,nBasis:5},10:{symbol:'Ne',name:'Neon',color:0xb3e3f5,radius:0.28,covalent:0.58,nBasis:5},11:{symbol:'Na',name:'Sodium',color:0xab5cf2,radius:0.40,covalent:1.66,nBasis:9},12:{symbol:'Mg',name:'Magnesium',color:0x8aff00,radius:0.38,covalent:1.41,nBasis:9},13:{symbol:'Al',name:'Aluminium',color:0xbfa6a6,radius:0.38,covalent:1.21,nBasis:9},14:{symbol:'Si',name:'Silicon',color:0xf0c8a0,radius:0.38,covalent:1.11,nBasis:9},15:{symbol:'P',name:'Phosphorus',color:0xff8000,radius:0.36,covalent:1.07,nBasis:9},16:{symbol:'S',name:'Sulfur',color:0xffff30,radius:0.36,covalent:1.05,nBasis:9},17:{symbol:'Cl',name:'Chlorine',color:0x1ff01f,radius:0.34,covalent:1.02,nBasis:9},18:{symbol:'Ar',name:'Argon',color:0x80d1e3,radius:0.32,covalent:1.06,nBasis:9}};
 function getElement(z){return ELEMENTS[z]||{symbol:`Z${z}`,name:`Element ${z}`,color:0x999999,radius:0.32,covalent:1.5,nBasis:5};}
 
-const BOND_RADIUS=0.08, BOND_COLOR=0x888888, BOND_TOLERANCE=0.35, BG_COLOR=0xf8f7f4;
+// Contracted Gaussian-Type Orbital (CGTO) shells from Basis Set Exchange (exponents in Bohr^-2)
+const BASIS_SETS={"sto-3g":{"1":{"shells":[{"l":0,"n":1,"label":"1s","core":false,"exps":[3.42525,0.62391,0.16886],"coeffs":[0.15433,0.53533,0.44463],"minaoP":0.9863,"minaoQ":0.9863}],"minaoDM":{"0":[[0.9863]]}},"2":{"shells":[{"l":0,"n":1,"label":"1s","core":false,"exps":[6.36242,1.15892,0.31365],"coeffs":[0.15433,0.53533,0.44463],"minaoP":1.9919,"minaoQ":1.9919}],"minaoDM":{"0":[[1.9919]]}},"3":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[16.11957,2.9362,0.79465],"coeffs":[0.15433,0.53533,0.44463],"minaoP":2.0474,"minaoQ":1.993},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.63629,0.14786,0.04809],"coeffs":[-0.09997,0.39951,0.70012],"minaoP":1.012,"minaoQ":0.9577},{"l":1,"n":2,"label":"2p","core":false,"exps":[0.63629,0.14786,0.04809],"coeffs":[0.15592,0.60768,0.39196],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.0474,-0.2253],[-0.2253,1.012]]}},"4":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[30.16787,5.49512,1.48719],"coeffs":[0.15433,0.53533,0.44463],"minaoP":2.1376,"minaoQ":1.9974},{"l":0,"n":2,"label":"2s","core":false,"exps":[1.31483,0.30554,0.09937],"coeffs":[-0.09997,0.39951,0.70012],"minaoP":2.0987,"minaoQ":1.9585},{"l":1,"n":2,"label":"2p","core":false,"exps":[1.31483,0.30554,0.09937],"coeffs":[0.15592,0.60768,0.39196],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1376,-0.54],[-0.54,2.0987]]}},"5":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[48.79111,8.88736,2.40527],"coeffs":[0.15433,0.53533,0.44463],"minaoP":2.1517,"minaoQ":1.9982},{"l":0,"n":2,"label":"2s","core":false,"exps":[2.23696,0.51982,0.16906],"coeffs":[-0.09997,0.39951,0.70012],"minaoP":2.1275,"minaoQ":1.9739},{"l":1,"n":2,"label":"2p","core":false,"exps":[2.23696,0.51982,0.16906],"coeffs":[0.15592,0.60768,0.39196],"minaoP":0.3162,"minaoQ":0.3162}],"minaoDM":{"0":[[2.1517,-0.5702],[-0.5702,2.1275]],"1":[[0.3162]]}},"6":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[71.61684,13.0451,3.53051],"coeffs":[0.15433,0.53533,0.44463],"minaoP":2.1298,"minaoQ":1.9989},{"l":0,"n":2,"label":"2s","core":false,"exps":[2.94125,0.68348,0.22229],"coeffs":[-0.09997,0.39951,0.70012],"minaoP":2.1243,"minaoQ":1.9935},{"l":1,"n":2,"label":"2p","core":false,"exps":[2.94125,0.68348,0.22229],"coeffs":[0.15592,0.60768,0.39196],"minaoP":0.6533,"minaoQ":0.6533}],"minaoDM":{"0":[[2.1298,-0.527],[-0.527,2.1243]],"1":[[0.6533]]}},"7":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[99.10617,18.05231,4.88566],"coeffs":[0.15433,0.53533,0.44463],"minaoP":2.1158,"minaoQ":1.9991},{"l":0,"n":2,"label":"2s","core":false,"exps":[3.78046,0.8785,0.28571],"coeffs":[-0.09997,0.39951,0.70012],"minaoP":2.1111,"minaoQ":1.9945},{"l":1,"n":2,"label":"2p","core":false,"exps":[3.78046,0.8785,0.28571],"coeffs":[0.15592,0.60768,0.39196],"minaoP":0.9853,"minaoQ":0.9853}],"minaoDM":{"0":[[2.1158,-0.4962],[-0.4962,2.1111]],"1":[[0.9853]]}},"8":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[130.70932,23.80887,6.44361],"coeffs":[0.15433,0.53533,0.44463],"minaoP":2.1175,"minaoQ":1.9991},{"l":0,"n":2,"label":"2s","core":false,"exps":[5.03315,1.1696,0.38039],"coeffs":[-0.09997,0.39951,0.70012],"minaoP":2.1119,"minaoQ":1.9935},{"l":1,"n":2,"label":"2p","core":false,"exps":[5.03315,1.1696,0.38039],"coeffs":[0.15592,0.60768,0.39196],"minaoP":1.2901,"minaoQ":1.2901}],"minaoDM":{"0":[[2.1175,-0.4999],[-0.4999,2.1119]],"1":[[1.2901]]}},"9":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[166.67913,30.36081,8.21682],"coeffs":[0.15433,0.53533,0.44463],"minaoP":2.119,"minaoQ":1.9992},{"l":0,"n":2,"label":"2s","core":false,"exps":[6.4648,1.50228,0.48859],"coeffs":[-0.09997,0.39951,0.70012],"minaoP":2.1134,"minaoQ":1.9936},{"l":1,"n":2,"label":"2p","core":false,"exps":[6.4648,1.50228,0.48859],"coeffs":[0.15592,0.60768,0.39196],"minaoP":1.607,"minaoQ":1.607}],"minaoDM":{"0":[[2.119,-0.5032],[-0.5032,2.1134]],"1":[[1.607]]}},"10":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[207.01561,37.70815,10.2053],"coeffs":[0.15433,0.53533,0.44463],"minaoP":2.1242,"minaoQ":1.9992},{"l":0,"n":2,"label":"2s","core":false,"exps":[8.24632,1.91627,0.62323],"coeffs":[-0.09997,0.39951,0.70012],"minaoP":2.1195,"minaoQ":1.9945},{"l":1,"n":2,"label":"2p","core":false,"exps":[8.24632,1.91627,0.62323],"coeffs":[0.15592,0.60768,0.39196],"minaoP":1.9542,"minaoQ":1.9542}],"minaoDM":{"0":[[2.1242,-0.5149],[-0.5149,2.1195]],"1":[[1.9542]]}},"11":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[250.77243,45.67851,12.36239],"coeffs":[0.15433,0.53533,0.44463],"minaoP":2.1641,"minaoQ":1.9977},{"l":0,"n":2,"label":"2s","core":true,"exps":[12.04019,2.79788,0.90996],"coeffs":[-0.09997,0.39951,0.70012],"minaoP":2.188,"minaoQ":1.9447},{"l":0,"n":3,"label":"3s","core":false,"exps":[1.47874,0.41256,0.16148],"coeffs":[-0.21962,0.2256,0.9004],"minaoP":0.588,"minaoQ":0.5123},{"l":1,"n":2,"label":"2p","core":true,"exps":[12.04019,2.79788,0.90996],"coeffs":[0.15592,0.60768,0.39196],"minaoP":1.6813,"minaoQ":1.8122},{"l":1,"n":3,"label":"3p","core":false,"exps":[1.47874,0.41256,0.16148],"coeffs":[0.01059,0.59517,0.462],"minaoP":0.0478,"minaoQ":0.1787}],"minaoDM":{"0":[[2.1641,-0.5995,0.0233],[-0.5995,2.188,-0.1697],[0.0233,-0.1697,0.588]],"1":[[1.6813,0.2835],[0.2835,0.0478]]}},"12":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[299.23741,54.50647,14.75158],"coeffs":[0.15433,0.53533,0.44463],"minaoP":2.1935,"minaoQ":1.9987},{"l":0,"n":2,"label":"2s","core":true,"exps":[15.12182,3.51399,1.14286],"coeffs":[-0.09997,0.39951,0.70012],"minaoP":2.4111,"minaoQ":1.9835},{"l":0,"n":3,"label":"3s","core":false,"exps":[1.39545,0.38933,0.15238],"coeffs":[-0.21962,0.2256,0.9004],"minaoP":1.7867,"minaoQ":1.5593},{"l":1,"n":2,"label":"2p","core":true,"exps":[15.12182,3.51399,1.14286],"coeffs":[0.15592,0.60768,0.39196],"minaoP":1.8262,"minaoQ":1.8978},{"l":1,"n":3,"label":"3p","core":false,"exps":[1.39545,0.38933,0.15238],"coeffs":[0.01059,0.59517,0.462],"minaoP":0.0205,"minaoQ":0.0921}],"minaoDM":{"0":[[2.1935,-0.6836,0.1516],[-0.6836,2.4111,-0.6456],[0.1516,-0.6456,1.7867]],"1":[[1.8262,0.1935],[0.1935,0.0205]]}},"13":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[351.42148,64.01186,17.32411],"coeffs":[0.15433,0.53533,0.44463],"minaoP":2.2122,"minaoQ":1.9989},{"l":0,"n":2,"label":"2s","core":true,"exps":[18.8994,4.39181,1.42835],"coeffs":[-0.09997,0.39951,0.70012],"minaoP":2.3977,"minaoQ":1.9938},{"l":0,"n":3,"label":"3s","core":false,"exps":[1.39545,0.38933,0.15238],"coeffs":[-0.21962,0.2256,0.9004],"minaoP":2.0793,"minaoQ":1.8936},{"l":1,"n":2,"label":"2p","core":true,"exps":[18.8994,4.39181,1.42835],"coeffs":[0.15592,0.60768,0.39196],"minaoP":1.9296,"minaoQ":1.9418},{"l":1,"n":3,"label":"3p","core":false,"exps":[1.39545,0.38933,0.15238],"coeffs":[0.01059,0.59517,0.462],"minaoP":0.294,"minaoQ":0.3062}],"minaoDM":{"0":[[2.2122,-0.714,0.1626],[-0.714,2.3977,-0.6442],[0.1626,-0.6442,2.0793]],"1":[[1.9296,0.0397],[0.0397,0.294]]}},"14":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[407.79755,74.28083,20.10329],"coeffs":[0.15433,0.53533,0.44463],"minaoP":2.2292,"minaoQ":1.999},{"l":0,"n":2,"label":"2s","core":true,"exps":[23.19366,5.38971,1.7529],"coeffs":[-0.09997,0.39951,0.70012],"minaoP":2.3784,"minaoQ":1.9967},{"l":0,"n":3,"label":"3s","core":false,"exps":[1.47874,0.41256,0.16148],"coeffs":[-0.21962,0.2256,0.9004],"minaoP":2.131,"minaoQ":1.9837},{"l":1,"n":2,"label":"2p","core":true,"exps":[23.19366,5.38971,1.7529],"coeffs":[0.15592,0.60768,0.39196],"minaoP":1.989,"minaoQ":1.9643},{"l":1,"n":3,"label":"3p","core":false,"exps":[1.47874,0.41256,0.16148],"coeffs":[0.01059,0.59517,0.462],"minaoP":0.6531,"minaoQ":0.6284}],"minaoDM":{"0":[[2.2292,-0.7392,0.1556],[-0.7392,2.3784,-0.5879],[0.1556,-0.5879,2.131]],"1":[[1.989,-0.092],[-0.092,0.6531]]}},"15":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[468.36564,85.31339,23.08913],"coeffs":[0.15433,0.53533,0.44463],"minaoP":2.2478,"minaoQ":1.999},{"l":0,"n":2,"label":"2s","core":true,"exps":[28.03264,6.51418,2.11861],"coeffs":[-0.09997,0.39951,0.70012],"minaoP":2.3923,"minaoQ":1.9973},{"l":0,"n":3,"label":"3s","core":false,"exps":[1.7431,0.48632,0.19034],"coeffs":[-0.21962,0.2256,0.9004],"minaoP":2.1292,"minaoQ":1.9875},{"l":1,"n":2,"label":"2p","core":true,"exps":[28.03264,6.51418,2.11861],"coeffs":[0.15592,0.60768,0.39196],"minaoP":2.0327,"minaoQ":1.9768},{"l":1,"n":3,"label":"3p","core":false,"exps":[1.7431,0.48632,0.19034],"coeffs":[0.01059,0.59517,0.462],"minaoP":1.0059,"minaoQ":0.9501}],"minaoDM":{"0":[[2.2478,-0.7708,0.1592],[-0.7708,2.3923,-0.5802],[0.1592,-0.5802,2.1292]],"1":[[2.0327,-0.2127],[-0.2127,1.0059]]}},"16":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[533.12574,97.10952,26.28163],"coeffs":[0.15433,0.53533,0.44463],"minaoP":2.2647,"minaoQ":1.999},{"l":0,"n":2,"label":"2s","core":true,"exps":[33.32975,7.74512,2.51895],"coeffs":[-0.09997,0.39951,0.70012],"minaoP":2.4045,"minaoQ":1.9968},{"l":0,"n":3,"label":"3s","core":false,"exps":[2.02919,0.56614,0.22158],"coeffs":[-0.21962,0.2256,0.9004],"minaoP":2.1286,"minaoQ":1.9913},{"l":1,"n":2,"label":"2p","core":true,"exps":[33.32975,7.74512,2.51895],"coeffs":[0.15592,0.60768,0.39196],"minaoP":2.0654,"minaoQ":1.9839},{"l":1,"n":3,"label":"3p","core":false,"exps":[2.02919,0.56614,0.22158],"coeffs":[0.01059,0.59517,0.462],"minaoP":1.3567,"minaoQ":1.2751}],"minaoDM":{"0":[[2.2647,-0.7987,0.1625],[-0.7987,2.4045,-0.5744],[0.1625,-0.5744,2.1286]],"1":[[2.0654,-0.3169],[-0.3169,1.3567]]}},"17":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[601.34561,109.53585,29.64468],"coeffs":[0.15433,0.53533,0.44463],"minaoP":2.2773,"minaoQ":1.999},{"l":0,"n":2,"label":"2s","core":true,"exps":[38.96042,9.05356,2.9445],"coeffs":[-0.09997,0.39951,0.70012],"minaoP":2.3899,"minaoQ":1.9978},{"l":0,"n":3,"label":"3s","core":false,"exps":[2.12939,0.59409,0.23252],"coeffs":[-0.21962,0.2256,0.9004],"minaoP":2.0732,"minaoQ":1.9634},{"l":1,"n":2,"label":"2p","core":true,"exps":[38.96042,9.05356,2.9445],"coeffs":[0.15592,0.60768,0.39196],"minaoP":2.0794,"minaoQ":1.9899},{"l":1,"n":3,"label":"3p","core":false,"exps":[2.12939,0.59409,0.23252],"coeffs":[0.01059,0.59517,0.462],"minaoP":1.7198,"minaoQ":1.6303}],"minaoDM":{"0":[[2.2773,-0.8152,0.1486],[-0.8152,2.3899,-0.5116],[0.1486,-0.5116,2.0732]],"1":[[2.0794,-0.3848],[-0.3848,1.7198]]}},"18":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[674.44652,122.85128,33.24835],"coeffs":[0.15433,0.53533,0.44463],"minaoP":2.2933,"minaoQ":1.9989},{"l":0,"n":2,"label":"2s","core":true,"exps":[45.16424,10.4952,3.41336],"coeffs":[-0.09997,0.39951,0.70012],"minaoP":2.4217,"minaoQ":1.9975},{"l":0,"n":3,"label":"3s","core":false,"exps":[2.62137,0.73135,0.28625],"coeffs":[-0.21962,0.2256,0.9004],"minaoP":2.0901,"minaoQ":1.9649},{"l":1,"n":2,"label":"2p","core":true,"exps":[45.16424,10.4952,3.41336],"coeffs":[0.15592,0.60768,0.39196],"minaoP":2.1199,"minaoQ":1.9937},{"l":1,"n":3,"label":"3p","core":false,"exps":[2.62137,0.73135,0.28625],"coeffs":[0.01059,0.59517,0.462],"minaoP":2.0975,"minaoQ":1.9713}],"minaoDM":{"0":[[2.2933,-0.8439,0.1629],[-0.8439,2.4217,-0.5497],[0.1629,-0.5497,2.0901]],"1":[[2.1199,-0.5128],[-0.5128,2.0975]]}}},"def2-svp":{"1":{"shells":[{"l":0,"n":1,"label":"1s","core":false,"exps":[13.0107,1.96226,0.44454],"coeffs":[0.01968,0.13797,0.47832],"minaoP":0.455,"minaoQ":0.6436},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.12195],"coeffs":[1.0],"minaoP":0.1668,"minaoQ":0.3554},{"l":1,"n":2,"label":"2p","core":false,"exps":[0.8],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[0.455,0.2755],[0.2755,0.1668]]}},"2":{"shells":[{"l":0,"n":1,"label":"1s","core":false,"exps":[38.35494,5.76891,1.23994],"coeffs":[0.02381,0.15491,0.46998],"minaoP":0.6957,"minaoQ":1.0813},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.29758],"coeffs":[1.0],"minaoP":0.5315,"minaoQ":0.9171},{"l":1,"n":2,"label":"2p","core":false,"exps":[1.0],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[0.6957,0.6081],[0.6081,0.5315]]}},"3":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[266.27786,40.06978,9.05599,2.4503,0.7221],"coeffs":[0.00649,0.04775,0.20269,0.48607,0.43627],"minaoP":2.0474,"minaoQ":1.998},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.05281],"coeffs":[1.0],"minaoP":0.6955,"minaoQ":0.8087},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.02096],"coeffs":[1.0],"minaoP":0.0466,"minaoQ":0.1909},{"l":1,"n":2,"label":"2p","core":false,"exps":[1.45,0.3],"coeffs":[0.2586,1.0],"minaoP":0.0,"minaoQ":0.0},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.082],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.0474,-0.1685,-0.073],[-0.1685,0.6955,0.1791],[-0.073,0.1791,0.0466]]}},"4":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[515.18616,77.51104,17.55248,4.80289,1.45162],"coeffs":[0.00556,0.04119,0.17913,0.44737,0.4201],"minaoP":2.1326,"minaoQ":1.9966},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.13282],"coeffs":[1.0],"minaoP":1.291,"minaoQ":1.5286},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.04584],"coeffs":[1.0],"minaoP":0.1438,"minaoQ":0.4724},{"l":1,"n":2,"label":"2p","core":false,"exps":[3.63169,0.71696,0.19542],"coeffs":[0.02903,0.16878,0.51403],"minaoP":0.0,"minaoQ":0.0},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.06052],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1326,-0.401,-0.166],[-0.401,1.291,0.4301],[-0.166,0.4301,0.1438]]}},"5":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[839.3183,126.26465,28.6206,7.87937,2.40889],"coeffs":[0.00559,0.04157,0.183,0.4654,0.44174],"minaoP":2.1553,"minaoQ":1.9961},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.25105],"coeffs":[1.0],"minaoP":1.2014,"minaoQ":1.4563},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.08365],"coeffs":[1.0],"minaoP":0.1903,"minaoQ":0.5456},{"l":1,"n":2,"label":"2p","core":false,"exps":[6.03322,1.24992,0.33872],"coeffs":[0.0356,0.19896,0.5085],"minaoP":0.1711,"minaoQ":0.2243},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.09642],"coeffs":[1.0],"minaoP":0.0557,"minaoQ":0.1089},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.5],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1553,-0.4189,-0.2009],[-0.4189,1.2014,0.4774],[-0.2009,0.4774,0.1903]],"1":[[0.1711,0.0976],[0.0976,0.0557]]}},"6":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[1238.40169,186.29005,42.25118,11.67656,3.59305],"coeffs":[0.00546,0.04064,0.18026,0.46315,0.44087],"minaoP":2.1621,"minaoQ":1.9957},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.40245],"coeffs":[1.0],"minaoP":1.0565,"minaoQ":1.3492},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.1309],"coeffs":[1.0],"minaoP":0.2664,"minaoQ":0.6534},{"l":1,"n":2,"label":"2p","core":false,"exps":[9.4681,2.01035,0.54771],"coeffs":[0.03839,0.21117,0.51328],"minaoP":0.3403,"minaoQ":0.4457},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.15269],"coeffs":[1.0],"minaoP":0.1153,"minaoQ":0.2206},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.8],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1621,-0.4003,-0.2381],[-0.4003,1.0565,0.5299],[-0.2381,0.5299,0.2664]],"1":[[0.3403,0.1981],[0.1981,0.1153]]}},"7":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[1712.84159,257.64813,58.45825,16.19837,5.00526],"coeffs":[0.00539,0.04022,0.17931,0.46376,0.44171],"minaoP":2.161,"minaoQ":1.995},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.58732],"coeffs":[1.0],"minaoP":0.9115,"minaoQ":1.2389},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.18765],"coeffs":[1.0],"minaoP":0.3558,"minaoQ":0.7645},{"l":1,"n":2,"label":"2p","core":false,"exps":[13.57147,2.92574,0.79928],"coeffs":[0.04007,0.21807,0.51294],"minaoP":0.4969,"minaoQ":0.6555},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.21954],"coeffs":[1.0],"minaoP":0.185,"minaoQ":0.3436},{"l":2,"n":3,"label":"3d","core":false,"exps":[1.0],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.161,-0.3682,-0.2728],[-0.3682,0.9115,0.5687],[-0.2728,0.5687,0.3558]],"1":[[0.4969,0.3032],[0.3032,0.185]]}},"8":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[2266.17678,340.8701,77.36314,21.47964,6.65894],"coeffs":[0.00534,0.03989,0.17854,0.46428,0.4431],"minaoP":2.1637,"minaoQ":1.9937},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.80976],"coeffs":[1.0],"minaoP":0.8722,"minaoQ":1.206},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.25531],"coeffs":[1.0],"minaoP":0.3871,"minaoQ":0.7986},{"l":1,"n":2,"label":"2p","core":false,"exps":[17.7215,3.86355,1.04809],"coeffs":[0.04339,0.23094,0.51375],"minaoP":0.605,"minaoQ":0.818},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.27642],"coeffs":[1.0],"minaoP":0.2973,"minaoQ":0.5103},{"l":2,"n":3,"label":"3d","core":false,"exps":[1.2],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1637,-0.36,-0.2925],[-0.36,0.8722,0.58],[-0.2925,0.58,0.3871]],"1":[[0.605,0.4241],[0.4241,0.2973]]}},"9":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[2894.8326,435.41939,98.84333,27.4852,8.54055],"coeffs":[0.00534,0.0399,0.17913,0.46758,0.44653],"minaoP":2.1713,"minaoQ":1.9934},{"l":0,"n":2,"label":"2s","core":false,"exps":[1.06546],"coeffs":[1.0],"minaoP":0.8958,"minaoQ":1.2205},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.33247],"coeffs":[1.0],"minaoP":0.3764,"minaoQ":0.7846},{"l":1,"n":2,"label":"2p","core":false,"exps":[22.69663,4.98723,1.34916],"coeffs":[0.04521,0.23754,0.51287],"minaoP":0.77,"minaoQ":1.031},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.3483],"coeffs":[1.0],"minaoP":0.3667,"minaoQ":0.6276},{"l":2,"n":3,"label":"3d","core":false,"exps":[1.4],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1713,-0.3734,-0.2957],[-0.3734,0.8958,0.5795],[-0.2957,0.5795,0.3764]],"1":[[0.77,0.5314],[0.5314,0.3667]]}},"10":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[3598.97366,541.32073,122.9045,34.21662,10.65058],"coeffs":[0.00533,0.03982,0.17914,0.46894,0.44783],"minaoP":2.1804,"minaoQ":1.9933},{"l":0,"n":2,"label":"2s","core":false,"exps":[1.3546],"coeffs":[1.0],"minaoP":0.9483,"minaoQ":1.2567},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.41919],"coeffs":[1.0],"minaoP":0.3472,"minaoQ":0.7487},{"l":1,"n":2,"label":"2p","core":false,"exps":[28.42405,6.28225,1.69787],"coeffs":[0.04603,0.23993,0.50872],"minaoP":1.0254,"minaoQ":1.3251},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.43301],"coeffs":[1.0],"minaoP":0.3728,"minaoQ":0.6726},{"l":2,"n":3,"label":"3d","core":false,"exps":[1.888],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1804,-0.3954,-0.292],[-0.3954,0.9483,0.5727],[-0.292,0.5727,0.3472]],"1":[[1.0254,0.6183],[0.6183,0.3728]]}},"11":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[4098.20039,616.49374,139.96644,39.07344,11.92985],"coeffs":[0.00585,0.04365,0.19431,0.48685,0.41882],"minaoP":2.1292,"minaoQ":1.9995},{"l":0,"n":2,"label":"2s","core":true,"exps":[20.65997,1.98389,0.64836],"coeffs":[-0.08595,0.56359,0.51954],"minaoP":2.1958,"minaoQ":1.9975},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.05244],"coeffs":[1.0],"minaoP":0.324,"minaoQ":0.5423},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.02805],"coeffs":[1.0],"minaoP":0.2335,"minaoQ":0.4583},{"l":1,"n":2,"label":"2p","core":true,"exps":[75.40186,17.27482,5.18423,1.66012,0.51233],"coeffs":[0.01544,0.09974,0.3121,0.49296,0.3242],"minaoP":1.9952,"minaoQ":1.9974},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.052],"coeffs":[1.0],"minaoP":0.0002,"minaoQ":0.0023},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.131],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1292,-0.5308,0.0038,0.0337],[-0.5308,2.1958,-0.1247,-0.1608],[0.0038,-0.1247,0.324,0.2741],[0.0337,-0.1608,0.2741,0.2335]],"1":[[1.9952,0.0178],[0.0178,0.0002]]}},"12":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[4953.83392,745.18044,169.21605,47.30067,14.46134],"coeffs":[0.00578,0.04312,0.19268,0.48641,0.42551],"minaoP":2.1434,"minaoQ":1.9997},{"l":0,"n":2,"label":"2s","core":true,"exps":[24.76817,2.49409,0.87808],"coeffs":[-0.08796,0.55165,0.53443],"minaoP":2.3718,"minaoQ":1.9974},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.08721],"coeffs":[1.0],"minaoP":1.3873,"minaoQ":1.5532},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.0336],"coeffs":[1.0],"minaoP":0.1267,"minaoQ":0.4479},{"l":1,"n":2,"label":"2p","core":true,"exps":[98.05301,22.58693,6.83915,2.23328,0.71607],"coeffs":[0.01448,0.0955,0.30788,0.49936,0.31503],"minaoP":1.9908,"minaoQ":1.9952},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.18915],"coeffs":[1.0],"minaoP":0.0001,"minaoQ":0.004},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.05377],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0006},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.101],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1434,-0.5778,0.0728,0.0361],[-0.5778,2.3718,-0.5574,-0.1929],[0.0728,-0.5574,1.3873,0.4188],[0.0361,-0.1929,0.4188,0.1267]],"1":[[1.9908,0.0125,0.0059],[0.0125,0.0001,0.0],[0.0059,0.0,0.0]]}},"13":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[5887.5727,885.61226,201.13605,56.28497,17.22955],"coeffs":[0.00135,0.01007,0.04513,0.11461,0.1016],"minaoP":2.1548,"minaoQ":1.9997},{"l":0,"n":2,"label":"2s","core":true,"exps":[29.34025,3.04396,1.12855],"coeffs":[-0.06935,0.42528,0.4145],"minaoP":2.4849,"minaoQ":1.9986},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.14234],"coeffs":[1.0],"minaoP":1.3912,"minaoQ":1.5097},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.0544],"coeffs":[1.0],"minaoP":0.1518,"minaoQ":0.4907},{"l":1,"n":2,"label":"2p","core":true,"exps":[145.11919,33.71789,10.36986,3.51356,1.19801],"coeffs":[0.0064,0.04419,0.15582,0.28635,0.22921],"minaoP":1.9716,"minaoQ":1.9785},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.26583],"coeffs":[1.0],"minaoP":0.0742,"minaoQ":0.1477},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.071],"coeffs":[1.0],"minaoP":0.1491,"minaoQ":0.2063},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.3],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1548,-0.6118,0.091,0.0412],[-0.6118,2.4849,-0.6787,-0.2368],[0.091,-0.6787,1.3912,0.4594],[0.0412,-0.2368,0.4594,0.1518]],"1":[[1.9716,0.0379,-0.0606],[0.0379,0.0742,0.1029],[-0.0606,0.1029,0.1491]]}},"14":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[6903.71187,1038.43464,235.87581,66.06939,20.24795],"coeffs":[0.00134,0.01,0.04491,0.11464,0.1028],"minaoP":2.1644,"minaoQ":1.9996},{"l":0,"n":2,"label":"2s","core":true,"exps":[34.35348,3.63708,1.4002],"coeffs":[-0.07084,0.43029,0.41383],"minaoP":2.5638,"minaoQ":1.998},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.20484],"coeffs":[1.0],"minaoP":1.3116,"minaoQ":1.4315},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.07799],"coeffs":[1.0],"minaoP":0.2035,"minaoQ":0.5697},{"l":1,"n":2,"label":"2p","core":true,"exps":[179.83907,41.90726,12.95529,4.43833,1.54622],"coeffs":[0.00619,0.0434,0.15632,0.2942,0.23537],"minaoP":1.9917,"minaoQ":1.9797},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.35608],"coeffs":[1.0],"minaoP":0.1661,"minaoQ":0.2947},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.10009],"coeffs":[1.0],"minaoP":0.2702,"minaoQ":0.3911},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.35],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1644,-0.6381,0.0957,0.0522],[-0.6381,2.5638,-0.7239,-0.3012],[0.0957,-0.7239,1.3116,0.5165],[0.0522,-0.3012,0.5165,0.2035]],"1":[[1.9917,-0.0068,-0.1126],[-0.0068,0.1661,0.2097],[-0.1126,0.2097,0.2702]]}},"15":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[8002.47951,1203.68136,273.44227,76.65554,23.51693],"coeffs":[0.00575,0.04301,0.19364,0.49652,0.44983],"minaoP":2.173,"minaoQ":1.9995},{"l":0,"n":2,"label":"2s","core":true,"exps":[39.79168,4.27703,1.69403],"coeffs":[-0.09519,0.5765,0.5424],"minaoP":2.6177,"minaoQ":2.0038},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.27568],"coeffs":[1.0],"minaoP":1.0851,"minaoQ":1.2572},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.10496],"coeffs":[1.0],"minaoP":0.3274,"minaoQ":0.7383},{"l":1,"n":2,"label":"2p","core":true,"exps":[219.50756,51.27416,15.9216,5.50699,1.95377],"coeffs":[0.00921,0.06541,0.24034,0.46318,0.37393],"minaoP":2.0142,"minaoQ":1.9809},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.47803],"coeffs":[1.0],"minaoP":0.2312,"minaoQ":0.4111},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.13658],"coeffs":[1.0],"minaoP":0.4251,"minaoQ":0.6043},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.45],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.173,-0.6601,0.0975,0.059],[-0.6601,2.6177,-0.7111,-0.3683],[0.0975,-0.7111,1.0851,0.5958],[0.059,-0.3683,0.5958,0.3274]],"1":[[2.0142,-0.0479,-0.1769],[-0.0479,0.2312,0.3112],[-0.1769,0.3112,0.4251]]}},"16":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[9184.9303,1381.51055,313.87148,88.05387,27.03991],"coeffs":[0.00223,0.01668,0.07526,0.19377,0.17718],"minaoP":2.1802,"minaoQ":1.9995},{"l":0,"n":2,"label":"2s","core":true,"exps":[45.64873,4.96645,2.01162],"coeffs":[-0.10736,0.65066,0.59712],"minaoP":2.6754,"minaoQ":1.995},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.35661],"coeffs":[1.0],"minaoP":1.1655,"minaoQ":1.3021},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.13507],"coeffs":[1.0],"minaoP":0.3088,"minaoQ":0.7025},{"l":1,"n":2,"label":"2p","core":true,"exps":[261.98233,61.30689,19.10373,6.65677,2.39596],"coeffs":[0.00927,0.06655,0.24829,0.48704,0.39338],"minaoP":2.0364,"minaoQ":1.9805},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.61776],"coeffs":[1.0],"minaoP":0.3031,"minaoQ":0.5281},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.16993],"coeffs":[1.0],"minaoP":0.5857,"minaoQ":0.8187},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.55],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1802,-0.6788,0.0967,0.0731],[-0.6788,2.6754,-0.7526,-0.4215],[0.0967,-0.7526,1.1655,0.5992],[0.0731,-0.4215,0.5992,0.3088]],"1":[[2.0364,-0.089,-0.2445],[-0.089,0.3031,0.4186],[-0.2445,0.4186,0.5857]]}},"17":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[10449.82757,1571.73652,357.12066,100.25186,30.81273],"coeffs":[0.00197,0.01475,0.06668,0.17229,0.15884],"minaoP":2.1873,"minaoQ":1.9994},{"l":0,"n":2,"label":"2s","core":true,"exps":[51.92379,5.70458,2.35084],"coeffs":[-0.10009,0.60842,0.54352],"minaoP":2.7314,"minaoQ":1.9958},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.44605],"coeffs":[1.0],"minaoP":1.1555,"minaoQ":1.2756},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.16849],"coeffs":[1.0],"minaoP":0.3318,"minaoQ":0.7283},{"l":1,"n":2,"label":"2p","core":true,"exps":[307.66791,72.10202,22.53268,7.89918,2.87673],"coeffs":[0.00878,0.06356,0.24016,0.47799,0.38516],"minaoP":2.0644,"minaoQ":1.9809},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.77459],"coeffs":[1.0],"minaoP":0.3823,"minaoQ":0.6517},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.21038],"coeffs":[1.0],"minaoP":0.7359,"minaoQ":1.025},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.65],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1873,-0.6975,0.1026,0.0771],[-0.6975,2.7314,-0.7886,-0.4513],[0.1026,-0.7886,1.1555,0.6187],[0.0771,-0.4513,0.6187,0.3318]],"1":[[2.0644,-0.1379,-0.3129],[-0.1379,0.3823,0.5277],[-0.3129,0.5277,0.7359]]}},"18":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[11797.11976,1774.35228,403.18876,113.24934,34.8353],"coeffs":[0.00202,0.01514,0.06853,0.17763,0.16496],"minaoP":2.1938,"minaoQ":1.9994},{"l":0,"n":2,"label":"2s","core":true,"exps":[58.61478,6.4922,2.7117],"coeffs":[-0.10343,0.63133,0.54888],"minaoP":2.7991,"minaoQ":1.9952},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.54413],"coeffs":[1.0],"minaoP":1.2542,"minaoQ":1.3169},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.20517],"coeffs":[1.0],"minaoP":0.301,"minaoQ":0.6878},{"l":1,"n":2,"label":"2p","core":true,"exps":[356.28707,83.59313,26.1867,9.22573,3.39228],"coeffs":[0.00873,0.06368,0.24312,0.48956,0.39229],"minaoP":2.1118,"minaoQ":1.9837},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.94741],"coeffs":[1.0],"minaoP":0.5387,"minaoQ":0.8496},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.25659],"coeffs":[1.0],"minaoP":0.8045,"minaoQ":1.162},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.696],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1938,-0.7164,0.1136,0.078],[-0.7164,2.7991,-0.8668,-0.455],[0.1136,-0.8668,1.2542,0.6139],[0.078,-0.455,0.6139,0.301]],"1":[[2.1118,-0.2258,-0.3843],[-0.2258,0.5387,0.6559],[-0.3843,0.6559,0.8045]]}}},"def2-svpd":{"1":{"shells":[{"l":0,"n":1,"label":"1s","core":false,"exps":[13.0107,1.96226,0.44454],"coeffs":[0.01968,0.13797,0.47832],"minaoP":0.455,"minaoQ":0.6436},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.12195],"coeffs":[1.0],"minaoP":0.1668,"minaoQ":0.3554},{"l":1,"n":2,"label":"2p","core":false,"exps":[0.8],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.11704],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[0.455,0.2755],[0.2755,0.1668]]}},"2":{"shells":[{"l":0,"n":1,"label":"1s","core":false,"exps":[38.35494,5.76891,1.23994],"coeffs":[0.02381,0.15491,0.46998],"minaoP":0.6957,"minaoQ":1.0813},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.29758],"coeffs":[1.0],"minaoP":0.5315,"minaoQ":0.9171},{"l":1,"n":2,"label":"2p","core":false,"exps":[1.0],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.22039],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[0.6957,0.6081],[0.6081,0.5315]]}},"3":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[266.27786,40.06978,9.05599,2.4503,0.7221],"coeffs":[0.00649,0.04775,0.20269,0.48607,0.43627],"minaoP":2.0474,"minaoQ":1.998},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.05281],"coeffs":[1.0],"minaoP":0.6955,"minaoQ":0.8087},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.02096],"coeffs":[1.0],"minaoP":0.0466,"minaoQ":0.1909},{"l":1,"n":2,"label":"2p","core":false,"exps":[1.45,0.3],"coeffs":[0.2586,1.0],"minaoP":0.0,"minaoQ":0.0},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.082],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.02635],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.0474,-0.1685,-0.073],[-0.1685,0.6955,0.1791],[-0.073,0.1791,0.0466]]}},"4":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[515.18616,77.51104,17.55248,4.80289,1.45162],"coeffs":[0.00556,0.04119,0.17913,0.44737,0.4201],"minaoP":2.1326,"minaoQ":1.9966},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.13282],"coeffs":[1.0],"minaoP":1.291,"minaoQ":1.5286},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.04584],"coeffs":[1.0],"minaoP":0.1438,"minaoQ":0.4724},{"l":1,"n":2,"label":"2p","core":false,"exps":[3.63169,0.71696,0.19542],"coeffs":[0.02903,0.16878,0.51403],"minaoP":0.0,"minaoQ":0.0},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.06052],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.03018],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1326,-0.401,-0.166],[-0.401,1.291,0.4301],[-0.166,0.4301,0.1438]]}},"5":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[839.3183,126.26465,28.6206,7.87937,2.40889],"coeffs":[0.00559,0.04157,0.183,0.4654,0.44174],"minaoP":2.1542,"minaoQ":1.9953},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.25105],"coeffs":[1.0],"minaoP":1.2162,"minaoQ":1.4677},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.08365],"coeffs":[1.0],"minaoP":0.1753,"minaoQ":0.5186},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.04235],"coeffs":[1.0],"minaoP":0.0004,"minaoQ":0.0164},{"l":1,"n":2,"label":"2p","core":false,"exps":[6.03322,1.24992,0.33872],"coeffs":[0.0356,0.19896,0.5085],"minaoP":0.1711,"minaoQ":0.2243},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.09642],"coeffs":[1.0],"minaoP":0.0557,"minaoQ":0.1089},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.5],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.07439],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1542,-0.4135,-0.2183,0.0134],[-0.4135,1.2162,0.4592,0.0164],[-0.2183,0.4592,0.1753,0.0056],[0.0134,0.0164,0.0056,0.0004]],"1":[[0.1711,0.0976],[0.0976,0.0557]]}},"6":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[1238.40169,186.29005,42.25118,11.67656,3.59305],"coeffs":[0.00546,0.04064,0.18026,0.46315,0.44087],"minaoP":2.1616,"minaoQ":1.9947},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.40245],"coeffs":[1.0],"minaoP":1.0917,"minaoQ":1.3744},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.1309],"coeffs":[1.0],"minaoP":0.2198,"minaoQ":0.5874},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.06705],"coeffs":[1.0],"minaoP":0.0017,"minaoQ":0.042},{"l":1,"n":2,"label":"2p","core":false,"exps":[9.4681,2.01035,0.54771],"coeffs":[0.03839,0.21117,0.51328],"minaoP":0.3403,"minaoQ":0.4457},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.15269],"coeffs":[1.0],"minaoP":0.1153,"minaoQ":0.2206},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.8],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.11713],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1616,-0.3993,-0.2469,0.0062],[-0.3993,1.0917,0.4872,0.0405],[-0.2469,0.4872,0.2198,0.0173],[0.0062,0.0405,0.0173,0.0017]],"1":[[0.3403,0.1981],[0.1981,0.1153]]}},"7":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[1712.84159,257.64813,58.45825,16.19837,5.00526],"coeffs":[0.00539,0.04022,0.17931,0.46376,0.44171],"minaoP":2.1611,"minaoQ":1.994},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.58732],"coeffs":[1.0],"minaoP":0.958,"minaoQ":1.2727},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.18765],"coeffs":[1.0],"minaoP":0.2788,"minaoQ":0.6709},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.09617],"coeffs":[1.0],"minaoP":0.0033,"minaoQ":0.061},{"l":1,"n":2,"label":"2p","core":false,"exps":[13.57147,2.92574,0.79928],"coeffs":[0.04007,0.21807,0.51294],"minaoP":0.4969,"minaoQ":0.6555},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.21954],"coeffs":[1.0],"minaoP":0.185,"minaoQ":0.3436},{"l":2,"n":3,"label":"3d","core":false,"exps":[1.0],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.16698],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1611,-0.3714,-0.272,-0.0018],[-0.3714,0.958,0.5144,0.0545],[-0.272,0.5144,0.2788,0.0286],[-0.0018,0.0545,0.0286,0.0033]],"1":[[0.4969,0.3032],[0.3032,0.185]]}},"8":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[2266.17678,340.8701,77.36314,21.47964,6.65894],"coeffs":[0.00534,0.03989,0.17854,0.46428,0.4431],"minaoP":2.1647,"minaoQ":1.9932},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.80976],"coeffs":[1.0],"minaoP":0.9099,"minaoQ":1.233},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.25531],"coeffs":[1.0],"minaoP":0.3347,"minaoQ":0.7403},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.07657],"coeffs":[1.0],"minaoP":0.0014,"minaoQ":0.0323},{"l":1,"n":2,"label":"2p","core":false,"exps":[17.7215,3.86355,1.04809],"coeffs":[0.04339,0.23094,0.51375],"minaoP":0.633,"minaoQ":0.8367},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.27642],"coeffs":[1.0],"minaoP":0.2377,"minaoQ":0.4563},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.069],"coeffs":[1.0],"minaoP":0.0073,"minaoQ":0.04},{"l":2,"n":3,"label":"3d","core":false,"exps":[1.2],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.17992],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1647,-0.3663,-0.2848,-0.0077],[-0.3663,0.9099,0.5502,0.0355],[-0.2848,0.5502,0.3347,0.0212],[-0.0077,0.0355,0.0212,0.0014]],"1":[[0.633,0.3879,0.0679],[0.3879,0.2377,0.0416],[0.0679,0.0416,0.0073]]}},"9":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[2894.8326,435.41939,98.84333,27.4852,8.54055],"coeffs":[0.00534,0.0399,0.17913,0.46758,0.44653],"minaoP":2.172,"minaoQ":1.9929},{"l":0,"n":2,"label":"2s","core":false,"exps":[1.06546],"coeffs":[1.0],"minaoP":0.9274,"minaoQ":1.243},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.33247],"coeffs":[1.0],"minaoP":0.3334,"minaoQ":0.7362},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.0981],"coeffs":[1.0],"minaoP":0.001,"minaoQ":0.0266},{"l":1,"n":2,"label":"2p","core":false,"exps":[22.69663,4.98723,1.34916],"coeffs":[0.04521,0.23754,0.51287],"minaoP":0.8075,"minaoQ":1.0558},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.3483],"coeffs":[1.0],"minaoP":0.2874,"minaoQ":0.5557},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.08337],"coeffs":[1.0],"minaoP":0.0114,"minaoQ":0.0547},{"l":2,"n":3,"label":"3d","core":false,"exps":[1.4],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.22301],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.172,-0.3782,-0.2904,-0.0055],[-0.3782,0.9274,0.5544,0.0299],[-0.2904,0.5544,0.3334,0.0177],[-0.0055,0.0299,0.0177,0.001]],"1":[[0.8075,0.4818,0.0958],[0.4818,0.2874,0.0571],[0.0958,0.0571,0.0114]]}},"10":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[3598.97366,541.32073,122.9045,34.21662,10.65058],"coeffs":[0.00533,0.03982,0.17914,0.46894,0.44783],"minaoP":2.1802,"minaoQ":1.9928},{"l":0,"n":2,"label":"2s","core":false,"exps":[1.3546],"coeffs":[1.0],"minaoP":0.9618,"minaoQ":1.2668},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.41919],"coeffs":[1.0],"minaoP":0.3302,"minaoQ":0.7282},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.12055],"coeffs":[1.0],"minaoP":0.0002,"minaoQ":0.011},{"l":1,"n":2,"label":"2p","core":false,"exps":[28.42405,6.28225,1.69787],"coeffs":[0.04603,0.23993,0.50872],"minaoP":1.0434,"minaoQ":1.3367},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.43301],"coeffs":[1.0],"minaoP":0.3378,"minaoQ":0.6401},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.10142],"coeffs":[1.0],"minaoP":0.0021,"minaoQ":0.0222},{"l":2,"n":3,"label":"3d","core":false,"exps":[1.888],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.28027],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1802,-0.3953,-0.2946,0.0018],[-0.3953,0.9618,0.5618,0.0127],[-0.2946,0.5618,0.3302,0.0072],[0.0018,0.0127,0.0072,0.0002]],"1":[[1.0434,0.5937,0.0471],[0.5937,0.3378,0.0268],[0.0471,0.0268,0.0021]]}},"11":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[4098.20039,616.49374,139.96644,39.07344,11.92985],"coeffs":[0.00585,0.04365,0.19431,0.48685,0.41882],"minaoP":2.1292,"minaoQ":1.9995},{"l":0,"n":2,"label":"2s","core":true,"exps":[20.65997,1.98389,0.64836],"coeffs":[-0.08595,0.56359,0.51954],"minaoP":2.1958,"minaoQ":1.9975},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.05244],"coeffs":[1.0],"minaoP":0.324,"minaoQ":0.5423},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.02805],"coeffs":[1.0],"minaoP":0.2335,"minaoQ":0.4583},{"l":1,"n":2,"label":"2p","core":true,"exps":[75.40186,17.27482,5.18423,1.66012,0.51233],"coeffs":[0.01544,0.09974,0.3121,0.49296,0.3242],"minaoP":1.994,"minaoQ":1.9968},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.052],"coeffs":[1.0],"minaoP":0.0004,"minaoQ":0.0035},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.01985],"coeffs":[1.0],"minaoP":0.0001,"minaoQ":-0.0005},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.131],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1292,-0.5308,0.0038,0.0337],[-0.5308,2.1958,-0.1247,-0.1608],[0.0038,-0.1247,0.324,0.2741],[0.0337,-0.1608,0.2741,0.2335]],"1":[[1.994,0.0267,-0.0117],[0.0267,0.0004,-0.0002],[-0.0117,-0.0002,0.0001]]}},"12":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[4953.83392,745.18044,169.21605,47.30067,14.46134],"coeffs":[0.00578,0.04312,0.19268,0.48641,0.42551],"minaoP":2.1434,"minaoQ":1.9997},{"l":0,"n":2,"label":"2s","core":true,"exps":[24.76817,2.49409,0.87808],"coeffs":[-0.08796,0.55165,0.53443],"minaoP":2.3718,"minaoQ":1.9974},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.08721],"coeffs":[1.0],"minaoP":1.3873,"minaoQ":1.5532},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.0336],"coeffs":[1.0],"minaoP":0.1267,"minaoQ":0.4479},{"l":1,"n":2,"label":"2p","core":true,"exps":[98.05301,22.58693,6.83915,2.23328,0.71607],"coeffs":[0.01448,0.0955,0.30788,0.49936,0.31503],"minaoP":1.9914,"minaoQ":1.9955},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.18915],"coeffs":[1.0],"minaoP":0.0001,"minaoQ":0.0033},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.05377],"coeffs":[1.0],"minaoP":0.0001,"minaoQ":0.0012},{"l":1,"n":5,"label":"5p","core":false,"exps":[0.02396],"coeffs":[1.0],"minaoP":0.0,"minaoQ":-0.0002},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.101],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1434,-0.5778,0.0728,0.0361],[-0.5778,2.3718,-0.5574,-0.1929],[0.0728,-0.5574,1.3873,0.4188],[0.0361,-0.1929,0.4188,0.1267]],"1":[[1.9914,0.0103,0.0124,-0.0063],[0.0103,0.0001,0.0001,-0.0],[0.0124,0.0001,0.0001,-0.0],[-0.0063,-0.0,-0.0,0.0]]}},"13":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[5887.5727,885.61226,201.13605,56.28497,17.22955],"coeffs":[0.00135,0.01007,0.04513,0.11461,0.1016],"minaoP":2.1546,"minaoQ":1.9996},{"l":0,"n":2,"label":"2s","core":true,"exps":[29.34025,3.04396,1.12855],"coeffs":[-0.06935,0.42528,0.4145],"minaoP":2.4843,"minaoQ":1.9979},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.14234],"coeffs":[1.0],"minaoP":1.4122,"minaoQ":1.5238},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.0544],"coeffs":[1.0],"minaoP":0.1332,"minaoQ":0.454},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.03254],"coeffs":[1.0],"minaoP":0.0006,"minaoQ":0.0234},{"l":1,"n":2,"label":"2p","core":true,"exps":[145.11919,33.71789,10.36986,3.51356,1.19801],"coeffs":[0.0064,0.04419,0.15582,0.28635,0.22921],"minaoP":1.9716,"minaoQ":1.9785},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.26583],"coeffs":[1.0],"minaoP":0.0742,"minaoQ":0.1477},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.071],"coeffs":[1.0],"minaoP":0.1491,"minaoQ":0.2063},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.3],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.05307],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1546,-0.611,0.0849,0.0595,-0.0137],[-0.611,2.4843,-0.6772,-0.2451,0.006],[0.0849,-0.6772,1.4122,0.4321,0.0231],[0.0595,-0.2451,0.4321,0.1332,0.0066],[-0.0137,0.006,0.0231,0.0066,0.0006]],"1":[[1.9716,0.0379,-0.0606],[0.0379,0.0742,0.1029],[-0.0606,0.1029,0.1491]]}},"14":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[6903.71187,1038.43464,235.87581,66.06939,20.24795],"coeffs":[0.00134,0.01,0.04491,0.11464,0.1028],"minaoP":2.1643,"minaoQ":1.9995},{"l":0,"n":2,"label":"2s","core":true,"exps":[34.35348,3.63708,1.4002],"coeffs":[-0.07084,0.43029,0.41383],"minaoP":2.5654,"minaoQ":1.9974},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.20484],"coeffs":[1.0],"minaoP":1.3596,"minaoQ":1.4599},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.07799],"coeffs":[1.0],"minaoP":0.1541,"minaoQ":0.4902},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.04683],"coeffs":[1.0],"minaoP":0.0022,"minaoQ":0.0519},{"l":1,"n":2,"label":"2p","core":true,"exps":[179.83907,41.90726,12.95529,4.43833,1.54622],"coeffs":[0.00619,0.0434,0.15632,0.2942,0.23537],"minaoP":1.9917,"minaoQ":1.9797},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.35608],"coeffs":[1.0],"minaoP":0.1661,"minaoQ":0.2947},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.10009],"coeffs":[1.0],"minaoP":0.2702,"minaoQ":0.3911},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.35],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.07412],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1643,-0.6375,0.0909,0.0672,-0.0112],[-0.6375,2.5654,-0.7332,-0.2841,-0.0138],[0.0909,-0.7332,1.3596,0.4562,0.0523],[0.0672,-0.2841,0.4562,0.1541,0.0171],[-0.0112,-0.0138,0.0523,0.0171,0.0022]],"1":[[1.9917,-0.0068,-0.1126],[-0.0068,0.1661,0.2097],[-0.1126,0.2097,0.2702]]}},"15":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[8002.47951,1203.68136,273.44227,76.65554,23.51693],"coeffs":[0.00575,0.04301,0.19364,0.49652,0.44983],"minaoP":2.1728,"minaoQ":1.9995},{"l":0,"n":2,"label":"2s","core":true,"exps":[39.79168,4.27703,1.69403],"coeffs":[-0.09519,0.5765,0.5424],"minaoP":2.6228,"minaoQ":2.0028},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.27568],"coeffs":[1.0],"minaoP":1.1757,"minaoQ":1.3129},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.10496],"coeffs":[1.0],"minaoP":0.2011,"minaoQ":0.5727},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.06431],"coeffs":[1.0],"minaoP":0.009,"minaoQ":0.1112},{"l":1,"n":2,"label":"2p","core":true,"exps":[219.50756,51.27416,15.9216,5.50699,1.95377],"coeffs":[0.00921,0.06541,0.24034,0.46318,0.37393],"minaoP":2.0142,"minaoQ":1.9809},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.47803],"coeffs":[1.0],"minaoP":0.2312,"minaoQ":0.4111},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.13658],"coeffs":[1.0],"minaoP":0.4251,"minaoQ":0.6043},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.45],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.09959],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1728,-0.6599,0.0942,0.0708,-0.0086],[-0.6599,2.6228,-0.7363,-0.3155,-0.0423],[0.0942,-0.7363,1.1757,0.4857,0.1014],[0.0708,-0.3155,0.4857,0.2011,0.0416],[-0.0086,-0.0423,0.1014,0.0416,0.009]],"1":[[2.0142,-0.0479,-0.1769],[-0.0479,0.2312,0.3112],[-0.1769,0.3112,0.4251]]}},"16":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[9184.9303,1381.51055,313.87148,88.05387,27.03991],"coeffs":[0.00223,0.01668,0.07526,0.19377,0.17718],"minaoP":2.1802,"minaoQ":1.9994},{"l":0,"n":2,"label":"2s","core":true,"exps":[45.64873,4.96645,2.01162],"coeffs":[-0.10736,0.65066,0.59712],"minaoP":2.6795,"minaoQ":1.995},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.35661],"coeffs":[1.0],"minaoP":1.2077,"minaoQ":1.3255},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.13507],"coeffs":[1.0],"minaoP":0.2691,"minaoQ":0.655},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.045],"coeffs":[1.0],"minaoP":0.0007,"minaoQ":0.0243},{"l":1,"n":2,"label":"2p","core":true,"exps":[261.98233,61.30689,19.10373,6.65677,2.39596],"coeffs":[0.00927,0.06655,0.24829,0.48704,0.39338],"minaoP":2.0393,"minaoQ":1.9805},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.61776],"coeffs":[1.0],"minaoP":0.3351,"minaoQ":0.5543},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.16993],"coeffs":[1.0],"minaoP":0.4873,"minaoQ":0.7463},{"l":1,"n":5,"label":"5p","core":false,"exps":[0.04171],"coeffs":[1.0],"minaoP":0.0079,"minaoQ":0.0511},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.55],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.10173],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1802,-0.6789,0.0964,0.0747,-0.001],[-0.6789,2.6795,-0.7689,-0.3984,-0.0179],[0.0964,-0.7689,1.2077,0.5693,0.0293],[0.0747,-0.3984,0.5693,0.2691,0.0138],[-0.001,-0.0179,0.0293,0.0138,0.0007]],"1":[[2.0393,-0.0998,-0.2298,-0.0247],[-0.0998,0.3351,0.4016,0.0515],[-0.2298,0.4016,0.4873,0.0622],[-0.0247,0.0515,0.0622,0.0079]]}},"17":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[10449.82757,1571.73652,357.12066,100.25186,30.81273],"coeffs":[0.00197,0.01475,0.06668,0.17229,0.15884],"minaoP":2.1873,"minaoQ":1.9994},{"l":0,"n":2,"label":"2s","core":true,"exps":[51.92379,5.70458,2.35084],"coeffs":[-0.10009,0.60842,0.54352],"minaoP":2.737,"minaoQ":1.9958},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.44605],"coeffs":[1.0],"minaoP":1.2058,"minaoQ":1.3029},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.16849],"coeffs":[1.0],"minaoP":0.2834,"minaoQ":0.6726},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.05534],"coeffs":[1.0],"minaoP":0.001,"minaoQ":0.0286},{"l":1,"n":2,"label":"2p","core":true,"exps":[307.66791,72.10202,22.53268,7.89918,2.87673],"coeffs":[0.00878,0.06356,0.24016,0.47799,0.38516],"minaoP":2.0688,"minaoQ":1.9809},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.77459],"coeffs":[1.0],"minaoP":0.4257,"minaoQ":0.6865},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.21038],"coeffs":[1.0],"minaoP":0.6042,"minaoQ":0.9284},{"l":1,"n":5,"label":"5p","core":false,"exps":[0.05005],"coeffs":[1.0],"minaoP":0.012,"minaoQ":0.0695},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.65],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.12285],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1873,-0.6978,0.103,0.0774,-0.0001],[-0.6978,2.737,-0.8098,-0.4215,-0.0231],[0.103,-0.8098,1.2058,0.584,0.0346],[0.0774,-0.4215,0.584,0.2834,0.0167],[-0.0001,-0.0231,0.0346,0.0167,0.001]],"1":[[2.0688,-0.1535,-0.2916,-0.0367],[-0.1535,0.4257,0.5046,0.0714],[-0.2916,0.5046,0.6042,0.0852],[-0.0367,0.0714,0.0852,0.012]]}},"18":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[11797.11976,1774.35228,403.18876,113.24934,34.8353],"coeffs":[0.00202,0.01514,0.06853,0.17763,0.16496],"minaoP":2.1938,"minaoQ":1.9993},{"l":0,"n":2,"label":"2s","core":true,"exps":[58.61478,6.4922,2.7117],"coeffs":[-0.10343,0.63133,0.54888],"minaoP":2.8015,"minaoQ":1.9951},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.54413],"coeffs":[1.0],"minaoP":1.2771,"minaoQ":1.3292},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.20517],"coeffs":[1.0],"minaoP":0.2807,"minaoQ":0.6634},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.06644],"coeffs":[1.0],"minaoP":0.0002,"minaoQ":0.0123},{"l":1,"n":2,"label":"2p","core":true,"exps":[356.28707,83.59313,26.1867,9.22573,3.39228],"coeffs":[0.00873,0.06368,0.24312,0.48956,0.39229],"minaoP":2.115,"minaoQ":1.9837},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.94741],"coeffs":[1.0],"minaoP":0.5694,"minaoQ":0.8729},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.25659],"coeffs":[1.0],"minaoP":0.7206,"minaoQ":1.0994},{"l":1,"n":5,"label":"5p","core":false,"exps":[0.05949],"coeffs":[1.0],"minaoP":0.0044,"minaoQ":0.0422},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.696],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.14309],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1938,-0.7163,0.1121,0.0813,-0.0024],[-0.7163,2.8015,-0.8756,-0.4432,-0.0092],[0.1121,-0.8756,1.2771,0.598,0.0155],[0.0813,-0.4432,0.598,0.2807,0.0072],[-0.0024,-0.0092,0.0155,0.0072,0.0002]],"1":[[2.115,-0.2368,-0.3695,-0.0256],[-0.2368,0.5694,0.6382,0.0502],[-0.3695,0.6382,0.7206,0.0565],[-0.0256,0.0502,0.0565,0.0044]]}}},"def2-tzvp":{"1":{"shells":[{"l":0,"n":1,"label":"1s","core":false,"exps":[34.06134,5.12357,1.16466],"coeffs":[0.00603,0.04502,0.2019],"minaoP":0.0952,"minaoQ":0.2416},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.32723],"coeffs":[1.0],"minaoP":0.2496,"minaoQ":0.4866},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.10307],"coeffs":[1.0],"minaoP":0.1059,"minaoQ":0.2715},{"l":1,"n":2,"label":"2p","core":false,"exps":[0.8],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[0.0952,0.1542,0.1004],[0.1542,0.2496,0.1625],[0.1004,0.1625,0.1059]]}},"2":{"shells":[{"l":0,"n":1,"label":"1s","core":false,"exps":[98.07832,14.7644,3.31858],"coeffs":[0.00758,0.05485,0.22074],"minaoP":0.143,"minaoQ":0.388},{"l":0,"n":2,"label":"2s","core":false,"exps":[0.87414],"coeffs":[1.0],"minaoP":0.4569,"minaoQ":0.9217},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.2446],"coeffs":[1.0],"minaoP":0.3278,"minaoQ":0.6899},{"l":1,"n":2,"label":"2p","core":false,"exps":[1.0],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[0.143,0.2556,0.2165],[0.2556,0.4569,0.387],[0.2165,0.387,0.3278]]}},"3":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[6269.2628,940.31612,214.22108,60.75984,19.91515,7.31715],"coeffs":[0.00021,0.00159,0.00829,0.03386,0.11103,0.27449],"minaoP":0.1185,"minaoQ":0.3599},{"l":0,"n":2,"label":"2s","core":false,"exps":[2.97247,1.26399],"coeffs":[0.23792,0.30765],"minaoP":0.8804,"minaoQ":1.2983},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.51427],"coeffs":[1.0],"minaoP":0.1155,"minaoQ":0.3196},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.07703],"coeffs":[1.0],"minaoP":0.3132,"minaoQ":0.5071},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.02894],"coeffs":[1.0],"minaoP":0.2947,"minaoQ":0.515},{"l":1,"n":2,"label":"2p","core":false,"exps":[3.327],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.4],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.06],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[0.1185,0.3227,0.1109,-0.0168,-0.0214],[0.3227,0.8804,0.3066,-0.0692,-0.081],[0.1109,0.3066,0.1155,-0.0758,-0.0782],[-0.0168,-0.0692,-0.0758,0.3132,0.3037],[-0.0214,-0.081,-0.0782,0.3037,0.2947]]}},"4":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[4700.23656,704.82846,160.4311,45.42535,14.79833,5.35125],"coeffs":[0.00024,0.00182,0.0094,0.03691,0.10898,0.21694],"minaoP":0.6213,"minaoQ":1.0315},{"l":0,"n":2,"label":"2s","core":false,"exps":[2.1542,0.93364],"coeffs":[0.44695,0.20867],"minaoP":0.674,"minaoQ":0.9411},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.18791],"coeffs":[1.0],"minaoP":0.5193,"minaoQ":0.9014},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.07465],"coeffs":[1.0],"minaoP":0.5588,"minaoQ":1.0111},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.03265],"coeffs":[1.0],"minaoP":0.0102,"minaoQ":0.1148},{"l":1,"n":2,"label":"2p","core":false,"exps":[3.63169],"coeffs":[0.02903],"minaoP":0.0,"minaoQ":0.0},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.71696,0.19542],"coeffs":[0.16878,0.51403],"minaoP":0.0,"minaoQ":0.0},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.06052],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.18],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[0.6213,0.6362,-0.1036,-0.1219,-0.0143],[0.6362,0.674,-0.2123,-0.2345,-0.0295],[-0.1036,-0.2123,0.5193,0.5385,0.0726],[-0.1219,-0.2345,0.5385,0.5588,0.0753],[-0.0143,-0.0295,0.0726,0.0753,0.0102]]}},"5":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[8564.86607,1284.15163,292.27872,82.77547,27.01794,9.81496],"coeffs":[0.00023,0.00177,0.00914,0.03634,0.11063,0.23367],"minaoP":0.5195,"minaoQ":0.9277},{"l":0,"n":2,"label":"2s","core":false,"exps":[3.93186,1.65956],"coeffs":[0.41819,0.22325],"minaoP":0.8049,"minaoQ":1.0455},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.35763],"coeffs":[1.0],"minaoP":0.4657,"minaoQ":0.8349},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.14246],"coeffs":[1.0],"minaoP":0.5604,"minaoQ":1.0123},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.06056],"coeffs":[1.0],"minaoP":0.0242,"minaoQ":0.1796},{"l":1,"n":2,"label":"2p","core":false,"exps":[22.45388,5.10451,1.49861,0.50928],"coeffs":[0.00503,0.0328,0.13151,0.33197],"minaoP":0.0799,"minaoQ":0.1387},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.18147],"coeffs":[0.47314],"minaoP":0.0812,"minaoQ":0.1539},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.06462],"coeffs":[0.25803],"minaoP":0.0111,"minaoQ":0.0407},{"l":2,"n":3,"label":"3d","core":false,"exps":[0.661],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.199],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":3,"n":4,"label":"4f","core":false,"exps":[0.49],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[0.5195,0.6373,-0.0967,-0.1231,-0.0225],[0.6373,0.8049,-0.2204,-0.2619,-0.0508],[-0.0967,-0.2204,0.4657,0.5106,0.1062],[-0.1231,-0.2619,0.5106,0.5604,0.1165],[-0.0225,-0.0508,0.1062,0.1165,0.0242]],"1":[[0.0799,0.0805,0.0297],[0.0805,0.0812,0.03],[0.0297,0.03,0.0111]]}},"6":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[13575.34968,2035.23337,463.22562,131.2002,42.85302,15.58419],"coeffs":[0.00022,0.00172,0.00893,0.03573,0.11076,0.24296],"minaoP":0.4639,"minaoQ":0.8668},{"l":0,"n":2,"label":"2s","core":false,"exps":[6.20671,2.57649],"coeffs":[0.4144,0.23745],"minaoP":0.8787,"minaoQ":1.1073},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.57696],"coeffs":[1.0],"minaoP":0.3968,"minaoQ":0.7554},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.22973],"coeffs":[1.0],"minaoP":0.5498,"minaoQ":1.0026},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.09516],"coeffs":[1.0],"minaoP":0.0518,"minaoQ":0.2677},{"l":1,"n":2,"label":"2p","core":false,"exps":[34.69723,7.95826,2.37808,0.81433],"coeffs":[0.00533,0.03586,0.14216,0.3427],"minaoP":0.168,"minaoQ":0.2847},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.28888],"coeffs":[0.46446],"minaoP":0.1521,"minaoQ":0.2963},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.10057],"coeffs":[0.24956],"minaoP":0.0249,"minaoQ":0.0857},{"l":2,"n":3,"label":"3d","core":false,"exps":[1.097],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.318],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":3,"n":4,"label":"4f","core":false,"exps":[0.761],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[0.4639,0.6304,-0.0844,-0.1217,-0.0316],[0.6304,0.8787,-0.2064,-0.2722,-0.076],[-0.0844,-0.2064,0.3968,0.4666,0.1434],[-0.1217,-0.2722,0.4666,0.5498,0.1687],[-0.0316,-0.076,0.1434,0.1687,0.0518]],"1":[[0.168,0.1598,0.0647],[0.1598,0.1521,0.0616],[0.0647,0.0616,0.0249]]}},"7":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[19730.80065,2957.89587,673.22134,190.68249,62.29544,22.65416],"coeffs":[0.00022,0.0017,0.0088,0.03536,0.11096,0.24983],"minaoP":0.4294,"minaoQ":0.8272},{"l":0,"n":2,"label":"2s","core":false,"exps":[8.97915,3.6863],"coeffs":[0.40624,0.24338],"minaoP":0.9224,"minaoQ":1.1482},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.8466],"coeffs":[1.0],"minaoP":0.3296,"minaoQ":0.6753},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.33647],"coeffs":[1.0],"minaoP":0.5413,"minaoQ":0.9953},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.13648],"coeffs":[1.0],"minaoP":0.0874,"minaoQ":0.3539},{"l":1,"n":2,"label":"2p","core":false,"exps":[49.20038,11.34679,3.4274,1.17855],"coeffs":[0.00556,0.03805,0.14954,0.34949],"minaoP":0.2599,"minaoQ":0.4321},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.41642],"coeffs":[0.45843],"minaoP":0.2081,"minaoQ":0.4229},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.14261],"coeffs":[0.24429],"minaoP":0.0471,"minaoQ":0.145},{"l":2,"n":3,"label":"3d","core":false,"exps":[1.654],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.469],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":3,"n":4,"label":"4f","core":false,"exps":[1.093],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[0.4294,0.6225,-0.0727,-0.118,-0.0412],[0.6225,0.9224,-0.1851,-0.272,-0.1006],[-0.0727,-0.1851,0.3296,0.4218,0.1697],[-0.118,-0.272,0.4218,0.5413,0.2174],[-0.0412,-0.1006,0.1697,0.2174,0.0874]],"1":[[0.2599,0.2325,0.1107],[0.2325,0.2081,0.099],[0.1107,0.099,0.0471]]}},"8":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[27032.38263,4052.38714,922.32723,261.24071,85.35464,31.03504],"coeffs":[0.00022,0.00168,0.00874,0.03524,0.11154,0.25589],"minaoP":0.4058,"minaoQ":0.7995},{"l":0,"n":2,"label":"2s","core":false,"exps":[12.26086,4.99871],"coeffs":[0.39769,0.24628],"minaoP":0.9574,"minaoQ":1.1744},{"l":0,"n":3,"label":"3s","core":false,"exps":[1.17031],"coeffs":[1.0],"minaoP":0.3132,"minaoQ":0.654},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.46475],"coeffs":[1.0],"minaoP":0.5333,"minaoQ":0.9863},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.18505],"coeffs":[1.0],"minaoP":0.1034,"minaoQ":0.3858},{"l":1,"n":2,"label":"2p","core":false,"exps":[63.27495,14.62705,4.45012,1.52758],"coeffs":[0.00607,0.04191,0.16154,0.35707],"minaoP":0.3455,"minaoQ":0.5631},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.52935],"coeffs":[0.44794],"minaoP":0.2377,"minaoQ":0.5189},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.17478],"coeffs":[0.24446],"minaoP":0.1,"minaoQ":0.2504},{"l":2,"n":3,"label":"3d","core":false,"exps":[2.314],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.645],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":3,"n":4,"label":"4f","core":false,"exps":[1.428],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[0.4058,0.6167,-0.0671,-0.1164,-0.0461],[0.6167,0.9574,-0.18,-0.2772,-0.1146],[-0.0671,-0.18,0.3132,0.4079,0.1798],[-0.1164,-0.2772,0.4079,0.5333,0.2348],[-0.0461,-0.1146,0.1798,0.2348,0.1034]],"1":[[0.3455,0.2866,0.1859],[0.2866,0.2377,0.1542],[0.1859,0.1542,0.1]]}},"9":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[35479.10044,5318.4729,1210.4811,342.85518,112.01943,40.71474],"coeffs":[0.00022,0.00167,0.00867,0.03505,0.11165,0.25989],"minaoP":0.3897,"minaoQ":0.7801},{"l":0,"n":2,"label":"2s","core":false,"exps":[16.03968,6.50382],"coeffs":[0.39423,0.24998],"minaoP":0.986,"minaoQ":1.1929},{"l":0,"n":3,"label":"3s","core":false,"exps":[1.54405],"coeffs":[1.0],"minaoP":0.3105,"minaoQ":0.6506},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.61223],"coeffs":[1.0],"minaoP":0.5567,"minaoQ":1.006},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.24028],"coeffs":[1.0],"minaoP":0.0963,"minaoQ":0.3703},{"l":1,"n":2,"label":"2p","core":false,"exps":[80.2339,18.59401,5.68679,1.9511],"coeffs":[0.00637,0.0443,0.16867,0.36166],"minaoP":0.4578,"minaoQ":0.7274},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.6697],"coeffs":[0.44203],"minaoP":0.28,"minaoQ":0.6249},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.21651],"coeffs":[0.2432],"minaoP":0.1284,"minaoQ":0.3127},{"l":2,"n":3,"label":"3d","core":false,"exps":[3.107],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.855],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":3,"n":4,"label":"4f","core":false,"exps":[1.917],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[0.3897,0.6134,-0.0657,-0.1194,-0.0448],[0.6134,0.986,-0.1816,-0.291,-0.1137],[-0.0657,-0.1816,0.3105,0.4148,0.1728],[-0.1194,-0.291,0.4148,0.5567,0.2315],[-0.0448,-0.1137,0.1728,0.2315,0.0963]],"1":[[0.4578,0.358,0.2424],[0.358,0.28,0.1896],[0.2424,0.1896,0.1284]]}},"10":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[45069.46402,6755.97687,1537.65029,435.51698,142.28656,51.69215],"coeffs":[0.00022,0.00168,0.00874,0.03536,0.11322,0.26655],"minaoP":0.3783,"minaoQ":0.7662},{"l":0,"n":2,"label":"2s","core":false,"exps":[20.31587,8.20219],"coeffs":[0.39632,0.25583],"minaoP":1.0082,"minaoQ":1.2064},{"l":0,"n":3,"label":"3s","core":false,"exps":[1.96813],"coeffs":[1.0],"minaoP":0.3061,"minaoQ":0.6472},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.77905],"coeffs":[1.0],"minaoP":0.6121,"minaoQ":1.0541},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.3023],"coeffs":[1.0],"minaoP":0.0763,"minaoQ":0.3262},{"l":1,"n":2,"label":"2p","core":false,"exps":[99.783,23.17612,7.11639,2.44187],"coeffs":[0.00656,0.04589,0.17331,0.36475],"minaoP":0.581,"minaoQ":0.9178},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.8339],"coeffs":[0.43831],"minaoP":0.3952,"minaoQ":0.8104},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.26607],"coeffs":[0.2416],"minaoP":0.0917,"minaoQ":0.2717},{"l":2,"n":3,"label":"3d","core":false,"exps":[4.014],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[1.096],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":3,"n":4,"label":"4f","core":false,"exps":[2.544],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[0.3783,0.6113,-0.0652,-0.126,-0.0406],[0.6113,1.0082,-0.1827,-0.311,-0.1038],[-0.0652,-0.1827,0.3061,0.4317,0.1526],[-0.126,-0.311,0.4317,0.6121,0.216],[-0.0406,-0.1038,0.1526,0.216,0.0763]],"1":[[0.581,0.4792,0.2308],[0.4792,0.3952,0.1904],[0.2308,0.1904,0.0917]]}},"11":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[26041.10993,3906.12685,888.97455,251.45498,81.65014,28.90416,10.62578],"coeffs":[0.00062,0.00477,0.02447,0.09476,0.26867,0.47925,0.33249],"minaoP":2.1155,"minaoQ":2.0002},{"l":0,"n":2,"label":"2s","core":true,"exps":[53.76941,16.30824,2.37304],"coeffs":[-0.01953,-0.09265,0.39939],"minaoP":0.2776,"minaoQ":0.6794},{"l":0,"n":3,"label":"3s","core":false,"exps":[0.95731,0.40806],"coeffs":[1.64286,0.55693],"minaoP":1.0462,"minaoQ":1.312},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.04997],"coeffs":[1.0],"minaoP":0.6596,"minaoQ":0.7662},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.01927],"coeffs":[1.0],"minaoP":0.0716,"minaoQ":0.2419},{"l":1,"n":2,"label":"2p","core":true,"exps":[138.0798,32.2327,9.98161,3.4822,1.22991],"coeffs":[0.0058,0.04162,0.16282,0.36012,0.44859],"minaoP":1.4932,"minaoQ":1.6942},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.41744],"coeffs":[0.23041],"minaoP":0.1018,"minaoQ":0.3029},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.091],"coeffs":[1.0],"minaoP":0.0001,"minaoQ":0.003},{"l":1,"n":5,"label":"5p","core":false,"exps":[0.03],"coeffs":[1.0],"minaoP":0.0,"minaoQ":-0.0001},{"l":2,"n":3,"label":"3d","core":false,"exps":[2.609],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.43],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":5,"label":"5d","core":false,"exps":[0.1],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1155,-0.1525,-0.3679,0.0331,0.011],[-0.1525,0.2776,0.5277,-0.0274,-0.0109],[-0.3679,0.5277,1.0462,-0.215,-0.0743],[0.0331,-0.0274,-0.215,0.6596,0.2174],[0.011,-0.0109,-0.0743,0.2174,0.0716]],"1":[[1.4932,0.3898,0.0115,-0.0016],[0.3898,0.1018,0.003,-0.0004],[0.0115,0.003,0.0001,-0.0],[-0.0016,-0.0004,-0.0,0.0]]}},"12":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[31438.34956,4715.51534,1073.16292,303.57239,98.62625,34.94381,12.85979],"coeffs":[0.00061,0.00471,0.02414,0.09363,0.26647,0.47891,0.33698],"minaoP":2.1276,"minaoQ":2.0005},{"l":0,"n":2,"label":"2s","core":true,"exps":[64.87691,19.72552,2.89518],"coeffs":[-0.01918,-0.09091,0.39564],"minaoP":0.3121,"minaoQ":0.7288},{"l":0,"n":3,"label":"3s","core":false,"exps":[1.19605,0.54329],"coeffs":[1.68276,0.52141],"minaoP":1.126,"minaoQ":1.2449},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.10099],"coeffs":[1.0],"minaoP":1.1371,"minaoQ":1.3597},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.03687],"coeffs":[1.0],"minaoP":0.2671,"minaoQ":0.6657},{"l":1,"n":2,"label":"2p","core":true,"exps":[179.8719,42.12007,13.1205,4.62575,1.66952],"coeffs":[0.00538,0.03932,0.1574,0.35919,0.45533],"minaoP":1.5072,"minaoQ":1.7061},{"l":1,"n":3,"label":"3p","core":false,"exps":[0.58551],"coeffs":[0.21986],"minaoP":0.092,"minaoQ":0.2908},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.18915],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0027},{"l":1,"n":5,"label":"5p","core":false,"exps":[0.05377],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0003},{"l":2,"n":3,"label":"3d","core":false,"exps":[3.444],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.29],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":5,"label":"5d","core":false,"exps":[0.07],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1276,-0.1718,-0.3944,0.0792,0.0379],[-0.1718,0.3121,0.5735,-0.1072,-0.0539],[-0.3944,0.5735,1.126,-0.4734,-0.2328],[0.0792,-0.1072,-0.4734,1.1371,0.5511],[0.0379,-0.0539,-0.2328,0.5511,0.2671]],"1":[[1.5072,0.3723,0.0073,0.003],[0.3723,0.092,0.0018,0.0007],[0.0073,0.0018,0.0,0.0],[0.003,0.0007,0.0,0.0]]}},"13":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[37792.55077,5668.06822,1289.85828,364.86596,118.57632,42.02487,15.4995],"coeffs":[0.00057,0.00441,0.02263,0.08803,0.25224,0.45961,0.33278],"minaoP":2.1391,"minaoQ":2.0018},{"l":0,"n":2,"label":"2s","core":true,"exps":[75.20803,23.03141,3.63488],"coeffs":[-0.01925,-0.08791,0.34247],"minaoP":0.2628,"minaoQ":0.672},{"l":0,"n":3,"label":"3s","core":false,"exps":[1.6065,0.76103],"coeffs":[1.51063,0.58071],"minaoP":1.3066,"minaoQ":1.2991},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.16557],"coeffs":[1.0],"minaoP":1.1491,"minaoQ":1.3148},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.06004],"coeffs":[1.0],"minaoP":0.3067,"minaoQ":0.7123},{"l":1,"n":2,"label":"2p","core":true,"exps":[452.52303,107.08195,34.13102,12.58704,4.98119],"coeffs":[0.00231,0.01857,0.08722,0.26902,0.52128],"minaoP":0.6074,"minaoQ":0.9713},{"l":1,"n":3,"label":"3p","core":false,"exps":[2.00704],"coeffs":[0.60272],"minaoP":0.3397,"minaoQ":0.7577},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.80084],"coeffs":[1.0],"minaoP":0.0769,"minaoQ":0.2706},{"l":1,"n":5,"label":"5p","core":false,"exps":[0.20179],"coeffs":[1.0],"minaoP":0.1189,"minaoQ":0.1812},{"l":1,"n":6,"label":"6p","core":false,"exps":[0.0579],"coeffs":[1.0],"minaoP":0.0891,"minaoQ":0.1523},{"l":2,"n":3,"label":"3d","core":false,"exps":[1.57,0.333],"coeffs":[0.2,1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.111],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":3,"n":4,"label":"4f","core":false,"exps":[0.244],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1391,-0.1584,-0.4395,0.1,0.0462],[-0.1584,0.2628,0.5657,-0.1268,-0.0633],[-0.4395,0.5657,1.3066,-0.5768,-0.2934],[0.1,-0.1268,-0.5768,1.1491,0.5936],[0.0462,-0.0633,-0.2934,0.5936,0.3067]],"1":[[0.6074,0.4542,0.2155,-0.0131,-0.0214],[0.4542,0.3397,0.1611,-0.0118,-0.0177],[0.2155,0.1611,0.0769,0.0022,-0.0017],[-0.0131,-0.0118,0.0022,0.1189,0.1028],[-0.0214,-0.0177,-0.0017,0.1028,0.0891]]}},"14":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[44773.35808,6717.19921,1528.89603,432.54747,140.61505,49.85764,18.43497],"coeffs":[0.00056,0.00432,0.02219,0.08649,0.2494,0.46017,0.3425],"minaoP":2.1497,"minaoQ":2.0034},{"l":0,"n":2,"label":"2s","core":true,"exps":[86.53389,26.62461,4.49531],"coeffs":[-0.0213,-0.09468,0.32616],"minaoP":0.2138,"minaoQ":0.6077},{"l":0,"n":3,"label":"3s","core":false,"exps":[2.1035,1.01061],"coeffs":[1.39808,0.63866],"minaoP":1.4708,"minaoQ":1.3626},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.23702],"coeffs":[1.0],"minaoP":1.0903,"minaoQ":1.2453},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.0857],"coeffs":[1.0],"minaoP":0.3691,"minaoQ":0.7808},{"l":1,"n":2,"label":"2p","core":true,"exps":[394.47504,93.13768,29.51961,10.78166,4.16266],"coeffs":[0.00263,0.02056,0.09207,0.25566,0.42112],"minaoP":1.0436,"minaoQ":1.3703},{"l":1,"n":3,"label":"3p","core":false,"exps":[1.6248],"coeffs":[0.34402],"minaoP":0.253,"minaoQ":0.5782},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.54307],"coeffs":[1.0],"minaoP":0.0285,"minaoQ":0.135},{"l":1,"n":5,"label":"5p","core":false,"exps":[0.20582],"coeffs":[1.0],"minaoP":0.2449,"minaoQ":0.3812},{"l":1,"n":6,"label":"6p","core":false,"exps":[0.07005],"coeffs":[1.0],"minaoP":0.0875,"minaoQ":0.2018},{"l":2,"n":3,"label":"3d","core":false,"exps":[2.303,0.476],"coeffs":[0.2,1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.16],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":3,"n":4,"label":"4f","core":false,"exps":[0.336],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1497,-0.1406,-0.4798,0.1069,0.0584],[-0.1406,0.2138,0.5428,-0.1267,-0.0735],[-0.4798,0.5428,1.4708,-0.617,-0.3581],[0.1069,-0.1267,-0.617,1.0903,0.6344],[0.0584,-0.0735,-0.3581,0.6344,0.3691]],"1":[[1.0436,0.5138,0.0681,-0.08,-0.0387],[0.5138,0.253,0.0327,-0.042,-0.0207],[0.0681,0.0327,0.0285,0.0705,0.0429],[-0.08,-0.042,0.0705,0.2449,0.1463],[-0.0387,-0.0207,0.0429,0.1463,0.0875]]}},"15":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[52426.99923,7863.26606,1789.52273,506.273,164.60699,58.39192,21.64366],"coeffs":[0.00055,0.00427,0.02193,0.08567,0.24841,0.46337,0.35351],"minaoP":2.1598,"minaoQ":2.0055},{"l":0,"n":2,"label":"2s","core":true,"exps":[99.01384,30.55044,5.45371],"coeffs":[-0.0219,-0.09565,0.29454],"minaoP":0.1766,"minaoQ":0.5531},{"l":0,"n":3,"label":"3s","core":false,"exps":[2.65034,1.27267],"coeffs":[1.32944,0.66109],"minaoP":1.5988,"minaoQ":1.4271},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.31645],"coeffs":[1.0],"minaoP":0.8983,"minaoQ":1.0832},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.11417],"coeffs":[1.0],"minaoP":0.5098,"minaoQ":0.9308},{"l":1,"n":2,"label":"2p","core":true,"exps":[472.27219,111.58883,35.44594,12.99078,5.04862],"coeffs":[0.00257,0.02025,0.09158,0.25749,0.42863],"minaoP":1.07,"minaoQ":1.392},{"l":1,"n":3,"label":"3p","core":false,"exps":[1.9934],"coeffs":[0.3436],"minaoP":0.2524,"minaoQ":0.5649},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.66527],"coeffs":[1.0],"minaoP":0.0662,"minaoQ":0.2176},{"l":1,"n":5,"label":"5p","core":false,"exps":[0.25517],"coeffs":[1.0],"minaoP":0.3036,"minaoQ":0.521},{"l":1,"n":6,"label":"6p","core":false,"exps":[0.09036],"coeffs":[1.0],"minaoP":0.1334,"minaoQ":0.3041},{"l":2,"n":3,"label":"3d","core":false,"exps":[3.12,0.648],"coeffs":[0.2,1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.218],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":3,"n":4,"label":"4f","core":false,"exps":[0.452],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1598,-0.1244,-0.5138,0.1095,0.065],[-0.1244,0.1766,0.518,-0.1233,-0.0805],[-0.5138,0.518,1.5988,-0.5994,-0.4168],[0.1095,-0.1233,-0.5994,0.8983,0.6761],[0.065,-0.0805,-0.4168,0.6761,0.5098]],"1":[[1.07,0.5196,0.036,-0.1152,-0.0658],[0.5196,0.2524,0.0152,-0.0607,-0.0351],[0.036,0.0152,0.0662,0.1337,0.0895],[-0.1152,-0.0607,0.1337,0.3036,0.2012],[-0.0658,-0.0351,0.0895,0.2012,0.1334]]}},"16":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[60700.9281,9102.61069,2071.4166,586.02477,190.55395,67.63038,25.12731],"coeffs":[0.00055,0.00423,0.02175,0.0851,0.24799,0.46704,0.36435],"minaoP":2.1691,"minaoQ":2.0077},{"l":0,"n":2,"label":"2s","core":true,"exps":[112.57463,34.79555,6.51156],"coeffs":[-0.02167,-0.0936,0.26068],"minaoP":0.149,"minaoQ":0.5084},{"l":0,"n":3,"label":"3s","core":false,"exps":[3.2399,1.54772],"coeffs":[1.28421,0.66036],"minaoP":1.7308,"minaoQ":1.4574},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.40541],"coeffs":[1.0],"minaoP":0.9987,"minaoQ":1.1484},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.14551],"coeffs":[1.0],"minaoP":0.4709,"minaoQ":0.8778},{"l":1,"n":2,"label":"2p","core":true,"exps":[564.36716,133.42624,42.46827,15.61653,6.1094],"coeffs":[0.00248,0.01968,0.08998,0.25706,0.43515],"minaoP":1.0746,"minaoQ":1.3949},{"l":1,"n":3,"label":"3p","core":false,"exps":[2.44042],"coeffs":[0.34883],"minaoP":0.2567,"minaoQ":0.5623},{"l":1,"n":4,"label":"4p","core":false,"exps":[0.83882],"coeffs":[1.0],"minaoP":0.0964,"minaoQ":0.2856},{"l":1,"n":5,"label":"5p","core":false,"exps":[0.31289],"coeffs":[1.0],"minaoP":0.4021,"minaoQ":0.6929},{"l":1,"n":6,"label":"6p","core":false,"exps":[0.1077],"coeffs":[1.0],"minaoP":0.1752,"minaoQ":0.3971},{"l":2,"n":3,"label":"3d","core":false,"exps":[3.756,0.812],"coeffs":[0.2,1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.273],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":3,"n":4,"label":"4f","core":false,"exps":[0.557],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1691,-0.1103,-0.543,0.1122,0.0787],[-0.1103,0.149,0.493,-0.114,-0.0836],[-0.543,0.493,1.7308,-0.657,-0.4673],[0.1122,-0.114,-0.657,0.9987,0.6856],[0.0787,-0.0836,-0.4673,0.6856,0.4709]],"1":[[1.0746,0.5251,0.0155,-0.1523,-0.0931],[0.5251,0.2567,0.0051,-0.0794,-0.0487],[0.0155,0.0051,0.0964,0.1891,0.1255],[-0.1523,-0.0794,0.1891,0.4021,0.2654],[-0.0931,-0.0487,0.1255,0.2654,0.1752]]}},"17":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[69507.99094,10426.15688,2373.23341,671.5642,218.42,77.57225,28.88882],"coeffs":[0.00054,0.0042,0.02159,0.0846,0.24757,0.47017,0.37436],"minaoP":2.1789,"minaoQ":2.0104},{"l":0,"n":2,"label":"2s","core":true,"exps":[127.10527,39.33958,7.67407],"coeffs":[-0.02518,-0.10786,0.27409],"minaoP":0.1279,"minaoQ":0.4698},{"l":0,"n":3,"label":"3s","core":false,"exps":[3.87456,1.83858],"coeffs":[1.32139,0.68637],"minaoP":1.8474,"minaoQ":1.4962},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.50229],"coeffs":[1.0],"minaoP":1.0107,"minaoQ":1.1374},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.17963],"coeffs":[1.0],"minaoP":0.482,"minaoQ":0.8859},{"l":1,"n":2,"label":"2p","core":true,"exps":[666.50423,157.64242,50.26252,18.53608,7.29405],"coeffs":[0.00236,0.01888,0.08721,0.25286,0.43507],"minaoP":1.0792,"minaoQ":1.3969},{"l":1,"n":3,"label":"3p","core":false,"exps":[2.94332],"coeffs":[0.35027],"minaoP":0.2633,"minaoQ":0.5601},{"l":1,"n":4,"label":"4p","core":false,"exps":[1.0405],"coeffs":[1.0],"minaoP":0.1324,"minaoQ":0.3606},{"l":1,"n":5,"label":"5p","core":false,"exps":[0.38456],"coeffs":[1.0],"minaoP":0.4868,"minaoQ":0.8512},{"l":1,"n":6,"label":"6p","core":false,"exps":[0.1307],"coeffs":[1.0],"minaoP":0.222,"minaoQ":0.4969},{"l":2,"n":3,"label":"3d","core":false,"exps":[4.61,1.011],"coeffs":[0.2,1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.339],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":3,"n":4,"label":"4f","core":false,"exps":[0.706],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1789,-0.0979,-0.5707,0.1196,0.0817],[-0.0979,0.1279,0.4727,-0.1152,-0.0832],[-0.5707,0.4727,1.8474,-0.6965,-0.4933],[0.1196,-0.1152,-0.6965,1.0107,0.6978],[0.0817,-0.0832,-0.4933,0.6978,0.482]],"1":[[1.0792,0.533,-0.0079,-0.1911,-0.122],[0.533,0.2633,-0.0069,-0.0998,-0.064],[-0.0079,-0.0069,0.1324,0.2462,0.1669],[-0.1911,-0.0998,0.2462,0.4868,0.3287],[-0.122,-0.064,0.1669,0.3287,0.222]]}},"18":{"shells":[{"l":0,"n":1,"label":"1s","core":true,"exps":[79111.423,11864.74601,2700.1643,763.95943,248.45151,88.28358,32.94861],"coeffs":[0.00051,0.00395,0.02031,0.07969,0.23421,0.44834,0.36408],"minaoP":2.1895,"minaoQ":2.0134},{"l":0,"n":2,"label":"2s","core":true,"exps":[142.55358,44.16369,8.9525],"coeffs":[-0.02639,-0.11226,0.26179],"minaoP":0.1093,"minaoQ":0.4335},{"l":0,"n":3,"label":"3s","core":false,"exps":[4.55469,2.14441],"coeffs":[1.30025,0.67197],"minaoP":1.9864,"minaoQ":1.527},{"l":0,"n":4,"label":"4s","core":false,"exps":[0.60709],"coeffs":[1.0],"minaoP":1.1329,"minaoQ":1.1966},{"l":0,"n":5,"label":"5s","core":false,"exps":[0.21651],"coeffs":[1.0],"minaoP":0.4303,"minaoQ":0.8292},{"l":1,"n":2,"label":"2p","core":true,"exps":[776.77542,183.80107,58.694,21.70159,8.58215],"coeffs":[0.0022,0.01769,0.08243,0.24207,0.42264],"minaoP":1.0946,"minaoQ":1.4055},{"l":1,"n":3,"label":"3p","core":false,"exps":[3.49227],"coeffs":[0.34152],"minaoP":0.2687,"minaoQ":0.5568},{"l":1,"n":4,"label":"4p","core":false,"exps":[1.26374],"coeffs":[1.0],"minaoP":0.1613,"minaoQ":0.434},{"l":1,"n":5,"label":"5p","core":false,"exps":[0.46608],"coeffs":[1.0],"minaoP":0.6896,"minaoQ":1.1162},{"l":1,"n":6,"label":"6p","core":false,"exps":[0.15766],"coeffs":[1.0],"minaoP":0.1897,"minaoQ":0.4873},{"l":2,"n":3,"label":"3d","core":false,"exps":[5.551,1.235],"coeffs":[0.2,1.0],"minaoP":0.0,"minaoQ":0.0},{"l":2,"n":4,"label":"4d","core":false,"exps":[0.412],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0},{"l":3,"n":4,"label":"4f","core":false,"exps":[0.89],"coeffs":[1.0],"minaoP":0.0,"minaoQ":0.0}],"minaoDM":{"0":[[2.1895,-0.0858,-0.6011,0.1353,0.083],[-0.0858,0.1093,0.4505,-0.1129,-0.0738],[-0.6011,0.4505,1.9864,-0.7911,-0.5031],[0.1353,-0.1129,-0.7911,1.1329,0.6981],[0.083,-0.0738,-0.5031,0.6981,0.4303]],"1":[[1.0946,0.5423,-0.0344,-0.2641,-0.133],[0.5423,0.2687,-0.0163,-0.1294,-0.0651],[-0.0344,-0.0163,0.1613,0.3249,0.1709],[-0.2641,-0.1294,0.3249,0.6896,0.3616],[-0.133,-0.0651,0.1709,0.3616,0.1897]]}}}};
+
+function getBasisEntry(z, basisName){
+  const bs=BASIS_SETS[basisName]||BASIS_SETS['sto-3g'];
+  return bs[z]||bs[6];
+}
+function getBasisShells(z, basisName){
+  return getBasisEntry(z, basisName).shells;
+}
+function getBasisMinaoDM(z, basisName){
+  return getBasisEntry(z, basisName).minaoDM||{};
+}
+function getBasisCount(z, basisName){
+  return getBasisShells(z, basisName).reduce((acc,sh)=>acc+(2*sh.l+1), 0);
+}
+
+const BOHR_PER_ANG=1.8897261246;
+let BOND_RADIUS=0.08;
+const BOND_COLOR=0x888888, BOND_TOLERANCE=0.35, BG_COLOR=0xf8f7f4;
+let molAtomScale=1.0;
 let GNN_CUTOFF=2.0;
 const GNN_NODE_RADIUS=0.22;
 let GNN_EDGE_RADIUS=0.03;
@@ -155,6 +341,40 @@ const SH_POS_COLOR=0x4a90d9; // blue for positive lobes
 const SH_NEG_COLOR=0xd94a4a; // red for negative lobes
 const SH_RADIAL_ALPHA=3.0; // Gaussian radial decay rate
 let SH_SCALE=0.55; // overall lobe size scaling
+
+// Matrix state
+let showMatrixBlocks=true;
+let showMatrixGrid=true;
+let showMatrixSparse=true;
+let matBlockScale=1.0;
+let matColorMode='shell'; // 'shell' | 'minao'
+
+// GTO state & colors
+let currentBasis='sto-3g'; // 'sto-3g' | 'def2-svp' | 'def2-svpd' | 'def2-tzvp'
+let gtoMode='shells'; // 'shells' | 'all_m' | 'lcao' | 'minao'
+let gtoShellFilter='all'; // 'all' | 'valence' | 's' | 'p' | 'd' | 'f'
+let gtoColorMode='shell'; // 'shell' | 'phase' | 'minao'
+let showGtoCards=true;
+let showGtoMatrixOverlay=false;
+let gtoIsovalue=0.10;
+let gtoScale=0.46;
+let gtoOpacity=0.78;
+
+const SHELL_L_COLORS={
+  0:{pos:0x4a90d9, neg:0x2b5c8f, inner:0x2d66a6, outer:0x6bc2f5},
+  1:{pos:0x47b068, neg:0x287843, inner:0x3ca35c, outer:0x76d692},
+  2:{pos:0xe68a2e, neg:0xa85a12, inner:0xe68a2e, outer:0xf2a555},
+  3:{pos:0x9b59b6, neg:0x6c3483, inner:0x8e44ad, outer:0xbb8fce}
+};
+
+function minaoValueColor(val){
+  const mag=Math.min(1, Math.pow(Math.abs(val)/2.2, 0.55));
+  if(val>=0){
+    return new THREE.Color().setHSL(0.58 - 0.50*mag, 0.78, 0.76 - 0.36*mag);
+  } else {
+    return new THREE.Color().setHSL(0.0, 0.75, 0.80 - 0.35*mag);
+  }
+}
 
 // Matrix block colors
 const MATRIX_DIAG_COLOR=0x4a90d9;
@@ -185,8 +405,9 @@ scene.add(new THREE.DirectionalLight(0xc8d8f0,0.35).translateX(-4).translateY(2)
 scene.add(new THREE.DirectionalLight(0xffeedd,0.25).translateX(-1).translateY(-2).translateZ(5));
 
 const floorMat=new THREE.ShadowMaterial({opacity:0.08});
-const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),floorMat);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(40,40),floorMat);
 floor.rotation.x=-Math.PI/2; floor.position.y=-2; floor.receiveShadow=true; scene.add(floor);
+let floorCustomY=null; // null = automatic rotation-safe floor placement
 
 const sphereGeo=new THREE.SphereGeometry(1,64,48);
 const cylGeo=new THREE.CylinderGeometry(1,1,1,16,1,true);
@@ -200,11 +421,14 @@ let molGroup=new THREE.Group(); scene.add(molGroup);
 let gnnGroup=new THREE.Group(); scene.add(gnnGroup); gnnGroup.visible=false;
 let gnnFeatGroup=new THREE.Group(); scene.add(gnnFeatGroup); gnnFeatGroup.visible=false;
 let matGroup=new THREE.Group(); scene.add(matGroup); matGroup.visible=false;
+let matBlocksGroup=new THREE.Group(); scene.add(matBlocksGroup); matBlocksGroup.visible=false;
 let shGroup=new THREE.Group(); scene.add(shGroup); shGroup.visible=false;
+let gtoGroup=new THREE.Group(); scene.add(gtoGroup); gtoGroup.visible=false;
+let gtoCardGroup=new THREE.Group(); scene.add(gtoCardGroup); gtoCardGroup.visible=false;
 
 let atomMeshes=[], bondMeshes=[], showBonds=true;
 let currentAtomZ=[], currentPositions=[], currentCenter=[0,0,0];
-let viewMode='molecule'; // 'molecule'|'gnn'|'matrix'
+let viewMode='molecule'; // 'molecule'|'gnn'|'matrix'|'sh'|'gto'
 let showFeatures=false, useCurvedArrows=false, monoNodes=false;
 let edgeOpacity=0.5;
 
@@ -221,6 +445,10 @@ let shPosMeshes=[]; // positive isosurface meshes
 let shNegMeshes=[]; // negative isosurface meshes
 let shAtomPositions=[]; // centered atom positions for SH
 let shIsovalue=0.15; // isosurface threshold
+
+// GTOs
+let gtoLobeMeshes=[]; // {mesh, type:'single'|'lcao', positive, dirs, angVals, radTable, shellTables, shellAngs}
+let gtoCardSubs=[]; // {group, atomIndex, nodePos}
 
 // ═══════════════════════════════════════════
 // Utilities
@@ -291,7 +519,7 @@ function buildMolecule(az,pos){
   az.forEach((z,i)=>{
     const e=getElement(z);
     const m=new THREE.Mesh(sphereGeo,new THREE.MeshStandardMaterial({color:e.color,roughness:z===1?0.25:0.3,metalness:z===1?0.05:0.08}));
-    m.scale.setScalar(e.radius); m.position.set(pos[i][0]-cx,pos[i][1]-cy,pos[i][2]-cz);
+    m.scale.setScalar(e.radius*molAtomScale); m.position.set(pos[i][0]-cx,pos[i][1]-cy,pos[i][2]-cz);
     m.castShadow=true; m.receiveShadow=true; molGroup.add(m); atomMeshes.push(m);
   });
   detectBonds(az,pos).forEach(([i,j])=>{
@@ -303,6 +531,8 @@ function buildMolecule(az,pos){
   buildGNN(az,pos,cx,cy,cz);
   buildMatrix(az,pos,cx,cy,cz);
   buildSH(az,pos,cx,cy,cz);
+  buildGTO(az,pos,cx,cy,cz);
+  drawRadialPlot();
   setView(viewMode);
   updateLegend(); updateLabel(az); fitCamera();
 }
@@ -400,7 +630,8 @@ function buildGNN(az,pos,cx,cy,cz){
 // Build Matrix view
 // ═══════════════════════════════════════════
 function buildMatrix(az,pos,cx,cy,cz){
-  scene.remove(matGroup); matGroup=new THREE.Group(); matFeatSubs=[];
+  scene.remove(matGroup); scene.remove(matBlocksGroup);
+  matGroup=new THREE.Group(); matBlocksGroup=new THREE.Group(); matFeatSubs=[];
   const npos=pos.map(p=>new THREE.Vector3(p[0]-cx,p[1]-cy,p[2]-cz));
 
   // Nodes (element-colored)
@@ -417,92 +648,128 @@ function buildMatrix(az,pos,cx,cy,cz){
       new THREE.MeshStandardMaterial({color:0xbbbbbb,roughness:0.5,transparent:true,opacity:0.4}),matGroup);
   });
 
-  // Build matrix block billboard per atom
-  // Compute total basis dimension
-  const basisSizes=az.map(z=>getElement(z).nBasis);
+  // Build matrix block billboard per atom using active basis set (STO-3G or def2-SVP)
+  const atomShells=az.map(z=>getBasisShells(z,currentBasis));
+  const basisSizes=az.map(z=>getBasisCount(z,currentBasis));
   const totalBasis=basisSizes.reduce((a,b)=>a+b,0);
+  const cellSize=Math.min(0.04, Math.max(0.012, 0.90/Math.max(totalBasis,1))) * matBlockScale;
+  const bondsList=detectBonds(az,pos);
 
   npos.forEach((p,i)=>{
     const sub=new THREE.Group();
     const nB=basisSizes[i];
-    const cellSize=0.04;
-    const blockW=nB*cellSize;
     const totalW=totalBasis*cellSize;
     const totalH=nB*cellSize;
 
-    // Compute where this atom's block starts
-    let blockStart=0;
-    for(let k=0;k<i;k++) blockStart+=basisSizes[k];
-
     // Draw the row strip: one row of blocks for this atom
-    // Each column-block corresponds to another atom
     let colStart=0;
     for(let j=0;j<az.length;j++){
       const nBj=basisSizes[j];
       const isOnDiag=(i===j);
-      const hasBond=detectBonds(az,pos).some(([a,b])=>(a===i&&b===j)||(a===j&&b===i));
+      const hasBond=bondsList.some(([a,b])=>(a===i&&b===j)||(a===j&&b===i));
       const isDiag=isOnDiag;
       const isConnected=hasBond||isOnDiag;
 
-      // Block rectangle
       const bw=nBj*cellSize, bh=nB*cellSize;
-      const col=isDiag?MATRIX_DIAG_COLOR:(isConnected?MATRIX_OFFDIAG_COLOR:0xdddddd);
-      const op=isDiag?0.7:(isConnected?0.4:0.1);
-
-      const block=new THREE.Mesh(boxGeo,new THREE.MeshStandardMaterial({
-        color:col, roughness:0.4, metalness:0.05, transparent:true, opacity:op
-      }));
-      block.scale.set(bw,bh,0.006);
-      block.position.set(colStart+bw/2-totalW/2, -bh/2, 0);
-      block.castShadow=false; block.receiveShadow=false;
-      sub.add(block);
+      if(isDiag){
+        const dmByL=getBasisMinaoDM(az[i],currentBasis);
+        const lCountsR={0:0,1:0,2:0,3:0};
+        let rOff=0;
+        for(const shR of atomShells[i]){
+          const idxR=lCountsR[shR.l]++;
+          const shH=(2*shR.l+1)*cellSize;
+          const lCountsC={0:0,1:0,2:0,3:0};
+          let cOff=0;
+          for(const shC of atomShells[j]){
+            const idxC=lCountsC[shC.l]++;
+            const shW=(2*shC.l+1)*cellSize;
+            const sameShell=(shR.label===shC.label);
+            let subCol, subOp;
+            if(matColorMode==='minao'){
+              if(shR.l===shC.l && dmByL[shR.l]){
+                const pVal=dmByL[shR.l][idxR]?.[idxC]||0;
+                const absP=Math.abs(pVal);
+                subCol=absP>1e-3 ? minaoValueColor(pVal) : 0xe4e3e0;
+                subOp=absP>1e-3 ? Math.min(0.92, 0.28 + 0.64*Math.pow(Math.min(absP/2.2,1),0.5)) : 0.14;
+              } else {
+                subCol=0xe4e3e0;
+                subOp=0.10;
+              }
+            } else {
+              subCol=sameShell?(SHELL_L_COLORS[shR.l]?.pos||MATRIX_DIAG_COLOR):0x6b9bd2;
+              subOp=sameShell?0.78:0.42;
+            }
+            const sb=new THREE.Mesh(boxGeo,new THREE.MeshStandardMaterial({
+              color:subCol, roughness:0.4, metalness:0.05, transparent:true, opacity:subOp, depthTest:false
+            }));
+            sb.scale.set(shW,shH,0.006);
+            sb.position.set(colStart+cOff+shW/2-totalW/2, -(rOff+shH/2), 0);
+            sb.castShadow=false; sb.receiveShadow=false; sb.renderOrder=25;
+            sub.add(sb);
+            cOff+=shW;
+          }
+          rOff+=shH;
+        }
+      } else if(isConnected || showMatrixSparse) {
+        const col=isConnected?MATRIX_OFFDIAG_COLOR:0xdddddd;
+        const op=isConnected?0.42:0.12;
+        const block=new THREE.Mesh(boxGeo,new THREE.MeshStandardMaterial({
+          color:col, roughness:0.4, metalness:0.05, transparent:true, opacity:op, depthTest:false
+        }));
+        block.scale.set(bw,bh,0.006);
+        block.position.set(colStart+bw/2-totalW/2, -bh/2, 0);
+        block.castShadow=false; block.receiveShadow=false; block.renderOrder=25;
+        sub.add(block);
+      }
 
       // Grid lines within block if diagonal or connected
-      if(isConnected && (nBj>1||nB>1)){
-        const lineMat=new THREE.LineBasicMaterial({color:MATRIX_LINE_COLOR,transparent:true,opacity:0.15});
-        // Vertical lines
+      if(showMatrixGrid && isConnected && (nBj>1||nB>1)){
+        const lineMat=new THREE.LineBasicMaterial({color:MATRIX_LINE_COLOR,transparent:true,opacity:totalBasis>40?0.10:0.16,depthTest:false});
         for(let c=0;c<=nBj;c++){
           const x=colStart+c*cellSize-totalW/2;
           const pts=[new THREE.Vector3(x,0,0.004),new THREE.Vector3(x,-bh,0.004)];
-          sub.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lineMat));
+          const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lineMat);
+          ln.renderOrder=26; sub.add(ln);
         }
-        // Horizontal lines
         for(let r=0;r<=nB;r++){
           const y=-r*cellSize;
           const pts=[new THREE.Vector3(colStart-totalW/2,y,0.004),new THREE.Vector3(colStart+bw-totalW/2,y,0.004)];
-          sub.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lineMat));
+          const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lineMat);
+          ln.renderOrder=26; sub.add(ln);
         }
       }
 
       // Block separator
-      const sepMat=new THREE.LineBasicMaterial({color:MATRIX_LINE_COLOR,transparent:true,opacity:0.3});
+      const sepMat=new THREE.LineBasicMaterial({color:MATRIX_LINE_COLOR,transparent:true,opacity:0.35,depthTest:false});
       const sepX=colStart+bw-totalW/2;
       if(j<az.length-1){
-        sub.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+        const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
           new THREE.Vector3(sepX,0.005,0.005),new THREE.Vector3(sepX,-bh-0.005,0.005)
-        ]),sepMat));
+        ]),sepMat);
+        ln.renderOrder=26; sub.add(ln);
       }
 
       colStart+=nBj*cellSize;
     }
 
     // Outer border
-    const borderMat=new THREE.LineBasicMaterial({color:MATRIX_LINE_COLOR,transparent:true,opacity:0.5});
+    const borderMat=new THREE.LineBasicMaterial({color:MATRIX_LINE_COLOR,transparent:true,opacity:0.5,depthTest:false});
     const bh=nB*cellSize;
     const pts=[
       new THREE.Vector3(-totalW/2,0,0.005), new THREE.Vector3(totalW/2,0,0.005),
       new THREE.Vector3(totalW/2,-bh,0.005), new THREE.Vector3(-totalW/2,-bh,0.005),
       new THREE.Vector3(-totalW/2,0,0.005)
     ];
-    sub.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),borderMat));
+    const bLn=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),borderMat);
+    bLn.renderOrder=26; sub.add(bLn);
 
     // Position: offset from atom
     sub.position.copy(p).add(new THREE.Vector3(0.35,-0.15,0));
-    matGroup.add(sub);
+    matBlocksGroup.add(sub);
     matFeatSubs.push({group:sub,atomIndex:i,nodePos:p});
   });
 
-  scene.add(matGroup);
+  scene.add(matGroup); scene.add(matBlocksGroup);
 }
 
 // ═══════════════════════════════════════════
@@ -625,12 +892,17 @@ function buildSH(az,pos,cx,cy,cz){
   scene.add(shGroup);
 }
 
-// Set vertex positions for an SH isosurface lobe
+// Cast shadows on all GTO and SH isosurface meshes so the floor shadow is visible in every view mode
+function applyShadowProps(mesh, cast=true){
+  mesh.castShadow=cast;
+  mesh.receiveShadow=false;
+}
 // F(r,theta,phi) = f(theta,phi) * exp(-alpha * r^2)
 // Isosurface at F = +iso (positive=true) or F = -iso (positive=false)
 // => r(theta,phi) = sqrt( ln(|f| / iso) / alpha ) when |f| > iso and sign matches
 function setSHVertices(geo,dirs,shVals,iso,positive){
   const posAttr=geo.attributes.position;
+  let maxR=0;
   for(let vi=0;vi<posAttr.count;vi++){
     const {nx,ny,nz}=dirs[vi];
     const val=shVals[vi];
@@ -638,11 +910,13 @@ function setSHVertices(geo,dirs,shVals,iso,positive){
     let rNew=0;
     if(relevant>iso && iso>0){
       rNew=SH_SCALE*Math.sqrt(Math.log(relevant/iso)/SH_RADIAL_ALPHA);
+      if(rNew>maxR) maxR=rNew;
     }
     posAttr.setXYZ(vi, nx*rNew, ny*rNew, nz*rNew);
   }
   posAttr.needsUpdate=true;
   geo.computeVertexNormals();
+  geo.userData.maxR=maxR;
 }
 
 // Live-update all SH isosurface meshes (called when slider changes)
@@ -658,19 +932,639 @@ function updateSHIsosurfaces(){
 }
 
 // ═══════════════════════════════════════════
+// Gaussian-Type Orbitals (STO-3G & def2-SVP)
+// ═══════════════════════════════════════════
+function doubleFact(n){
+  let r=1;
+  while(n>1){r*=n;n-=2;}
+  return r;
+}
+function normPrimGTO(alpha,l){
+  return Math.sqrt((Math.pow(2,2*l+3.5)*Math.pow(alpha,l+1.5))/(doubleFact(2*l+1)*Math.sqrt(Math.PI)));
+}
+function normContractedGTO(exps,coeffs,l){
+  let s=0;
+  const p=l+1.5;
+  for(let j=0;j<exps.length;j++){
+    for(let k=0;k<exps.length;k++){
+      s+=coeffs[j]*coeffs[k]*Math.pow((2*Math.sqrt(exps[j]*exps[k]))/(exps[j]+exps[k]),p);
+    }
+  }
+  return s>0?1/Math.sqrt(s):1;
+}
+
+const GTO_NR=320, GTO_RMAX=3.8, GTO_DR=GTO_RMAX/(GTO_NR-1);
+
+function buildShellRadialTable(shell){
+  const {l,exps,coeffs}=shell;
+  const nc=normContractedGTO(exps,coeffs,l);
+  const pNorms=exps.map(a=>normPrimGTO(a,l));
+  const table=new Float64Array(GTO_NR);
+  let iPeak=0, valPeak=-1;
+  for(let i=0;i<GTO_NR;i++){
+    const rAng=i*GTO_DR;
+    const rb=rAng*BOHR_PER_ANG;
+    const rPow=(l===0)?1:Math.pow(rb,l);
+    let sum=0;
+    for(let k=0;k<exps.length;k++){
+      sum+=coeffs[k]*pNorms[k]*Math.exp(-exps[k]*rb*rb);
+    }
+    const v=nc*rPow*sum;
+    table[i]=v;
+    if(v>valPeak){valPeak=v;iPeak=i;}
+  }
+  return {table,iPeak,valPeak,maxExp:Math.max(...exps)};
+}
+
+// Solve R(r) = target for r >= r_peak via binary search on monotonically decreasing outer tail
+function solveRadialIso(radInfo,target){
+  const {table,iPeak,valPeak}=radInfo;
+  if(target<=0||target>=valPeak) return 0;
+  let lo=iPeak, hi=GTO_NR-1;
+  if(table[hi]>=target) return GTO_RMAX;
+  while(hi-lo>1){
+    const mid=(lo+hi)>>1;
+    if(table[mid]>=target) lo=mid;
+    else hi=mid;
+  }
+  const v0=table[lo], v1=table[hi];
+  const frac=(v0>v1)?(v0-target)/(v0-v1):0;
+  return (lo+frac)*GTO_DR;
+}
+
+function setSingleGTOVertices(geo,dirs,angVals,radInfo,iso,positive){
+  const posAttr=geo.attributes.position;
+  const {valPeak}=radInfo;
+  let maxR=0;
+  for(let vi=0;vi<posAttr.count;vi++){
+    const {nx,ny,nz}=dirs[vi];
+    const y=angVals[vi];
+    const rel=positive?y:-y;
+    let rNew=0;
+    if(rel>1e-6 && iso>0 && rel*valPeak>iso){
+      const rAng=solveRadialIso(radInfo,iso/rel);
+      rNew=gtoScale*rAng;
+      if(rNew>maxR) maxR=rNew;
+    }
+    posAttr.setXYZ(vi, nx*rNew, ny*rNew, nz*rNew);
+  }
+  posAttr.needsUpdate=true;
+  geo.computeVertexNormals();
+  geo.userData.maxR=maxR;
+}
+
+function setLCAOGTOVertices(geo,dirs,shellAngs,shellTables,iso,positive){
+  const posAttr=geo.attributes.position;
+  const nSh=shellTables.length;
+  let maxR=0;
+  for(let vi=0;vi<posAttr.count;vi++){
+    const {nx,ny,nz}=dirs[vi];
+    const angs=shellAngs[vi];
+    let rNew=0;
+    if(iso>0 && nSh>0){
+      // Scan from outer radius inward to find outermost isosurface crossing
+      let prevVal=0;
+      for(let ir=GTO_NR-1;ir>=0;ir--){
+        let f=0;
+        for(let s=0;s<nSh;s++) f+=angs[s]*shellTables[s].table[ir];
+        const rel=positive?f:-f;
+        if(rel>=iso){
+          if(ir===GTO_NR-1){
+            rNew=gtoScale*GTO_RMAX;
+          } else {
+            const denom=rel-prevVal;
+            const frac=denom>1e-9?(rel-iso)/denom:0;
+            rNew=gtoScale*((ir+frac)*GTO_DR);
+          }
+          if(rNew>maxR) maxR=rNew;
+          break;
+        }
+        prevVal=rel;
+      }
+    }
+    posAttr.setXYZ(vi, nx*rNew, ny*rNew, nz*rNew);
+  }
+  posAttr.needsUpdate=true;
+  geo.computeVertexNormals();
+  geo.userData.maxR=maxR;
+}
+
+function shellPassesFilter(sh){
+  if(gtoShellFilter==='all') return true;
+  if(gtoShellFilter==='valence') return !sh.core;
+  if(gtoShellFilter==='s') return sh.l===0;
+  if(gtoShellFilter==='p') return sh.l===1;
+  if(gtoShellFilter==='d') return sh.l===2;
+  if(gtoShellFilter==='f') return sh.l===3;
+  return true;
+}
+
+function getShellLobeColor(sh,positive,sameLIndex){
+  if(gtoColorMode==='minao'){
+    return minaoValueColor(sh.minaoP||0);
+  }
+  if(gtoColorMode==='phase'){
+    return positive?SH_POS_COLOR:SH_NEG_COLOR;
+  }
+  const pal=SHELL_L_COLORS[sh.l]||SHELL_L_COLORS[0];
+  if(sh.core) return 0x2b5c8f;
+  if(positive){
+    return sameLIndex>0?pal.outer:pal.pos;
+  } else {
+    return sameLIndex>0?pal.pos:pal.neg;
+  }
+}
+
+// Build radial table for MINAO electron density rho(r) (or sqrt(rho(r)) so isovalue slider works smoothly)
+function buildAtomMinaoDensityRadialTable(z, basisName){
+  const allShells=getBasisShells(z, basisName);
+  const dmByL=getBasisMinaoDM(z, basisName);
+  const radByShell=allShells.map(sh=>buildShellRadialTable(sh));
+  const table=new Float64Array(GTO_NR);
+  let iPeak=0, valPeak=-1;
+
+  // Group shell indices by l, keeping only shells that pass current filter
+  for(let ir=0;ir<GTO_NR;ir++){
+    let rho=0;
+    for(let l=0;l<=3;l++){
+      const dmL=dmByL[l];
+      if(!dmL) continue;
+      const shIndices=[];
+      allShells.forEach((sh,idx)=>{if(sh.l===l) shIndices.push(idx);});
+      const deg=(2*l+1)/(4*Math.PI);
+      for(let a=0;a<shIndices.length;a++){
+        const ia=shIndices[a];
+        if(!shellPassesFilter(allShells[ia])) continue;
+        const ra=radByShell[ia].table[ir];
+        for(let b=0;b<shIndices.length;b++){
+          const ib=shIndices[b];
+          if(!shellPassesFilter(allShells[ib])) continue;
+          const rb=radByShell[ib].table[ir];
+          const pVal=dmL[a]?.[b]||0;
+          rho+=deg*pVal*ra*rb;
+        }
+      }
+    }
+    // Store sqrt(max(0, rho)) so its amplitude matches orbital amplitude scale [0.01 .. 0.35]
+    const amp=Math.sqrt(Math.max(0, rho));
+    table[ir]=amp;
+    if(amp>valPeak){valPeak=amp;iPeak=ir;}
+  }
+  return {table,iPeak,valPeak};
+}
+
+// Compute local orthonormal frame (ex, ey, ez) per atom aligned with primary bond
+function computeAtomLocalFrames(az,npos,bonds){
+  return npos.map((p,i)=>{
+    const nbrs=[];
+    bonds.forEach(([a,b])=>{
+      if(a===i) nbrs.push(new THREE.Vector3().subVectors(npos[b],p).normalize());
+      else if(b===i) nbrs.push(new THREE.Vector3().subVectors(npos[a],p).normalize());
+    });
+    let ez=nbrs.length?nbrs[0].clone():new THREE.Vector3(0,0,1);
+    if( ez.lengthSq()<1e-6 ) ez.set(0,0,1);
+    ez.normalize();
+    let ref=(nbrs.length>1)?nbrs[1].clone():new THREE.Vector3(0,1,0);
+    let ex=new THREE.Vector3().crossVectors(ref,ez);
+    if(ex.lengthSq()<1e-4){
+      ref.set(1,0,0);
+      ex.crossVectors(ref,ez);
+      if(ex.lengthSq()<1e-4){ref.set(0,1,0);ex.crossVectors(ref,ez);}
+    }
+    ex.normalize();
+    const ey=new THREE.Vector3().crossVectors(ez,ex).normalize();
+    return {ex,ey,ez};
+  });
+}
+
+function buildGTO(az,pos,cx,cy,cz){
+  scene.remove(gtoGroup); scene.remove(gtoCardGroup);
+  gtoGroup=new THREE.Group(); gtoCardGroup=new THREE.Group();
+  gtoLobeMeshes=[]; gtoCardSubs=[];
+  const npos=pos.map(p=>new THREE.Vector3(p[0]-cx,p[1]-cy,p[2]-cz));
+  const bonds=detectBonds(az,pos);
+
+  // Thin bonds
+  bonds.forEach(([i,j])=>{
+    makeCylinder(npos[i],npos[j],0.03,
+      new THREE.MeshStandardMaterial({color:0xbbbbbb,roughness:0.5,transparent:true,opacity:0.32}),gtoGroup);
+  });
+
+  // Sphere template
+  const gtoRes=(gtoMode==='all_m')?44:56;
+  const templateGeo=new THREE.SphereGeometry(1,gtoRes,gtoRes);
+  const tPos=templateGeo.attributes.position;
+  const baseDirs=[];
+  for(let vi=0;vi<tPos.count;vi++){
+    const x=tPos.getX(vi), y=tPos.getY(vi), z=tPos.getZ(vi);
+    const r0=Math.sqrt(x*x+y*y+z*z)||1e-10;
+    baseDirs.push({nx:x/r0, ny:y/r0, nz:z/r0});
+  }
+  templateGeo.dispose();
+
+  const frames=computeAtomLocalFrames(az,npos,bonds);
+
+  npos.forEach((atomPos,ai)=>{
+    const z=az[ai];
+    const allShells=getBasisShells(z,currentBasis);
+    const filteredShells=allShells.filter(shellPassesFilter);
+    const frame=frames[ai];
+
+    // Precompute local spherical angles (theta, phi) in the atom's bond-aligned frame
+    const localAngles=baseDirs.map(({nx,ny,nz})=>{
+      const lx=nx*frame.ex.x+ny*frame.ex.y+nz*frame.ex.z;
+      const ly=nx*frame.ey.x+ny*frame.ey.y+nz*frame.ey.z;
+      const lz=nx*frame.ez.x+ny*frame.ez.y+nz*frame.ez.z;
+      const theta=Math.acos(Math.max(-1,Math.min(1,lz)));
+      const phi=Math.atan2(ly,lx);
+      return {nx,ny,nz,theta,phi};
+    });
+
+    // Small nucleus sphere
+    const e=getElement(z);
+    const core=new THREE.Mesh(sphereGeo,new THREE.MeshStandardMaterial({
+      color:e.color, roughness:0.25, metalness:0.05
+    }));
+    core.scale.setScalar(0.09);
+    core.position.copy(atomPos);
+    core.renderOrder=0;
+    gtoGroup.add(core);
+
+    if(gtoMode==='lcao'){
+      // LCAO superposition of all filtered shells on this atom
+      const shellTables=[];
+      const shellAngs=localAngles.map(()=>[]);
+      let normSq=0;
+      const rawWeights=[];
+      filteredShells.forEach((sh,si)=>{
+        const radInfo=buildShellRadialTable(sh);
+        shellTables.push(radInfo);
+        const mWeights=[];
+        for(let m=-sh.l;m<=sh.l;m++){
+          let w=seededRand(ai*131+sh.n*43+sh.l*29+(m+3)*17+z*11+5)*2-1;
+          if(sh.core) w*=0.15;
+          else if(sh.l===0) w*=0.55;
+          mWeights.push({m,w});
+          normSq+=w*w;
+        }
+        rawWeights.push({sh,mWeights});
+      });
+      const invNorm=normSq>0?1/Math.sqrt(normSq):1;
+      for(let vi=0;vi<localAngles.length;vi++){
+        const {theta,phi}=localAngles[vi];
+        for(let si=0;si<rawWeights.length;si++){
+          const {sh,mWeights}=rawWeights[si];
+          let aSum=0;
+          for(const {m,w} of mWeights) aSum+=(w*invNorm)*realSH(sh.l,m,theta,phi);
+          shellAngs[vi].push(aSum);
+        }
+      }
+      [true,false].forEach(positive=>{
+        const geo=new THREE.SphereGeometry(1,gtoRes,gtoRes);
+        setLCAOGTOVertices(geo,localAngles,shellAngs,shellTables,gtoIsovalue,positive);
+        const col=positive?SH_POS_COLOR:SH_NEG_COLOR;
+        const mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({
+          color:col, roughness:0.25, metalness:0.08,
+          transparent:true, opacity:gtoOpacity, side:THREE.DoubleSide, depthWrite:false
+        }));
+        mesh.position.copy(atomPos);
+        mesh.castShadow=true;
+        mesh.renderOrder=2;
+        gtoGroup.add(mesh);
+        gtoLobeMeshes.push({mesh,type:'lcao',positive,dirs:localAngles,shellAngs,shellTables});
+      });
+    } else if(gtoMode==='minao'){
+      // Projected MINAO electron density rho_A(r) in the selected basis
+      const densRad=buildAtomMinaoDensityRadialTable(z,currentBasis);
+      const unitAng=localAngles.map(()=>1.0);
+      // Outer valence density isosurface (at sqrt(rho) = gtoIsovalue)
+      const geo=new THREE.SphereGeometry(1,gtoRes,gtoRes);
+      setSingleGTOVertices(geo,localAngles,unitAng,densRad,gtoIsovalue,true);
+      const totPop=filteredShells.reduce((s,sh)=>s+(2*sh.l+1)*(sh.minaoQ||0),0);
+      const col=minaoValueColor(Math.min(2.2, totPop/Math.max(1,filteredShells.length)));
+      const mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({
+        color:col, roughness:0.22, metalness:0.08,
+        transparent:true, opacity:gtoOpacity*0.82, side:THREE.DoubleSide, depthWrite:false
+      }));
+      mesh.position.copy(atomPos);
+      mesh.castShadow=true;
+      mesh.renderOrder=3;
+      gtoGroup.add(mesh);
+      gtoLobeMeshes.push({mesh,type:'single',positive:true,dirs:localAngles,angVals:unitAng,radInfo:densRad,sameLIdx:0,l:0,core:false,hasHigherL:false});
+
+      // Inner high-density core contour (at 3.5x isovalue) so core vs valence shells are visible in 3D
+      if(z>2 && gtoShellFilter==='all'){
+        const coreGeo=new THREE.SphereGeometry(1,36,36);
+        setSingleGTOVertices(coreGeo,localAngles,unitAng,densRad,gtoIsovalue*3.5,true);
+        const coreMesh=new THREE.Mesh(coreGeo,new THREE.MeshStandardMaterial({
+          color:0xb83227, roughness:0.25, metalness:0.1,
+          transparent:true, opacity:Math.min(0.92,gtoOpacity+0.12), side:THREE.DoubleSide, depthWrite:false
+        }));
+        coreMesh.position.copy(atomPos);
+        coreMesh.castShadow=true;
+        coreMesh.renderOrder=2;
+        gtoGroup.add(coreMesh);
+        gtoLobeMeshes.push({mesh:coreMesh,type:'single',positive:true,dirs:localAngles,angVals:unitAng,radInfo:densRad,sameLIdx:0,l:0,core:true,hasHigherL:false,isoMult:3.5});
+      }
+    } else {
+      // 'shells' (1 representative m per shell) or 'all_m' (all 2l+1 m values per shell)
+      // Sort shells from tightest (innermost) to most diffuse (outermost) for clean nested transparency
+      const shellsWithRad=filteredShells.map(sh=>({sh,radInfo:buildShellRadialTable(sh)}));
+      shellsWithRad.sort((a,b)=>b.radInfo.maxExp-a.radInfo.maxExp);
+
+      const hasHigherL=shellsWithRad.some(x=>x.sh.l>0);
+      const valenceCountByL={0:0,1:0,2:0,3:0};
+      shellsWithRad.forEach(({sh,radInfo},orderIdx)=>{
+        const sameLIdx=sh.core?0:(valenceCountByL[sh.l]++);
+        let mList=[];
+        if(gtoMode==='all_m'){
+          for(let m=-sh.l;m<=sh.l;m++) mList.push(m);
+        } else {
+          // Canonical representative m per shell; alternate orientation for split-valence shells so both are clearly seen
+          if(sh.l===0) mList=[0];
+          else if(sh.l===1) mList=[sameLIdx%2===0 ? 0 : 1];
+          else if(sh.l===2) mList=[sameLIdx%2===0 ? 2 : -2]; // d_{x^2-y^2} / d_{xy}
+          else if(sh.l===3) mList=[0]; // f_{z^3}
+        }
+
+        // Keep spherical s-shells glass-like when p/d/f lobes are present on the same atom so directional lobes stand out clearly
+        let shellOp;
+        if(gtoColorMode==='minao'){
+          const pNorm=Math.min(1, Math.pow((sh.minaoP||0)/2.0, 0.45));
+          shellOp=Math.max(0.10, gtoOpacity*(0.15 + 0.80*pNorm));
+        } else if(sh.l===0 && hasHigherL){
+          shellOp=sh.core ? Math.min(0.60, gtoOpacity*0.72) : Math.max(0.16, gtoOpacity*(0.36 - sameLIdx*0.08));
+        } else {
+          shellOp=Math.max(0.24, gtoOpacity - sameLIdx*0.12 - (gtoMode==='all_m'&&sh.l>0?0.14:0));
+        }
+        mList.forEach(m=>{
+          const angVals=localAngles.map(({theta,phi})=>realSH(sh.l,m,theta,phi));
+          const signs=(sh.l===0)?[true]:[true,false];
+          signs.forEach(positive=>{
+            const geo=new THREE.SphereGeometry(1,gtoRes,gtoRes);
+            setSingleGTOVertices(geo,localAngles,angVals,radInfo,gtoIsovalue,positive);
+            const col=getShellLobeColor(sh,positive,sameLIdx);
+            const mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({
+              color:col, roughness:0.24, metalness:0.08,
+              transparent:true, opacity:shellOp, side:THREE.DoubleSide,
+              depthWrite:false
+            }));
+            mesh.position.copy(atomPos);
+            mesh.castShadow=true;
+            mesh.renderOrder=(sh.l>0?5:1)+orderIdx;
+            gtoGroup.add(mesh);
+            gtoLobeMeshes.push({mesh,type:'single',positive,dirs:localAngles,angVals,radInfo,sameLIdx,l:sh.l,core:sh.core,hasHigherL});
+          });
+        });
+      });
+    }
+
+    // Build per-atom 3D shell breakdown billboard card (shows shells, 2l+1 AO cells, and primitive contraction bars)
+    const card=new THREE.Group();
+    const cellW=0.044, cellH=0.036, colGap=0.014;
+    const nCols=allShells.length;
+    const totalCardW=nCols*cellW+Math.max(0,nCols-1)*colGap;
+    const useMinaoCard=(gtoMode==='minao'||gtoColorMode==='minao');
+
+    allShells.forEach((sh,si)=>{
+      const xCenter=-totalCardW/2+si*(cellW+colGap)+cellW/2;
+      const nAO=2*sh.l+1;
+      const isActive=shellPassesFilter(sh);
+      const pVal=sh.minaoP||0;
+      const baseCol=useMinaoCard ? (pVal>1e-3?minaoValueColor(pVal):0xcccccc) : (sh.core?0x2b5c8f:(SHELL_L_COLORS[sh.l]?.pos||0x4a90d9));
+      const fillRatio=useMinaoCard ? Math.max(0.15, Math.min(1.0, Math.pow(pVal/2.2, 0.5))) : 1.0;
+      const op=isActive ? (useMinaoCard ? (pVal>1e-3?0.88:0.22) : 0.82) : 0.14;
+
+      // Stack (2l+1) AO cells vertically downward
+      for(let mIdx=0;mIdx<nAO;mIdx++){
+        const yCenter=-(mIdx+0.5)*cellH;
+        const cell=new THREE.Mesh(boxGeo,new THREE.MeshStandardMaterial({
+          color:baseCol, roughness:0.38, metalness:0.05, transparent:true, opacity:op, depthTest:false
+        }));
+        cell.scale.set(cellW*0.92*fillRatio, cellH*0.88, 0.008);
+        cell.position.set(xCenter, yCenter, 0);
+        cell.renderOrder=30;
+        card.add(cell);
+      }
+
+      // Above the column: primitive contraction indicator (K thin horizontal ticks for K primitives)
+      const nPrims=sh.exps.length;
+      const tickH=0.010, tickGap=0.005;
+      for(let kp=0;kp<nPrims;kp++){
+        const yTick=0.012+kp*(tickH+tickGap);
+        const tick=new THREE.Mesh(boxGeo,new THREE.MeshStandardMaterial({
+          color:0x333333, roughness:0.4, transparent:true, opacity:isActive?0.75:0.15, depthTest:false
+        }));
+        tick.scale.set(cellW*0.85, tickH, 0.006);
+        tick.position.set(xCenter, yTick, 0);
+        tick.renderOrder=30;
+        card.add(tick);
+      }
+    });
+
+    // Baseline under shell columns
+    const baseLine=new THREE.Mesh(boxGeo,new THREE.MeshStandardMaterial({
+      color:0x333333, roughness:0.4, transparent:true, opacity:0.45, depthTest:false
+    }));
+    baseLine.scale.set(totalCardW+0.02, 0.005, 0.006);
+    baseLine.position.set(0, 0.002, 0);
+    baseLine.renderOrder=30;
+    card.add(baseLine);
+
+    card.position.copy(atomPos).add(new THREE.Vector3(0.38,-0.12,0));
+    gtoCardGroup.add(card);
+    gtoCardSubs.push({group:card,atomIndex:ai,nodePos:atomPos});
+  });
+
+  scene.add(gtoGroup); scene.add(gtoCardGroup);
+}
+
+function updateGTOIsosurfaces(){
+  gtoLobeMeshes.forEach(item=>{
+    if(item.type==='lcao'){
+      setLCAOGTOVertices(item.mesh.geometry,item.dirs,item.shellAngs,item.shellTables,gtoIsovalue,item.positive);
+    } else {
+      const mult=item.isoMult||1.0;
+      setSingleGTOVertices(item.mesh.geometry,item.dirs,item.angVals,item.radInfo,gtoIsovalue*mult,item.positive);
+    }
+  });
+}
+
+// Draw 2D radial wavefunction preview |R_{nl}(r)| or MINAO sqrt(rho(r)) vs r (Å) in side panel
+function drawRadialPlot(){
+  const canvas=document.getElementById('radialCanvas');
+  if(!canvas||!currentAtomZ.length) return;
+  const ctx=canvas.getContext('2d');
+  const cw=canvas.width, ch=canvas.height;
+  ctx.clearRect(0,0,cw,ch);
+
+  const uniqueZ=[...new Set(currentAtomZ)].sort((a,b)=>b-a); // heaviest element first for plot
+  const plotZ=uniqueZ[0];
+  const elem=getElement(plotZ);
+  const shells=getBasisShells(plotZ,currentBasis);
+
+  const padL=28, padR=10, padT=16, padB=20;
+  const pw=cw-padL-padR, ph=ch-padT-padB;
+  const rMaxPlot=2.4; // Å
+  const yMaxPlot=1.4;
+
+  // Axes
+  ctx.strokeStyle='rgba(255,255,255,0.18)';
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+ph); ctx.lineTo(padL+pw,padT+ph);
+  ctx.stroke();
+
+  // Isovalue reference line (scaled by Y_00 = 0.282 for orbitals, or direct for MINAO sqrt(rho))
+  const isoR=Math.min(yMaxPlot, (gtoMode==='minao')?gtoIsovalue:(gtoIsovalue/0.282095));
+  const yIso=padT+ph-(isoR/yMaxPlot)*ph;
+  ctx.strokeStyle='rgba(255,255,255,0.28)';
+  ctx.setLineDash([3,3]);
+  ctx.beginPath();
+  ctx.moveTo(padL,yIso); ctx.lineTo(padL+pw,yIso);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  const colMap={0:'#5da5f0',1:'#55c977',2:'#f0983e',3:'#bb8fce'};
+  shells.forEach((sh,idx)=>{
+    if(!shellPassesFilter(sh)) return;
+    const {table}=buildShellRadialTable(sh);
+    ctx.strokeStyle=sh.core?'#3d6ea8':(colMap[sh.l]||'#ccc');
+    ctx.lineWidth=sh.core?1.0:(gtoMode==='minao'?1.1:1.6);
+    ctx.globalAlpha=(gtoMode==='minao')?0.45:1.0;
+    if(sh.exps.length===1 && !sh.core) ctx.setLineDash([4,2]);
+    else ctx.setLineDash([]);
+    ctx.beginPath();
+    for(let i=0;i<GTO_NR;i++){
+      const rAng=i*GTO_DR;
+      if(rAng>rMaxPlot) break;
+      const x=padL+(rAng/rMaxPlot)*pw;
+      const v=Math.min(yMaxPlot, Math.abs(table[i]));
+      const y=padT+ph-(v/yMaxPlot)*ph;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  });
+  ctx.globalAlpha=1.0;
+  ctx.setLineDash([]);
+
+  // Overlay total MINAO radial density curve sqrt(rho(r)) in bright gold/coral when in MINAO mode or color scheme
+  if(gtoMode==='minao'||gtoColorMode==='minao'){
+    const densRad=buildAtomMinaoDensityRadialTable(plotZ,currentBasis);
+    ctx.strokeStyle='#ff6b4a';
+    ctx.lineWidth=2.2;
+    ctx.beginPath();
+    for(let i=0;i<GTO_NR;i++){
+      const rAng=i*GTO_DR;
+      if(rAng>rMaxPlot) break;
+      const x=padL+(rAng/rMaxPlot)*pw;
+      const v=Math.min(yMaxPlot, densRad.table[i]);
+      const y=padT+ph-(v/yMaxPlot)*ph;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  }
+
+  // Labels
+  ctx.fillStyle='#999';
+  ctx.font='9px "DM Mono", monospace';
+  const modeTag=(gtoMode==='minao'||gtoColorMode==='minao')?' · MINAO √ρ(r)':'';
+  ctx.fillText(`${elem.symbol} (${currentBasis.toUpperCase()})${modeTag}`, padL+4, padT+9);
+  ctx.fillText('0', padL-4, padT+ph+12);
+  ctx.fillText('1.2 Å', padL+pw*0.5-12, padT+ph+12);
+  ctx.fillText('2.4 Å', padL+pw-24, padT+ph+12);
+
+  // Update basis summary text for all unique elements in the molecule (including MINAO P_ii and Mulliken q)
+  const totalAO=currentAtomZ.reduce((s,z)=>s+getBasisCount(z,currentBasis),0);
+  const totalMinaoE=currentAtomZ.reduce((s,z)=>{
+    const shs=getBasisShells(z,currentBasis);
+    return s+shs.reduce((acc,sh)=>acc+(2*sh.l+1)*(sh.minaoQ||0),0);
+  },0);
+  const lines=uniqueZ.slice().reverse().map(z=>{
+    const el=getElement(z);
+    const shs=getBasisShells(z,currentBasis);
+    const nAO=getBasisCount(z,currentBasis);
+    const desc=shs.map(sh=>{
+      const pStr=(sh.minaoP||0).toFixed(2);
+      return `${sh.label}(${sh.exps.length}p, P=${pStr})`;
+    }).join(' ');
+    return `<b>${el.symbol}</b> [${nAO} AOs]: ${desc}`;
+  });
+  lines.push(`Total: <b>${totalAO} CGTOs</b> · Projected MINAO Tr(PS) = <b>${totalMinaoE.toFixed(2)} e⁻</b>`);
+  const sumEl=document.getElementById('basisSummaryText');
+  if(sumEl) sumEl.innerHTML=lines.join('<br>');
+}
+
+// ═══════════════════════════════════════════
 // View management
 // ═══════════════════════════════════════════
+const VIZ_MODE_LABELS={
+  molecule:'Molecule',
+  gnn:'GNN Graph',
+  matrix:'AO Matrix',
+  sh:'Harmonics',
+  gto:'GTO Basis'
+};
+
+function syncBasisUI(){
+  document.querySelectorAll('#quickBasisToggle button, #panelBasisSeg button, #matBasisSeg button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.basis===currentBasis);
+  });
+  document.querySelectorAll('#quickGtoMode button, #panelGtoModeSeg button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.mode===gtoMode);
+  });
+  document.querySelectorAll('#quickGtoFilter button, #panelGtoFilterSeg button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.filter===gtoShellFilter);
+  });
+  document.querySelectorAll('#panelGtoColorSeg button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.color===gtoColorMode);
+  });
+  document.querySelectorAll('#matColorModeSeg button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.matmode===matColorMode);
+  });
+  document.getElementById('quickCardsBtn').classList.toggle('active', showGtoCards);
+  document.getElementById('gtoCardsToggle').checked=showGtoCards;
+  document.getElementById('quickMatBlocksBtn').classList.toggle('active', showMatrixBlocks);
+  document.getElementById('quickMatMinaoBtn').classList.toggle('active', matColorMode==='minao');
+  document.getElementById('matBlocksToggle').checked=showMatrixBlocks;
+  document.getElementById('gtoMatrixOverlayToggle').checked=showGtoMatrixOverlay;
+}
+
+function syncVizPanelSection(mode){
+  ['molecule','gnn','matrix','sh','gto'].forEach(m=>{
+    const sec=document.getElementById(`vizSec-${m}`);
+    if(sec) sec.classList.toggle('active', m===mode);
+  });
+  const badge=document.getElementById('vizModeBadge');
+  if(badge) badge.textContent=VIZ_MODE_LABELS[mode]||mode;
+  if(mode==='gto') drawRadialPlot();
+}
+
 function setView(mode){
   viewMode=mode;
   molGroup.visible=(mode==='molecule');
   gnnGroup.visible=(mode==='gnn');
   gnnFeatGroup.visible=(mode==='gnn'&&showFeatures);
   matGroup.visible=(mode==='matrix');
+  matBlocksGroup.visible=(mode==='matrix'&&showMatrixBlocks)||(mode==='gto'&&showGtoMatrixOverlay);
   shGroup.visible=(mode==='sh');
+  gtoGroup.visible=(mode==='gto');
+  gtoCardGroup.visible=(mode==='gto'&&showGtoCards);
+
   document.getElementById('viewMol').classList.toggle('active',mode==='molecule');
   document.getElementById('viewGNN').classList.toggle('active',mode==='gnn');
   document.getElementById('viewMatrix').classList.toggle('active',mode==='matrix');
   document.getElementById('viewSH').classList.toggle('active',mode==='sh');
+  document.getElementById('viewGTO').classList.toggle('active',mode==='gto');
+
+  const quickBar=document.getElementById('basisQuickBar');
+  quickBar.classList.toggle('visible', mode==='gto'||mode==='matrix');
+  document.getElementById('quickGtoMode').style.display=(mode==='gto')?'flex':'none';
+  document.getElementById('quickGtoFilter').style.display=(mode==='gto')?'flex':'none';
+  document.getElementById('quickGtoExtras').style.display=(mode==='gto')?'flex':'none';
+  document.getElementById('quickMatExtras').style.display=(mode==='matrix')?'flex':'none';
+  syncBasisUI();
+  syncVizPanelSection(mode);
   updateLegend(); fitCamera();
 }
 
@@ -692,39 +1586,183 @@ function updateLegend(){
       `<div class="legend-item" style="margin-top:8px;"><div class="legend-dot" style="background:#4a90d9;border-radius:2px;"></div>\u2113=0 scalars</div>`+
       `<div class="legend-item"><div class="legend-dot" style="background:#50b86c;border-radius:2px;"></div>\u2113=1 vectors</div>`;
   } else if(viewMode==='matrix'){
-    el.innerHTML=elemItems+
-      `<div class="legend-item" style="margin-top:8px;"><div class="legend-dot" style="background:#4a90d9;border-radius:2px;"></div>Diagonal block</div>`+
-      `<div class="legend-item"><div class="legend-dot" style="background:#aaaacc;border-radius:2px;"></div>Off-diagonal (bonded)</div>`+
-      `<div class="legend-item"><div class="legend-dot" style="background:#dddddd;border-radius:2px;"></div>Off-diagonal (sparse)</div>`;
+    const totalAO=currentAtomZ.reduce((s,z)=>s+getBasisCount(z,currentBasis),0);
+    const hasD=unique.some(z=>getBasisShells(z,currentBasis).some(sh=>sh.l===2));
+    const hasF=unique.some(z=>getBasisShells(z,currentBasis).some(sh=>sh.l===3));
+    if(matColorMode==='minao'){
+      const minaoRows=unique.map(z=>{
+        const sym=getElement(z).symbol;
+        const shs=getBasisShells(z,currentBasis);
+        const vals=shs.filter(s=>s.minaoP>0.01).map(s=>`${s.label}:${s.minaoP.toFixed(2)}`).join(' ');
+        return `<div class="legend-item" style="color:#666;font-size:10px;text-transform:none;">${sym}[${vals}]</div>`;
+      }).join('');
+      el.innerHTML=elemItems+
+        `<div class="legend-item" style="margin-top:8px;"><div class="legend-dot" style="background:#b83227;border-radius:2px;"></div>High MINAO P<sub>μμ</sub> (~2.0)</div>`+
+        `<div class="legend-item"><div class="legend-dot" style="background:#55b86c;border-radius:2px;"></div>Valence P<sub>μμ</sub> (0.2–1.2)</div>`+
+        `<div class="legend-item"><div class="legend-dot" style="background:#7db8e8;border-radius:2px;"></div>Diffuse / Low P<sub>μμ</sub></div>`+
+        `<div class="legend-item"><div class="legend-dot" style="background:#e4e3e0;border-radius:2px;"></div>Unoccupied Pol (0.0)</div>`+
+        `<div class="legend-item" style="color:#777;font-size:10px;margin-top:4px;">${currentBasis.toUpperCase()} · ${totalAO}\u00d7${totalAO} AOs</div>`+
+        minaoRows;
+    } else {
+      el.innerHTML=elemItems+
+        `<div class="legend-item" style="margin-top:8px;"><div class="legend-dot" style="background:#4a90d9;border-radius:2px;"></div>Diag s (\u2113=0)</div>`+
+        `<div class="legend-item"><div class="legend-dot" style="background:#47b068;border-radius:2px;"></div>Diag p (\u2113=1)</div>`+
+        (hasD?`<div class="legend-item"><div class="legend-dot" style="background:#e68a2e;border-radius:2px;"></div>Diag d (\u2113=2)</div>`:'')+
+        (hasF?`<div class="legend-item"><div class="legend-dot" style="background:#9b59b6;border-radius:2px;"></div>Diag f (\u2113=3)</div>`:'')+
+        `<div class="legend-item"><div class="legend-dot" style="background:#aaaacc;border-radius:2px;"></div>Off-diag (bonded)</div>`+
+        `<div class="legend-item" style="color:#999;font-size:10px;">${currentBasis.toUpperCase()} · ${totalAO}\u00d7${totalAO} AOs</div>`;
+    }
   } else if(viewMode==='sh'){
     el.innerHTML=elemItems+
       `<div class="legend-item" style="margin-top:8px;"><div class="legend-dot" style="background:#4a90d9;border-radius:2px;"></div>f(θ,φ) = +c</div>`+
       `<div class="legend-item"><div class="legend-dot" style="background:#d94a4a;border-radius:2px;"></div>f(θ,φ) = −c</div>`+
       `<div class="legend-item" style="color:#999;font-size:10px;">\u2113\u2098\u2090\u2093 = ${SH_LMAX}, c = ${shIsovalue.toFixed(2)}</div>`;
+  } else if(viewMode==='gto'){
+    const totalAO=currentAtomZ.reduce((s,z)=>s+getBasisCount(z,currentBasis),0);
+    const hasD=unique.some(z=>getBasisShells(z,currentBasis).some(sh=>sh.l===2));
+    const hasF=unique.some(z=>getBasisShells(z,currentBasis).some(sh=>sh.l===3));
+    const perElem=unique.map(z=>{
+      const sym=getElement(z).symbol;
+      const shs=getBasisShells(z,currentBasis);
+      const counts={0:0,1:0,2:0,3:0};
+      shs.forEach(s=>{counts[s.l]=(counts[s.l]||0)+1;});
+      const code=(counts[0]?counts[0]+'s':'')+(counts[1]?counts[1]+'p':'')+(counts[2]?counts[2]+'d':'')+(counts[3]?counts[3]+'f':'');
+      return `${sym}[${code}]`;
+    }).join(' ');
+    if(gtoMode==='minao'||gtoColorMode==='minao'){
+      const minaoRows=unique.map(z=>{
+        const sym=getElement(z).symbol;
+        const shs=getBasisShells(z,currentBasis);
+        const vals=shs.map(s=>`${s.label}:${(s.minaoP||0).toFixed(2)}`).join(' ');
+        return `<div class="legend-item" style="color:#666;font-size:10px;text-transform:none;"><b>${sym}</b> P<sub>μμ</sub>: ${vals}</div>`;
+      }).join('');
+      el.innerHTML=elemItems+
+        `<div class="legend-item" style="margin-top:8px;"><div class="legend-dot" style="background:#b83227;border-radius:2px;"></div>Core / High P<sub>μμ</sub> (~2.0)</div>`+
+        `<div class="legend-item"><div class="legend-dot" style="background:#55b86c;border-radius:2px;"></div>Valence P<sub>μμ</sub> (0.2–1.3)</div>`+
+        `<div class="legend-item"><div class="legend-dot" style="background:#7db8e8;border-radius:2px;"></div>Diffuse Split P<sub>μμ</sub> (&lt;0.2)</div>`+
+        `<div class="legend-item"><div class="legend-dot" style="background:#cccccc;border-radius:2px;"></div>Unoccupied Pol (0.0)</div>`+
+        `<div class="legend-item" style="color:#777;font-size:10px;margin-top:4px;">${currentBasis.toUpperCase()} · ${totalAO} CGTOs (MINAO)</div>`+
+        minaoRows;
+    } else if(gtoMode==='lcao'||gtoColorMode==='phase'){
+      el.innerHTML=elemItems+
+        `<div class="legend-item" style="margin-top:8px;"><div class="legend-dot" style="background:#4a90d9;border-radius:2px;"></div>\u03c7(r,\u03b8,\u03c6) = +c</div>`+
+        `<div class="legend-item"><div class="legend-dot" style="background:#d94a4a;border-radius:2px;"></div>\u03c7(r,\u03b8,\u03c6) = \u2212c</div>`+
+        `<div class="legend-item" style="color:#777;font-size:10px;margin-top:4px;">${currentBasis.toUpperCase()} (${totalAO} AOs)</div>`+
+        `<div class="legend-item" style="color:#999;font-size:10px;text-transform:none;">${perElem} · c=${gtoIsovalue.toFixed(2)}</div>`;
+    } else {
+      el.innerHTML=elemItems+
+        `<div class="legend-item" style="margin-top:8px;"><div class="legend-dot" style="background:#2b5c8f;border-radius:2px;"></div>Core 1s</div>`+
+        `<div class="legend-item"><div class="legend-dot" style="background:#4a90d9;border-radius:2px;"></div>Valence s (\u2113=0)</div>`+
+        `<div class="legend-item"><div class="legend-dot" style="background:#47b068;border-radius:2px;"></div>Valence p (\u2113=1)</div>`+
+        (hasD?`<div class="legend-item"><div class="legend-dot" style="background:#e68a2e;border-radius:2px;"></div>Polarization d (\u2113=2)</div>`:'')+
+        (hasF?`<div class="legend-item"><div class="legend-dot" style="background:#9b59b6;border-radius:2px;"></div>Polarization f (\u2113=3)</div>`:'')+
+        (showGtoCards?`<div class="legend-item"><div class="legend-dot" style="background:#444444;border-radius:1px;height:4px;"></div>Primitive ticks (K)</div>`:'')+
+        `<div class="legend-item" style="color:#777;font-size:10px;margin-top:4px;">${currentBasis.toUpperCase()} · ${totalAO} CGTOs</div>`+
+        `<div class="legend-item" style="color:#999;font-size:10px;text-transform:none;">${perElem}</div>`;
+    }
   }
 }
+
+let currentPresetKey='ethanol';
 
 function updateLabel(az){
   const c={};az.forEach(z=>{const s=getElement(z).symbol;c[s]=(c[s]||0)+1;});
   const o=Object.keys(c).sort((a,b)=>{if(a==='C')return-1;if(b==='C')return 1;if(a==='H')return-1;if(b==='H')return 1;return a.localeCompare(b);});
-  document.getElementById('mol-formula').innerHTML=o.map(s=>s+(c[s]>1?`<sub>${c[s]}</sub>`:'')).join('');
-  document.getElementById('mol-label').textContent='Molecule';
+  const preset=EXAMPLE_STRUCTURES[currentPresetKey];
+  const chargeSup=(preset&&preset.charge)?`<sup>${preset.charge>0?(preset.charge===1?'+':preset.charge+'+'):(preset.charge===-1?'−':Math.abs(preset.charge)+'−')}</sup>`:'';
+  document.getElementById('mol-formula').innerHTML=o.map(s=>s+(c[s]>1?`<sub>${c[s]}</sub>`:'')).join('')+chargeSup;
+  document.getElementById('mol-label').textContent=preset?currentPresetKey:'Molecule';
 }
 
 // ═══════════════════════════════════════════
-// Camera
+// Camera & Floor Placement
 // ═══════════════════════════════════════════
 let camBaseDist=8.5;
+
+// Compute rotation-invariant bounding sphere radius for the active visualization
+// so that no 3D rotation ever clips atoms, orbitals, or billboards into the floor by default.
+function computeBoundingRadius(){
+  let maxExtent=0.5;
+  if(viewMode==='molecule'){
+    atomMeshes.forEach((m,i)=>{
+      const r=m.position.length()+(getElement(currentAtomZ[i]).radius*molAtomScale);
+      if(r>maxExtent) maxExtent=r;
+    });
+  } else if(viewMode==='gnn'){
+    gnnNodes.forEach(n=>{
+      const extra=showFeatures?0.62:GNN_NODE_RADIUS;
+      const r=n.pos.length()+extra;
+      if(r>maxExtent) maxExtent=r;
+    });
+  } else if(viewMode==='matrix'){
+    matGroup.children.forEach(c=>{
+      if(c.type==='Mesh'){
+        const extra=showMatrixBlocks?(0.45*matBlockScale+0.25):(GNN_NODE_RADIUS*0.8);
+        const r=c.position.length()+extra;
+        if(r>maxExtent) maxExtent=r;
+      }
+    });
+  } else if(viewMode==='sh'){
+    shPosMeshes.forEach(m=>{
+      const r=m.position.length()+(m.geometry.userData.maxR||0.8);
+      if(r>maxExtent) maxExtent=r;
+    });
+    shNegMeshes.forEach(m=>{
+      const r=m.position.length()+(m.geometry.userData.maxR||0.8);
+      if(r>maxExtent) maxExtent=r;
+    });
+  } else if(viewMode==='gto'){
+    gtoLobeMeshes.forEach(item=>{
+      const r=item.mesh.position.length()+(item.mesh.geometry.userData.maxR||0.8);
+      if(r>maxExtent) maxExtent=r;
+    });
+    if(showGtoCards){
+      gtoCardSubs.forEach(sub=>{
+        const r=sub.nodePos.length()+0.55;
+        if(r>maxExtent) maxExtent=r;
+      });
+    }
+  }
+  return maxExtent;
+}
+
+function updateFloorPosition(){
+  const maxExtent=computeBoundingRadius();
+  const autoFloorY=-(maxExtent+0.35);
+  const slider=document.getElementById('floorYRange');
+  const valEl=document.getElementById('floorYVal');
+  const autoBtn=document.getElementById('floorAutoBtn');
+  // Dynamically expand slider min if a large molecule (e.g. 3bpa or aspirin) exceeds -12
+  const minVal=Math.min(-10, Math.floor((autoFloorY-3.0)*2)/2);
+  if(slider){
+    slider.min=String(minVal);
+    slider.max='0.0';
+  }
+  const activeY=(floorCustomY!==null)?floorCustomY:autoFloorY;
+  floor.position.y=activeY;
+  if(slider) slider.value=String(activeY);
+  if(valEl) valEl.textContent=activeY.toFixed(2);
+  if(autoBtn){
+    autoBtn.style.opacity=(floorCustomY===null)?'1':'0.55';
+    autoBtn.textContent=(floorCustomY===null)?'Auto ✓':'Auto';
+  }
+  // Keep shadow camera frustum large enough for big molecules so shadows don't clip
+  const shadowSpan=Math.max(6, maxExtent+2.5);
+  keyLight.shadow.camera.left=-shadowSpan;
+  keyLight.shadow.camera.right=shadowSpan;
+  keyLight.shadow.camera.top=shadowSpan;
+  keyLight.shadow.camera.bottom=-shadowSpan;
+  keyLight.shadow.camera.far=Math.max(30, maxExtent*4+15);
+  keyLight.shadow.camera.updateProjectionMatrix();
+}
+
 function fitCamera(){
-  let meshes;
-  if(viewMode==='molecule') meshes=atomMeshes;
-  else if(viewMode==='gnn') meshes=gnnNodes.map(n=>n.mesh);
-  else meshes=matGroup.children.filter(c=>c.type==='Mesh');
-  if(viewMode==='sh') meshes=shGroup.children.filter(c=>c.type==='Mesh');
-  let maxR=0;
-  meshes.forEach(m=>{const d=m.position.length();if(d>maxR)maxR=d;});
-  camBaseDist=Math.max(maxR*3.5,5);
+  const maxExtent=computeBoundingRadius();
+  let maxAtomCenter=0;
+  atomMeshes.forEach(m=>{const d=m.position.length();if(d>maxAtomCenter)maxAtomCenter=d;});
+  camBaseDist=Math.max(maxAtomCenter*3.5, maxExtent*2.45, 5);
   targetZoom=1; zoom=1;
+  updateFloorPosition();
 }
 
 // ═══════════════════════════════════════════
@@ -745,12 +1783,12 @@ let isDragging=false, prevMouse={x:0,y:0};
 let rotX=0.25, rotY=-0.3, targetRotX=rotX, targetRotY=rotY;
 let zoom=1, targetZoom=1, autoRotate=true;
 
-renderer.domElement.addEventListener('mousedown',e=>{isDragging=true;autoRotate=false;prevMouse={x:e.clientX,y:e.clientY};});
+renderer.domElement.addEventListener('mousedown',e=>{isDragging=true;autoRotate=false;document.getElementById('autoRotateToggle').checked=false;prevMouse={x:e.clientX,y:e.clientY};});
 renderer.domElement.addEventListener('mousemove',e=>{if(!isDragging)return;targetRotY+=(e.clientX-prevMouse.x)*0.008;targetRotX+=(e.clientY-prevMouse.y)*0.008;targetRotX=Math.max(-Math.PI/2,Math.min(Math.PI/2,targetRotX));prevMouse={x:e.clientX,y:e.clientY};});
 renderer.domElement.addEventListener('mouseup',()=>{isDragging=false;});
 renderer.domElement.addEventListener('mouseleave',()=>{isDragging=false;});
 renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();targetZoom*=e.deltaY>0?1.08:0.92;targetZoom=Math.max(0.3,Math.min(3,targetZoom));},{passive:false});
-renderer.domElement.addEventListener('touchstart',e=>{if(e.touches.length===1){isDragging=true;autoRotate=false;prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};}});
+renderer.domElement.addEventListener('touchstart',e=>{if(e.touches.length===1){isDragging=true;autoRotate=false;document.getElementById('autoRotateToggle').checked=false;prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};}});
 renderer.domElement.addEventListener('touchmove',e=>{e.preventDefault();if(!isDragging||e.touches.length!==1)return;targetRotY+=(e.touches[0].clientX-prevMouse.x)*0.008;targetRotX+=(e.touches[0].clientY-prevMouse.y)*0.008;targetRotX=Math.max(-Math.PI/2,Math.min(Math.PI/2,targetRotX));prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:false});
 renderer.domElement.addEventListener('touchend',()=>{isDragging=false;});
 
@@ -787,28 +1825,45 @@ function animate(now){
   gnnGroup.rotation.x=rotX; gnnGroup.rotation.y=rotY;
   gnnFeatGroup.rotation.x=rotX; gnnFeatGroup.rotation.y=rotY;
   matGroup.rotation.x=rotX; matGroup.rotation.y=rotY;
+  matBlocksGroup.rotation.x=rotX; matBlocksGroup.rotation.y=rotY;
   shGroup.rotation.x=rotX; shGroup.rotation.y=rotY;
+  gtoGroup.rotation.x=rotX; gtoGroup.rotation.y=rotY;
+  gtoCardGroup.rotation.x=rotX; gtoCardGroup.rotation.y=rotY;
 
   const dist=camBaseDist*zoom;
   camera.position.set(dist*Math.sin(0.3)*Math.cos(0.2),dist*Math.sin(0.35),dist*Math.cos(0.3)*Math.cos(0.2));
   camera.lookAt(0,0,0);
   camera.updateMatrixWorld();
 
-  // Billboard only matrix subs (they need to face camera despite matGroup rotating)
-  // We counter-rotate matrix billboard sub-groups
-  if(viewMode==='matrix'){
-    const invQ=matGroup.quaternion.clone().invert();
+  // Billboard matrix subs and GTO shell cards so they face the camera
+  if(matBlocksGroup.visible){
+    const invQ=matBlocksGroup.quaternion.clone().invert();
     const camQ=camera.quaternion.clone();
     const billQ=invQ.multiply(camQ);
     const cr=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0).normalize();
     const cu=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1).normalize();
-    // Transform camera directions into matGroup local space
-    const invMat=new THREE.Matrix4().copy(matGroup.matrixWorld).invert();
+    const invMat=new THREE.Matrix4().copy(matBlocksGroup.matrixWorld).invert();
+    const localR=cr.clone().transformDirection(invMat);
+    const localU=cu.clone().transformDirection(invMat);
+    const yOff=(viewMode==='gto'&&showGtoCards)?0.36:0.15;
+
+    matFeatSubs.forEach(({group,nodePos})=>{
+      group.position.copy(nodePos).add(localR.clone().multiplyScalar(0.35)).sub(localU.clone().multiplyScalar(yOff));
+      group.quaternion.copy(billQ);
+    });
+  }
+  if(gtoCardGroup.visible){
+    const invQ=gtoCardGroup.quaternion.clone().invert();
+    const camQ=camera.quaternion.clone();
+    const billQ=invQ.multiply(camQ);
+    const cr=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0).normalize();
+    const cu=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1).normalize();
+    const invMat=new THREE.Matrix4().copy(gtoCardGroup.matrixWorld).invert();
     const localR=cr.clone().transformDirection(invMat);
     const localU=cu.clone().transformDirection(invMat);
 
-    matFeatSubs.forEach(({group,nodePos})=>{
-      group.position.copy(nodePos).add(localR.clone().multiplyScalar(0.35)).sub(localU.clone().multiplyScalar(0.15));
+    gtoCardSubs.forEach(({group,nodePos})=>{
+      group.position.copy(nodePos).add(localR.clone().multiplyScalar(0.42)).sub(localU.clone().multiplyScalar(0.14));
       group.quaternion.copy(billQ);
     });
   }
@@ -826,10 +1881,57 @@ window.addEventListener('resize',()=>{W=container.clientWidth;H=container.client
 // UI
 // ═══════════════════════════════════════════
 const sidePanel=document.getElementById('sidePanel');
-document.getElementById('panelBtn').addEventListener('click',()=>{sidePanel.classList.toggle('open');});
-document.getElementById('closePanel').addEventListener('click',()=>{sidePanel.classList.remove('open');});
-document.getElementById('bondsToggle').addEventListener('change',e=>{showBonds=e.target.checked;setBondVisibility(showBonds);});
+const vizPanel=document.getElementById('vizPanel');
+const panelBtn=document.getElementById('panelBtn');
+const vizPanelBtn=document.getElementById('vizPanelBtn');
+
+function toggleEditPanel(force){
+  const open=typeof force==='boolean'?force:!sidePanel.classList.contains('open');
+  if(open){vizPanel.classList.remove('open');vizPanelBtn.classList.remove('active');}
+  sidePanel.classList.toggle('open',open);
+}
+function toggleVizPanel(force){
+  const open=typeof force==='boolean'?force:!vizPanel.classList.contains('open');
+  if(open){sidePanel.classList.remove('open');drawRadialPlot();}
+  vizPanel.classList.toggle('open',open);
+  vizPanelBtn.classList.toggle('active',open);
+}
+
+panelBtn.addEventListener('click',()=>toggleEditPanel());
+document.getElementById('closePanel').addEventListener('click',()=>toggleEditPanel(false));
+document.getElementById('closePanelX').addEventListener('click',()=>toggleEditPanel(false));
+
+vizPanelBtn.addEventListener('click',()=>toggleVizPanel());
+document.getElementById('closeVizPanel').addEventListener('click',()=>toggleVizPanel(false));
+document.getElementById('closeVizPanelX').addEventListener('click',()=>toggleVizPanel(false));
+
+// Global Options
 document.getElementById('shadowToggle').addEventListener('change',e=>{floor.visible=e.target.checked;});
+document.getElementById('floorYRange').addEventListener('input',e=>{
+  floorCustomY=parseFloat(e.target.value);
+  updateFloorPosition();
+});
+document.getElementById('floorAutoBtn').addEventListener('click',()=>{
+  floorCustomY=null;
+  updateFloorPosition();
+});
+document.getElementById('autoRotateToggle').addEventListener('change',e=>{autoRotate=e.target.checked;});
+
+// Molecule View Options
+document.getElementById('bondsToggle').addEventListener('change',e=>{showBonds=e.target.checked;setBondVisibility(showBonds);});
+document.getElementById('molAtomScaleRange').addEventListener('input',e=>{
+  molAtomScale=parseFloat(e.target.value);
+  document.getElementById('molAtomScaleVal').textContent=molAtomScale.toFixed(2);
+  atomMeshes.forEach((m,i)=>{m.scale.setScalar(getElement(currentAtomZ[i]).radius*molAtomScale);});
+  updateFloorPosition();
+});
+document.getElementById('molBondRadRange').addEventListener('input',e=>{
+  BOND_RADIUS=parseFloat(e.target.value);
+  document.getElementById('molBondRadVal').textContent=BOND_RADIUS.toFixed(2);
+  bondMeshes.forEach(c=>{c.scale.x=BOND_RADIUS;c.scale.z=BOND_RADIUS;});
+});
+
+// GNN View Options
 document.getElementById('featuresToggle').addEventListener('change',e=>{showFeatures=e.target.checked;gnnFeatGroup.visible=(viewMode==='gnn'&&showFeatures);});
 document.getElementById('curvedToggle').addEventListener('change',e=>{
   useCurvedArrows=e.target.checked;
@@ -859,21 +1961,66 @@ document.getElementById('arrowColorPicker').addEventListener('input',e=>{
   if(currentAtomZ.length) buildMolecule(currentAtomZ,currentPositions);
 });
 
+// Matrix View Options (optional matrix representations)
+document.getElementById('quickMatBlocksBtn').addEventListener('click',()=>{
+  showMatrixBlocks=!showMatrixBlocks;
+  matBlocksGroup.visible=(viewMode==='matrix'&&showMatrixBlocks)||(viewMode==='gto'&&showGtoMatrixOverlay);
+  syncBasisUI();
+  updateLegend();
+});
+document.getElementById('quickMatMinaoBtn').addEventListener('click',()=>{
+  matColorMode=(matColorMode==='minao')?'shell':'minao';
+  rebuildBasisViews();
+});
+document.querySelectorAll('#matColorModeSeg button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    matColorMode=btn.dataset.matmode;
+    rebuildBasisViews();
+  });
+});
+document.getElementById('matBlocksToggle').addEventListener('change',e=>{
+  showMatrixBlocks=e.target.checked;
+  matBlocksGroup.visible=(viewMode==='matrix'&&showMatrixBlocks)||(viewMode==='gto'&&showGtoMatrixOverlay);
+  syncBasisUI();
+  updateLegend();
+});
+document.getElementById('matGridToggle').addEventListener('change',e=>{
+  showMatrixGrid=e.target.checked;
+  rebuildBasisViews();
+});
+document.getElementById('matSparseToggle').addEventListener('change',e=>{
+  showMatrixSparse=e.target.checked;
+  rebuildBasisViews();
+});
+document.getElementById('matScaleRange').addEventListener('input',e=>{
+  matBlockScale=parseFloat(e.target.value);
+  document.getElementById('matScaleVal').textContent=matBlockScale.toFixed(2);
+  rebuildBasisViews();
+});
+document.getElementById('gtoMatrixOverlayToggle').addEventListener('change',e=>{
+  showGtoMatrixOverlay=e.target.checked;
+  matBlocksGroup.visible=(viewMode==='matrix'&&showMatrixBlocks)||(viewMode==='gto'&&showGtoMatrixOverlay);
+  syncBasisUI();
+});
+
 document.getElementById('viewMol').addEventListener('click',()=>setView('molecule'));
 document.getElementById('viewGNN').addEventListener('click',()=>setView('gnn'));
 document.getElementById('viewMatrix').addEventListener('click',()=>setView('matrix'));
 document.getElementById('viewSH').addEventListener('click',()=>setView('sh'));
+document.getElementById('viewGTO').addEventListener('click',()=>setView('gto'));
 
 document.getElementById('shIsoRange').addEventListener('input',e=>{
   shIsovalue=parseFloat(e.target.value);
   document.getElementById('shIsoVal').textContent=shIsovalue.toFixed(2);
   updateSHIsosurfaces();
+  updateFloorPosition();
   if(viewMode==='sh') updateLegend();
 });
 document.getElementById('shScaleRange').addEventListener('input',e=>{
   SH_SCALE=parseFloat(e.target.value);
   document.getElementById('shScaleVal').textContent=SH_SCALE.toFixed(2);
   updateSHIsosurfaces();
+  updateFloorPosition();
 });
 document.getElementById('shOpacityRange').addEventListener('input',e=>{
   const op=parseFloat(e.target.value);
@@ -882,22 +2029,107 @@ document.getElementById('shOpacityRange').addEventListener('input',e=>{
   shNegMeshes.forEach(m=>{m.material.opacity=op;});
 });
 
+// GTO & Basis UI listeners
+function rebuildBasisViews(){
+  if(!currentAtomZ.length) return;
+  const [cx,cy,cz]=currentCenter;
+  buildMatrix(currentAtomZ,currentPositions,cx,cy,cz);
+  buildGTO(currentAtomZ,currentPositions,cx,cy,cz);
+  gtoGroup.visible=(viewMode==='gto');
+  gtoCardGroup.visible=(viewMode==='gto'&&showGtoCards);
+  matGroup.visible=(viewMode==='matrix');
+  matBlocksGroup.visible=(viewMode==='matrix'&&showMatrixBlocks)||(viewMode==='gto'&&showGtoMatrixOverlay);
+  syncBasisUI();
+  drawRadialPlot();
+  updateFloorPosition();
+  updateLegend();
+}
+
+document.querySelectorAll('#quickBasisToggle button, #panelBasisSeg button, #matBasisSeg button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    currentBasis=btn.dataset.basis;
+    rebuildBasisViews();
+  });
+});
+document.querySelectorAll('#quickGtoMode button, #panelGtoModeSeg button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    gtoMode=btn.dataset.mode;
+    rebuildBasisViews();
+  });
+});
+document.querySelectorAll('#quickGtoFilter button, #panelGtoFilterSeg button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    gtoShellFilter=btn.dataset.filter;
+    rebuildBasisViews();
+  });
+});
+document.querySelectorAll('#panelGtoColorSeg button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    gtoColorMode=btn.dataset.color;
+    rebuildBasisViews();
+  });
+});
+document.getElementById('quickCardsBtn').addEventListener('click',()=>{
+  showGtoCards=!showGtoCards;
+  gtoCardGroup.visible=(viewMode==='gto'&&showGtoCards);
+  syncBasisUI();
+  updateLegend();
+});
+document.getElementById('gtoCardsToggle').addEventListener('change',e=>{
+  showGtoCards=e.target.checked;
+  gtoCardGroup.visible=(viewMode==='gto'&&showGtoCards);
+  syncBasisUI();
+  updateLegend();
+});
+document.getElementById('gtoIsoRange').addEventListener('input',e=>{
+  gtoIsovalue=parseFloat(e.target.value);
+  document.getElementById('gtoIsoVal').textContent=gtoIsovalue.toFixed(3);
+  updateGTOIsosurfaces();
+  drawRadialPlot();
+  updateFloorPosition();
+  if(viewMode==='gto') updateLegend();
+});
+document.getElementById('gtoScaleRange').addEventListener('input',e=>{
+  gtoScale=parseFloat(e.target.value);
+  document.getElementById('gtoScaleVal').textContent=gtoScale.toFixed(2);
+  updateGTOIsosurfaces();
+  updateFloorPosition();
+});
+document.getElementById('gtoOpacityRange').addEventListener('input',e=>{
+  gtoOpacity=parseFloat(e.target.value);
+  document.getElementById('gtoOpacityVal').textContent=gtoOpacity.toFixed(2);
+  gtoLobeMeshes.forEach(item=>{
+    if(item.type==='single'){
+      if(item.l===0 && item.hasHigherL){
+        item.mesh.material.opacity=item.core?Math.min(0.60,gtoOpacity*0.72):Math.max(0.16,gtoOpacity*(0.36-item.sameLIdx*0.10));
+      } else {
+        const sub=item.sameLIdx*0.14+(gtoMode==='all_m'&&item.l>0?0.14:0);
+        item.mesh.material.opacity=Math.max(0.24, gtoOpacity-sub);
+      }
+    } else {
+      item.mesh.material.opacity=gtoOpacity;
+    }
+  });
+});
+
+['atomZInput','nucPosInput'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',()=>{
+    currentPresetKey='custom';
+    document.getElementById('presetSelect').value='custom';
+    document.getElementById('panelPresetSelect').value='custom';
+  });
+});
+
 document.getElementById('loadMolecule').addEventListener('click',()=>{
   const errEl=document.getElementById('errorMsg'); errEl.classList.remove('visible');
   try{
     const az=parseAtomZ(document.getElementById('atomZInput').value);
     const pos=parsePositions(document.getElementById('nucPosInput').value);
     if(az.length!==pos.length)throw new Error(`Mismatch: ${az.length} atoms vs ${pos.length} positions`);
-    const cv=parseFloat(document.getElementById('cutoffRange').value);
-    if(isNaN(cv)||cv<=0)throw new Error('Cutoff must be positive');
-    GNN_CUTOFF=cv;
-    GNN_EDGE_RADIUS=parseFloat(document.getElementById('thicknessRange').value);
-    edgeOpacity=parseFloat(document.getElementById('opacityRange').value);
-    GNN_EDGE_COLOR=parseInt(document.getElementById('arrowColorPicker').value.slice(1),16);
-    monoNodes=document.getElementById('monoToggle').checked;
-    showFeatures=document.getElementById('featuresToggle').checked;
+    floorCustomY=null;
     buildMolecule(az,pos);
-    sidePanel.classList.remove('open'); autoRotate=true;
+    toggleEditPanel(false);
+    autoRotate=document.getElementById('autoRotateToggle').checked;
   }catch(e){errEl.textContent=e.message;errEl.classList.add('visible');}
 });
 
@@ -910,16 +2142,29 @@ function renderCroppedDataURL(){
   renderer.setSize(ew,eh); renderer.setPixelRatio(1);
   camera.aspect=W/H; camera.updateProjectionMatrix(); camera.updateMatrixWorld();
 
-  // Update matrix billboards at export resolution
-  if(matGroup.visible){
-    const invQ=matGroup.quaternion.clone().invert();
+  // Update matrix and GTO billboards at export resolution
+  if(matBlocksGroup.visible){
+    const invQ=matBlocksGroup.quaternion.clone().invert();
     const camQ=camera.quaternion.clone();
     const billQ=invQ.multiply(camQ);
-    const invMat4=new THREE.Matrix4().copy(matGroup.matrixWorld).invert();
+    const invMat4=new THREE.Matrix4().copy(matBlocksGroup.matrixWorld).invert();
     const cr=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0).normalize().transformDirection(invMat4);
     const cu=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1).normalize().transformDirection(invMat4);
+    const yOff=gtoCardGroup.visible?0.36:0.15;
     matFeatSubs.forEach(({group,nodePos})=>{
-      group.position.copy(nodePos).add(cr.clone().multiplyScalar(0.35)).sub(cu.clone().multiplyScalar(0.15));
+      group.position.copy(nodePos).add(cr.clone().multiplyScalar(0.35)).sub(cu.clone().multiplyScalar(yOff));
+      group.quaternion.copy(billQ);
+    });
+  }
+  if(gtoCardGroup.visible){
+    const invQ=gtoCardGroup.quaternion.clone().invert();
+    const camQ=camera.quaternion.clone();
+    const billQ=invQ.multiply(camQ);
+    const invMat4=new THREE.Matrix4().copy(gtoCardGroup.matrixWorld).invert();
+    const cr=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0).normalize().transformDirection(invMat4);
+    const cu=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1).normalize().transformDirection(invMat4);
+    gtoCardSubs.forEach(({group,nodePos})=>{
+      group.position.copy(nodePos).add(cr.clone().multiplyScalar(0.42)).sub(cu.clone().multiplyScalar(0.14));
       group.quaternion.copy(billQ);
     });
   }
@@ -942,35 +2187,340 @@ function dlURL(url,fn){const l=document.createElement('a');l.download=fn;l.href=
 document.getElementById('exportBtn').addEventListener('click',()=>{
   const prev=viewMode;
   // Molecule
-  molGroup.visible=true;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=false;shGroup.visible=false;
+  molGroup.visible=true;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=false;matBlocksGroup.visible=false;shGroup.visible=false;gtoGroup.visible=false;gtoCardGroup.visible=false;
   const molURL=renderCroppedDataURL();
   // GNN
-  molGroup.visible=false;gnnGroup.visible=true;gnnFeatGroup.visible=showFeatures;matGroup.visible=false;shGroup.visible=false;
+  molGroup.visible=false;gnnGroup.visible=true;gnnFeatGroup.visible=showFeatures;matGroup.visible=false;matBlocksGroup.visible=false;shGroup.visible=false;gtoGroup.visible=false;gtoCardGroup.visible=false;
   const gnnURL=renderCroppedDataURL();
   // Matrix
-  molGroup.visible=false;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=true;shGroup.visible=false;
+  molGroup.visible=false;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=true;matBlocksGroup.visible=showMatrixBlocks;shGroup.visible=false;gtoGroup.visible=false;gtoCardGroup.visible=false;
   const matURL=renderCroppedDataURL();
   // SH
-  molGroup.visible=false;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=false;shGroup.visible=true;
+  molGroup.visible=false;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=false;matBlocksGroup.visible=false;shGroup.visible=true;gtoGroup.visible=false;gtoCardGroup.visible=false;
   const shURL=renderCroppedDataURL();
+  // GTO
+  molGroup.visible=false;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=false;matBlocksGroup.visible=showGtoMatrixOverlay;shGroup.visible=false;gtoGroup.visible=true;gtoCardGroup.visible=showGtoCards;
+  const gtoURL=renderCroppedDataURL();
   // Restore
   renderer.setClearColor(BG_COLOR,1);scene.background=new THREE.Color(BG_COLOR);
   renderer.setSize(W,H);renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   setView(prev);
   dlURL(molURL,'molecule.png');
   setTimeout(()=>dlURL(gnnURL,'molecule_gnn.png'),400);
-  setTimeout(()=>dlURL(matURL,'molecule_matrix.png'),800);
+  setTimeout(()=>dlURL(matURL,`molecule_matrix_${currentBasis}.png`),800);
   setTimeout(()=>dlURL(shURL,'molecule_sh.png'),1200);
+  setTimeout(()=>dlURL(gtoURL,`molecule_gto_${currentBasis}.png`),1600);
 });
 
 // ═══════════════════════════════════════════
-// Load default
+// Preconfigured Example Structures
 // ═══════════════════════════════════════════
-buildMolecule(
-  [6,6,8,1,1,1,1,1,1],
-  [[-0.14365933,-0.11813374,-0.56843375],[-0.17613,1.28513285,-0.00859315],[0.21953989,-1.07718569,0.51279995],[-1.17635944,-0.44982293,-1.02836848],[0.49325929,-0.34332167,-1.39655428],[-0.82220941,1.53936818,0.84187767],[0.86485323,1.37019756,0.45488715],[-0.22079702,2.03512503,-0.80257909],[1.18606471,-0.96054634,0.66677837]]
-);
-document.getElementById('mol-label').textContent='Ethanol';
+const _3BPA_ATOM_Z = [6, 6, 6, 1, 6, 8, 7, 7, 1, 1, 6, 1, 1, 6, 6, 1, 1, 6, 6, 6, 1, 6, 1, 6, 1, 1, 1];
+
+const EXAMPLE_STRUCTURES = {
+  'h': {
+    label: 'h (H atom)',
+    atom_z: [1],
+    nuc_pos: [[0.0, 0.0, 0.0]],
+    spin: 1
+  },
+  'c': {
+    label: 'c (C atom)',
+    atom_z: [6],
+    nuc_pos: [[0.0, 0.0, 0.0]],
+    spin: 2
+  },
+  'o': {
+    label: 'o (O atom)',
+    atom_z: [8],
+    nuc_pos: [[0.0, 0.0, 0.0]],
+    spin: 2
+  },
+  'f': {
+    label: 'f (F atom)',
+    atom_z: [9],
+    nuc_pos: [[0.0, 0.0, 0.0]],
+    spin: 1
+  },
+  'h2+': {
+    label: 'h2+ (H₂⁺)',
+    atom_z: [1, 1],
+    nuc_pos: [[0.0, 0.0, 0.0], [1.4, 0.0, 0.0]],
+    charge: 1,
+    spin: 1
+  },
+  'h2': {
+    label: 'h2 (H₂)',
+    atom_z: [1, 1],
+    nuc_pos: [[0.0, 0.0, 0.0], [1.4, 0.0, 0.0]]
+  },
+  'o2': {
+    label: 'o2 (O₂)',
+    atom_z: [8, 8],
+    nuc_pos: [[0.0, 0.0, 0.0], [1.4, 0.0, 0.0]]
+  },
+  'oh': {
+    label: 'oh (OH radical)',
+    atom_z: [8, 1],
+    nuc_pos: [[0.0, 0.0, 0.0], [0.0, 0.0, 0.9697]]
+  },
+  'organic': {
+    label: 'organic (HCN OF)',
+    atom_z: [1, 6, 7, 8, 9],
+    nuc_pos: [
+      [0.0, 0.0, 0.0],
+      [1.0, 0.0, 0.0],
+      [0.0, 1.0, 0.0],
+      [0.0, 0.0, 1.0],
+      [1.0, 1.0, 1.0]
+    ]
+  },
+  'water': {
+    label: 'water (H₂O)',
+    atom_z: [8, 1, 1],
+    nuc_pos: [
+      [0.0000, 0.0000, 0.1165],
+      [0.0000, 0.7694, -0.4661],
+      [0.0000, -0.7694, -0.4661]
+    ]
+  },
+  'ch3cl': {
+    label: 'ch3cl (CH₃Cl)',
+    atom_z: [6, 1, 1, 1, 17],
+    nuc_pos: [
+      [0.0, 0.0, 0.0],
+      [0.51, 0.89, 0.0],
+      [0.51, -0.89, 0.0],
+      [-1.02, 0.0, 0.2],
+      [0.1, 0.0, 1.79]
+    ]
+  },
+  'mixed': {
+    label: 'mixed (S/N/C/F/H)',
+    atom_z: [16, 7, 6, 9, 1, 1],
+    nuc_pos: [
+      [0.0, 0.0, 0.0],
+      [0.0, 0.0, 1.6],
+      [1.4, 0.0, -0.6],
+      [2.2, 1.0, -0.4],
+      [1.6, -1.0, -1.1],
+      [-0.9, 0.9, 2.0]
+    ]
+  },
+  'ethene': {
+    label: 'ethene (C₂H₄)',
+    atom_z: [6, 6, 1, 1, 1, 1],
+    nuc_pos: [
+      [-0.6579, 0.0045, -0.0639],
+      [0.6579, -0.0045, 0.0639],
+      [1.1610, 0.0661, 1.0238],
+      [1.3352, -0.0830, -0.7815],
+      [-1.3355, 0.0830, 0.7812],
+      [-1.1608, -0.0661, -1.0239]
+    ]
+  },
+  'ethanol': {
+    label: 'ethanol (C₂H₅OH)',
+    atom_z: [6, 6, 8, 1, 1, 1, 1, 1, 1],
+    nuc_pos: [
+      [-0.14365933, -0.11813374, -0.56843375],
+      [-0.17613, 1.28513285, -0.00859315],
+      [0.21953989, -1.07718569, 0.51279995],
+      [-1.17635944, -0.44982293, -1.02836848],
+      [0.49325929, -0.34332167, -1.39655428],
+      [-0.82220941, 1.53936818, 0.84187767],
+      [0.86485323, 1.37019756, 0.45488715],
+      [-0.22079702, 2.03512503, -0.80257909],
+      [1.18606471, -0.96054634, 0.66677837]
+    ]
+  },
+  'aspirin': {
+    label: 'aspirin (C₉H₈O₄)',
+    atom_z: [6, 6, 6, 6, 6, 6, 6, 8, 8, 8, 6, 6, 8, 1, 1, 1, 1, 1, 1, 1, 1],
+    nuc_pos: [
+      [2.15275078, -0.93790121, -0.05378575],
+      [0.99956719, 1.13262738, -1.67300307],
+      [2.73218273, -0.44859684, -1.19275553],
+      [2.14794307, 0.41880283, -2.08405233],
+      [-3.15705489, 1.42240939, 0.33067654],
+      [0.91168856, -0.33727827, 0.29772754],
+      [0.36105629, 0.72618343, -0.42339745],
+      [-0.40166094, -0.12259909, 2.26219435],
+      [-2.13128849, -0.48888369, -0.80224462],
+      [0.29867456, -2.24990948, 1.44246368],
+      [0.1239993, -0.83296539, 1.42230211],
+      [-2.04596577, 0.64616435, -0.22107209],
+      [-0.88096468, 1.36265193, -0.06099633],
+      [-0.02472582, -2.46371902, 2.33402192],
+      [2.47956412, -1.70739289, 0.55101985],
+      [0.49126967, 1.99943374, -2.09234064],
+      [3.77819263, -0.85891833, -1.40897491],
+      [2.75656656, 0.58901616, -2.98423316],
+      [-2.82095412, 2.33964098, 0.93973904],
+      [-3.76033286, 1.76801371, -0.50670433],
+      [-3.80678333, 0.80577181, 0.93093152]
+    ]
+  },
+  'benzene': {
+    label: 'benzene (C₆H₆)',
+    atom_z: [6, 6, 6, 6, 6, 6, 1, 1, 1, 1, 1, 1],
+    nuc_pos: [
+      [-1.17701667, 0.628175, -0.3431],
+      [0.03758333, 1.274275, -0.5205],
+      [1.21898333, 0.650375, -0.2513],
+      [1.24578333, -0.654725, 0.3335],
+      [-0.01361667, -1.257825, 0.5988],
+      [-1.22571667, -0.640425, 0.2372],
+      [-2.11961667, 1.163575, -0.5769],
+      [0.05898333, 2.257775, -1.0766],
+      [2.16458333, 1.159175, -0.3528],
+      [2.16518333, -1.198125, 0.4236],
+      [-0.10771667, -2.264025, 1.086],
+      [-2.24741667, -1.118225, 0.4421]
+    ]
+  },
+  'toluene': {
+    label: 'toluene (C₇H₈)',
+    atom_z: [6, 6, 6, 6, 6, 6, 6, 1, 1, 1, 1, 1, 1, 1, 1],
+    nuc_pos: [
+      [2.21099309, -0.213506861, 0.249508229],
+      [0.681932229, 0.000127978667, -0.126283431],
+      [-0.0239355113, -1.13700971, -0.553183121],
+      [-1.39124473, -0.959111431, -0.512795811],
+      [-2.12171677, 0.210078419, -0.0963132607],
+      [-1.37364578, 1.34153136, 0.195166499],
+      [0.0826932687, 1.19693882, 0.204563959],
+      [2.62700104, -1.00310271, -0.191848021],
+      [2.87154393, 0.560016199, 0.0649209093],
+      [2.19943319, -0.566922311, 1.22136951],
+      [0.564269529, -2.14756659, -0.690916221],
+      [-2.03206059, -1.82119392, -0.737063061],
+      [-3.23640748, 0.181348219, -0.141217201],
+      [-1.75321084, 2.40497179, 0.417926179],
+      [0.694355439, 1.95340076, 0.696164839]
+    ]
+  },
+  'malonaldehyde': {
+    label: 'malonaldehyde (C₃H₄O₂)',
+    atom_z: [6, 6, 6, 8, 8, 1, 1, 1, 1],
+    nuc_pos: [
+      [0.92768327, -0.76532832, 0.43548246],
+      [-0.55217159, -0.17860673, 0.3188344],
+      [-0.38930302, 0.82837453, -0.7735311],
+      [-1.14209009, 0.92354304, -1.78297229],
+      [1.82359972, 0.06762339, 0.36430571],
+      [1.05790473, -1.94286082, 0.55973303],
+      [-1.38445232, -0.97464033, 0.27831208],
+      [-0.75663989, 0.3534461, 1.32381917],
+      [0.41546923, 1.68844912, -0.7239835]
+    ]
+  },
+  '3bpa': {
+    label: '3bpa (C₁₅H₁₆N₂O)',
+    atom_z: _3BPA_ATOM_Z,
+    nuc_pos: [
+      [1.38963128, 1.30881270, -1.84807340],
+      [0.25134028, 1.61695797, -1.17378268],
+      [2.34174165, 2.30279245, -2.05237245],
+      [1.74670811, 0.30770268, -2.08813647],
+      [0.05520299, 2.95681402, -0.72831891],
+      [-0.81096017, 0.83736826, -0.91802960],
+      [-1.10099896, 3.26937222, -0.10832467],
+      [0.91391981, 3.92808926, -0.99610811],
+      [-1.73558122, 2.55577479, 0.18972739],
+      [-1.19481836, 4.21421525, 0.12159553],
+      [2.07766676, 3.62803433, -1.63042725],
+      [2.81650095, 4.38833396, -1.67628005],
+      [3.23433192, 2.10381485, -2.63100063],
+      [-0.57931678, -0.63039174, -0.91326348],
+      [-1.77506852, -1.28327640, -0.40022312],
+      [0.20195626, -0.97701420, -0.35217348],
+      [-0.31077873, -0.89430482, -2.04282024],
+      [-3.00526392, -1.38331587, -1.13839590],
+      [-1.88488065, -1.72681611, 0.94414745],
+      [-4.15739837, -2.00672026, -0.71479091],
+      [-2.95735117, -1.01520162, -2.24735924],
+      [-4.19469156, -2.42753431, 0.61887066],
+      [-5.04818305, -2.24955496, -1.33679401],
+      [-3.08464301, -2.27809040, 1.38882121],
+      [-5.07725553, -2.96292210, 1.05906295],
+      [-3.24228124, -2.56751763, 2.40845989],
+      [-1.09224915, -1.37255578, 1.68160820]
+    ]
+  },
+  'ZINC000480760627': {
+    label: 'ZINC000480760627 (C₂₄H₃₁N₅O)',
+    atom_z: [6, 6, 6, 6, 6, 7, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 6, 6, 8, 6, 6, 7, 7, 7, 6, 6, 6, 6, 6, 6,
+             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    nuc_pos: [
+      [ 2.731637, -0.795348,  1.769429], [ 2.955659, -0.845969,  0.295739], [ 2.120995, -1.244632, -0.731695],
+      [ 0.688360, -1.706676, -0.647695], [ 0.136563, -2.071397, -2.037101], [-0.073201, -0.699024,  0.106139],
+      [-1.455349, -1.024046,  0.447114], [-2.500805, -0.323213, -0.452244], [-3.936965, -0.696772, -0.094796],
+      [-4.814366, -1.097371, -1.106633], [-6.132165, -1.438696, -0.814509], [-6.594000, -1.384837,  0.495273],
+      [-5.742533, -0.989182,  1.531283], [-6.245172, -0.913292,  2.952876], [-4.423762, -0.653383,  1.218371],
+      [-2.215041,  1.124735, -0.526035], [-2.452875,  1.907699,  0.686126], [-1.902346,  3.320420,  0.492744],
+      [-2.488202,  3.956993, -0.627584], [-2.261923,  3.205392, -1.806971], [-2.817681,  1.788168, -1.681056],
+      [ 2.809516, -1.168051, -1.904577], [ 4.016565, -0.750843, -1.678601], [ 4.127909, -0.542500, -0.336385],
+      [ 5.370785, -0.101968,  0.190643], [ 6.549757, -0.642052, -0.326552], [ 7.775412, -0.207389,  0.164152],
+      [ 7.831969,  0.752269,  1.173504], [ 6.652411,  1.288713,  1.682121], [ 5.419318,  0.871850,  1.188114],
+      [ 1.928971, -1.484228,  2.037123], [ 3.635089, -1.066597,  2.323053], [ 2.415490,  0.198857,  2.103334],
+      [ 0.664113, -2.619679, -0.032775], [-0.878473, -2.469938, -1.951908], [ 0.121073, -1.194833, -2.691316],
+      [ 0.762597, -2.827401, -2.518167], [-0.065257,  0.192674, -0.382824], [-1.641486, -0.764644,  1.498095],
+      [-1.617396, -2.105097,  0.376073], [-2.326580, -0.683701, -1.471887], [-4.458489, -1.151940, -2.131337],
+      [-6.798348, -1.753328, -1.611515], [-7.621622, -1.655921,  0.719522], [-6.867382, -0.023333,  3.107373],
+      [-6.860866, -1.782293,  3.206120], [-5.419055, -0.863870,  3.667474], [-3.763356, -0.358866,  2.027514],
+      [-1.942051,  1.440438,  1.533945], [-3.526421,  1.976165,  0.932948], [-2.133443,  3.942036,  1.362763],
+      [-0.806934,  3.273068,  0.374072], [-2.757650,  3.741641, -2.621255], [-1.181940,  3.155055, -2.023462],
+      [-2.572325,  1.221416, -2.586477], [-3.918445,  1.838367, -1.604022], [ 6.486536, -1.387197, -1.108913],
+      [ 8.690260, -0.626899, -0.240313], [ 8.790618,  1.083016,  1.557890], [ 6.686896,  2.045758,  2.458129],
+      [ 4.503722,  1.315375,  1.558210]
+    ]
+  }
+};
+
+function populatePresetDropdowns(){
+  const topSel=document.getElementById('presetSelect');
+  const panSel=document.getElementById('panelPresetSelect');
+  const keys=Object.keys(EXAMPLE_STRUCTURES).sort((a,b)=>{
+    const azA=EXAMPLE_STRUCTURES[a].atom_z;
+    const azB=EXAMPLE_STRUCTURES[b].atom_z;
+    const heavyA=azA.filter(z=>z>1).length;
+    const heavyB=azB.filter(z=>z>1).length;
+    if(heavyA!==heavyB) return heavyA-heavyB;
+    if(azA.length!==azB.length) return azA.length-azB.length;
+    const sumA=azA.reduce((s,z)=>s+z,0);
+    const sumB=azB.reduce((s,z)=>s+z,0);
+    return sumA-sumB;
+  });
+  const optsHTML=keys.map(k=>`<option value="${k}">${EXAMPLE_STRUCTURES[k].label}</option>`).join('')+
+    `<option value="custom" disabled hidden>custom</option>`;
+  topSel.innerHTML=optsHTML;
+  panSel.innerHTML=optsHTML;
+  topSel.value=currentPresetKey;
+  panSel.value=currentPresetKey;
+}
+
+function selectPresetMolecule(key){
+  const entry=EXAMPLE_STRUCTURES[key];
+  if(!entry) return;
+  currentPresetKey=key;
+  floorCustomY=null; // reset to rotation-safe auto floor when switching molecule
+  document.getElementById('presetSelect').value=key;
+  document.getElementById('panelPresetSelect').value=key;
+  document.getElementById('atomZInput').value=`np.array([${entry.atom_z.join(', ')}])`;
+  const rows=entry.nuc_pos.map(r=>`  [${r.join(', ')}],`).join('\n');
+  document.getElementById('nucPosInput').value=`np.array([\n${rows}\n])`;
+  buildMolecule(entry.atom_z.slice(), entry.nuc_pos.map(r=>r.slice()));
+  document.getElementById('mol-label').textContent=key;
+  autoRotate=true;
+}
+
+populatePresetDropdowns();
+document.getElementById('presetSelect').addEventListener('change',e=>selectPresetMolecule(e.target.value));
+document.getElementById('panelPresetSelect').addEventListener('change',e=>selectPresetMolecule(e.target.value));
+
+// Load default
+selectPresetMolecule('ethanol');
 </script>
 </body>
 </html>
