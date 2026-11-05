@@ -136,7 +136,7 @@
         <button data-filter="f">f</button>
       </div>
       <div class="sub-toggle" id="quickGtoExtras" style="display:none;">
-        <button id="quickCardsBtn" class="active" title="Toggle per-atom shell breakdown cards">Cards</button>
+        <button id="quickCardsBtn" title="Toggle per-atom shell breakdown cards">Cards</button>
       </div>
       <div class="sub-toggle" id="quickMatExtras" style="display:none;">
         <button id="quickMatBlocksBtn" class="active" title="Toggle per-atom matrix row blocks">Blocks</button>
@@ -173,6 +173,7 @@
     <div class="hint" style="margin-top:-10px;">Defaults to below the full rotation bounding sphere so no atom or orbital clips into the floor.</div>
     <div class="toggle-row"><span>Auto-Rotate</span><label class="toggle-switch"><input type="checkbox" id="autoRotateToggle" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
     <div class="section-label" style="margin-top:8px;">Export</div>
+    <div class="toggle-row"><span>Include Legend</span><label class="toggle-switch"><input type="checkbox" id="exportLegendToggle"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
     <label>Background</label>
     <div class="panel-seg" id="exportBgSeg">
       <button type="button" data-bg="solid">Solid color</button>
@@ -294,7 +295,7 @@
         <button type="button" data-color="phase">By Phase (+/−)</button>
         <button type="button" data-color="minao">Atomic MINAO P<sub>μμ</sub></button>
       </div>
-      <div class="toggle-row"><span>Show Shell Cards</span><label class="toggle-switch"><input type="checkbox" id="gtoCardsToggle" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+      <div class="toggle-row"><span>Show Shell Cards</span><label class="toggle-switch"><input type="checkbox" id="gtoCardsToggle"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
       <div class="toggle-row"><span>Overlay Matrix Blocks</span><label class="toggle-switch"><input type="checkbox" id="gtoMatrixOverlayToggle"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
       <div class="range-row"><label>Isovalue</label><input type="range" id="gtoIsoRange" min="0.01" max="0.35" step="0.005" value="0.10"><span class="range-val" id="gtoIsoVal">0.100</span></div>
       <div class="hint">Threshold |χ(r,θ,φ)| = c (in a₀⁻³ᐟ²). Lower values show diffuse outer split-valence tails; higher values isolate tight inner shells.</div>
@@ -890,7 +891,7 @@ let currentBasis='sto-3g'; // 'sto-3g' | 'def2-svp' | 'def2-svpd' | 'def2-tzvp'
 let gtoMode='shells'; // 'shells' | 'all_m' | 'lcao'
 let gtoShellFilter='all'; // 'all' | 'valence' | 's' | 'p' | 'd' | 'f'
 let gtoColorMode='shell'; // 'shell' | 'phase' | 'minao'
-let showGtoCards=true;
+let showGtoCards=false;
 let showGtoMatrixOverlay=false;
 let gtoIsovalue=0.10;
 let gtoScale=0.46;
@@ -2461,11 +2462,14 @@ function updateFloorPosition(){
 
 // Camera distance depends only on the molecule (not on the active view), so switching tabs never changes the zoom.
 // A fixed halo around the atoms leaves room for orbital lobes and density surfaces; zoom out for anything larger.
+let lastFitSig='';
 function fitCamera(){
   let maxAtomCenter=0;
   atomMeshes.forEach(m=>{const d=m.position.length();if(d>maxAtomCenter)maxAtomCenter=d;});
   camBaseDist=Math.max(maxAtomCenter*3.5, (maxAtomCenter+2.0)*2.8, 5);
-  targetZoom=1; zoom=1;
+  // only reset the zoom when the geometry actually changed, never for setting tweaks or tab switches
+  const sig=currentAtomZ.join(',')+'|'+currentPositions.map(p=>p.map(v=>v.toFixed(4)).join(',')).join(';');
+  if(sig!==lastFitSig){ lastFitSig=sig; targetZoom=1; zoom=1; }
   updateFloorPosition();
 }
 
@@ -2873,6 +2877,7 @@ document.getElementById('loadMolecule').addEventListener('click',()=>{
 // ═══════════════════════════════════════════
 let exportBg='transparent';  // 'solid' | 'transparent'
 let exportBgColor='#ffffff';
+let exportLegend=false;      // append a legend column to every exported image
 let exportPad=40;            // px margin around the shared tight crop
 let exporting=false;
 
@@ -2973,33 +2978,120 @@ function makeZip(files){ // files: [{name, data:Uint8Array}] -> Blob
 }
 function dataURLToBytes(u){const b=atob(u.split(',')[1]);const a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
 
+// ---- Legend rendering for exports ----
+function legendItemFromElement(it){
+  const cs=getComputedStyle(it);
+  const dot=it.querySelector('.legend-dot');
+  let dotSpec=null;
+  if(dot){ const dc=getComputedStyle(dot); dotSpec={color:dc.backgroundColor,radius:dc.borderRadius,w:parseFloat(dc.width)||12,h:parseFloat(dc.height)||12}; }
+  const runs=[];
+  (function walk(node,st){
+    node.childNodes.forEach(n=>{
+      if(n.nodeType===3){ if(n.textContent) runs.push({t:n.textContent,sub:!!st.sub,sup:!!st.sup,bold:!!st.bold}); }
+      else if(n.nodeType===1&&n.tagName==='BR'){ runs.push({br:true,t:''}); }
+      else if(n.nodeType===1&&!n.classList.contains('legend-dot')){
+        const tn=n.tagName;
+        walk(n,{sub:st.sub||tn==='SUB',sup:st.sup||tn==='SUP',bold:st.bold||tn==='B'});
+      }
+    });
+  })(it,{});
+  return {runs,dot:dotSpec,font:parseFloat(cs.fontSize)||11,color:cs.color,upper:cs.textTransform==='uppercase',
+    ls:parseFloat(cs.letterSpacing)||0,mt:parseFloat(cs.marginTop)||0,family:cs.fontFamily,weight:cs.fontWeight};
+}
+// Legend items (title block + legend entries) exactly as the on-screen legend would show them in the given view mode
+function getLegendSpec(mode){
+  const prevMode=viewMode;
+  viewMode=mode; updateLegend();
+  const items=[];
+  ['mol-label','mol-formula'].forEach((id,k)=>{
+    const el=document.getElementById(id);
+    const it=legendItemFromElement(el); it.mt=0; it.header=true; if(k===1) it.mt=2;
+    it.runs=[{t:el.textContent,sub:false,sup:false,bold:false}];
+    if(id==='mol-formula'){ // keep sub/sup in the formula
+      const r=[]; (function w(n,st){n.childNodes.forEach(c=>{if(c.nodeType===3){if(c.textContent)r.push({t:c.textContent,sub:!!st.sub,sup:!!st.sup,bold:false});}else if(c.nodeType===1)w(c,{sub:st.sub||c.tagName==='SUB',sup:st.sup||c.tagName==='SUP'});});})(el,{});
+      it.runs=r;
+    }
+    items.push(it);
+  });
+  document.getElementById('legend').querySelectorAll(':scope > .legend-item').forEach(it=>{
+    if(it.id==='densLegendStatus') return;
+    const li=legendItemFromElement(it);
+    if(!li.runs.some(r=>r.t.trim())) return;
+    items.push(li);
+  });
+  viewMode=prevMode; updateLegend();
+  return items;
+}
+// Lay out (and optionally draw) a legend; S scales CSS px to export px. Returns {w,h}
+function layoutLegend(ctx,items,S,x0,y0,draw){
+  let y=y0, maxW=0;
+  const gap=8*S;
+  items.forEach((it,idx)=>{
+    if(idx>0) y+=gap+it.mt*S;
+    const fs=it.font*S, family=it.family||'monospace';
+    const dotW=it.dot?it.dot.w*S:0, dotH=it.dot?it.dot.h*S:0;
+    const lineH=Math.max(fs*1.3,dotH);
+    const textX=x0+(it.dot?dotW+8*S:0);
+    let x=textX;
+    if(draw&&it.dot){
+      ctx.fillStyle=it.dot.color;
+      const r=it.dot.radius.includes('%')?Math.min(dotW,dotH)/2:Math.min(parseFloat(it.dot.radius)*S||0,Math.min(dotW,dotH)/2);
+      const dy=y+(lineH-dotH)/2;
+      ctx.beginPath();
+      if(ctx.roundRect) ctx.roundRect(x0,dy,dotW,dotH,r); else ctx.rect(x0,dy,dotW,dotH);
+      ctx.fill();
+    }
+    let lineMaxX=0;
+    it.runs.forEach(run=>{
+      if(run.br){ if(x-x0>maxW) maxW=x-x0; x=textX; y+=lineH; return; }
+      let t=run.t; if(it.upper) t=t.toUpperCase();
+      const sz=(run.sub||run.sup)?fs*0.7:fs;
+      ctx.font=`${run.bold?500:it.weight||400} ${sz}px ${family}`;
+      ctx.fillStyle=it.color; ctx.textBaseline='middle';
+      const cy=y+lineH/2+(run.sub?fs*0.2:0)-(run.sup?fs*0.3:0);
+      for(const ch of t){
+        if(draw) ctx.fillText(ch,x,cy);
+        x+=ctx.measureText(ch).width+it.ls*S;
+      }
+    });
+    if(x-x0>maxW) maxW=x-x0;
+    y+=lineH;
+  });
+  return {w:maxW,h:y-y0};
+}
+
 async function exportAllViews(){
   if(exporting) return;
   exporting=true;
   const btn=document.getElementById('exportBtn');
   const label=btn.textContent;
   const prev=viewMode;
+  // Every user setting is exported as is, except fidelity: the density is always exported at the finest grid with core refinement
+  const savedDensRes=densRes, savedDensGrid=densGrid, savedDensKey=densGridKey;
   try{
-    // Make sure the density is available so it can be exported together with the other views
-    if(!(densGrid&&densMeshes.length)){
-      btn.textContent='Computing density…';
-      setView('density');
+    btn.textContent='Computing density (fine)…';
+    densRes='fine'; syncBasisUI();
+    setView('density');
+    {
       const t0=performance.now();
-      while((densBusyKey!==''||!densGrid)&&!densError&&performance.now()-t0<60000) await densYield();
+      while(!densError&&performance.now()-t0<300000){
+        if(densGrid&&densGridKey===densCurrentKey()&&!densToken&&densBusyKey==='') break;
+        await densYield();
+      }
       await densYield();
     }
     btn.textContent='Exporting…';
     await densYield();
 
     const views=[
-      {name:'molecule.png',      spec:{mol:true}},
-      {name:'molecule_gnn.png',  spec:{gnn:true,gnnFeat:showFeatures}},
-      {name:`molecule_matrix_${currentBasis}.png`, spec:{mat:true,matBlocks:showMatrixBlocks}},
-      {name:'molecule_sh.png',   spec:{sh:true}},
-      {name:`molecule_gto_${currentBasis}.png`,    spec:{gto:true,gtoCards:showGtoCards,matBlocks:showGtoMatrixOverlay}}
+      {name:'molecule.png',      mode:'molecule', spec:{mol:true}},
+      {name:'molecule_gnn.png',  mode:'gnn', spec:{gnn:true,gnnFeat:showFeatures}},
+      {name:`molecule_matrix_${currentBasis}.png`, mode:'matrix', spec:{mat:true,matBlocks:showMatrixBlocks}},
+      {name:'molecule_sh.png',   mode:'sh', spec:{sh:true}},
+      {name:`molecule_gto_${currentBasis}.png`,    mode:'gto', spec:{gto:true,gtoCards:showGtoCards,matBlocks:showGtoMatrixOverlay}}
     ];
     if(densGrid&&densMeshes.length){
-      views.push({name:`molecule_density_${densSource==='ano'?'ano':currentBasis}.png`, spec:{dens:true}});
+      views.push({name:`molecule_density_${densSource==='ano'?'ano':currentBasis}.png`, mode:'density', spec:{dens:true}});
     }
 
     // 1) render every view full-frame (same camera, rotation and size)
@@ -3018,12 +3110,28 @@ async function exportAllViews(){
     const x1=Math.min(ew-1,U.mxX+exportPad), y1=Math.min(eh-1,U.mxY+exportPad);
     const cW=x1-x0+1, cH=y1-y0+1;
 
-    // 3) compose with the chosen background and download
+    // 3) compose with the chosen background (optionally with a legend column of identical size on every image)
+    const S=3;
+    let legW=0, outW=cW, outH=cH;
+    if(exportLegend){
+      try{ await document.fonts.load('11px "DM Mono"'); }catch(e){}
+      const mctx=document.createElement('canvas').getContext('2d');
+      let lw=0, lh=0;
+      views.forEach(v=>{
+        v.legend=getLegendSpec(v.mode);
+        const m=layoutLegend(mctx,v.legend,S,0,0,false);
+        if(m.w>lw) lw=m.w; if(m.h>lh) lh=m.h;
+      });
+      legW=Math.ceil(lw+exportPad);
+      outW=cW+legW;
+      outH=Math.max(cH,Math.ceil(lh+2*exportPad));
+    }
     views.forEach(v=>{
-      const out=document.createElement('canvas'); out.width=cW; out.height=cH;
+      const out=document.createElement('canvas'); out.width=outW; out.height=outH;
       const ctx=out.getContext('2d');
-      if(exportBg==='solid'){ ctx.fillStyle=exportBgColor; ctx.fillRect(0,0,cW,cH); }
-      ctx.drawImage(v.canvas,x0,y0,cW,cH,0,0,cW,cH);
+      if(exportBg==='solid'){ ctx.fillStyle=exportBgColor; ctx.fillRect(0,0,outW,outH); }
+      ctx.drawImage(v.canvas,x0,y0,cW,cH,0,Math.round((outH-cH)/2),cW,cH);
+      if(exportLegend) layoutLegend(ctx,v.legend,S,cW,exportPad,true);
       v.url=out.toDataURL('image/png');
       v.canvas=null;
     });
@@ -3044,6 +3152,14 @@ async function exportAllViews(){
     renderer.setSize(W,H); renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
     setView(prev);
   }finally{
+    // restore the user's grid resolution and the grid computed for it
+    densRes=savedDensRes;
+    if(savedDensGrid&&savedDensKey===densCurrentKey()){
+      if(densToken){ densToken.cancelled=true; densToken=null; }
+      densBusyKey=''; densGrid=savedDensGrid; densGridKey=savedDensKey;
+      if(viewMode==='density') rebuildDensityMeshes();
+    } else if(viewMode==='density'){ ensureDensity(); }
+    syncBasisUI();
     btn.textContent=label;
     exporting=false;
   }
@@ -3057,6 +3173,7 @@ document.querySelectorAll('#exportBgSeg button').forEach(b=>{
     document.getElementById('exportBgColorRow').style.display=(exportBg==='solid')?'flex':'none';
   });
 });
+document.getElementById('exportLegendToggle').addEventListener('change',e=>{exportLegend=e.target.checked;});
 document.getElementById('exportBgColor').addEventListener('input',e=>{exportBgColor=e.target.value;});
 document.getElementById('exportPadRange').addEventListener('input',e=>{
   exportPad=parseInt(e.target.value,10);
