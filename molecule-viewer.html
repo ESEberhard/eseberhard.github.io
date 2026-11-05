@@ -107,6 +107,7 @@
         <button id="viewMatrix">Matrix</button>
         <button id="viewSH">Harmonics</button>
         <button id="viewGTO">GTOs</button>
+        <button id="viewDens">Density</button>
       </div>
       <button class="btn btn-outline" id="vizPanelBtn">View Options</button>
     </div>
@@ -121,7 +122,10 @@
         <button data-mode="shells" class="active" title="One oriented orbital per (n,ℓ) shell">Shells</button>
         <button data-mode="all_m" title="All (2ℓ+1) magnetic sub-orbitals per shell">2ℓ+1</button>
         <button data-mode="lcao" title="Linear combination of atomic orbitals">LCAO</button>
-        <button data-mode="minao" title="Projected MINAO initial-guess electron density in selected basis">MINAO ρ</button>
+      </div>
+      <div class="sub-toggle" id="quickDens" style="display:none;">
+        <button data-dsrc="projected" class="active" title="Real-space density of the PySCF MINAO guess projected onto the selected basis">Projected</button>
+        <button data-dsrc="ano" title="Basis-free reference: superposition of the free-atom ANO densities">ANO ref.</button>
       </div>
       <div class="sub-toggle" id="quickGtoFilter" style="display:none;">
         <button data-filter="all" class="active">All</button>
@@ -136,7 +140,7 @@
       </div>
       <div class="sub-toggle" id="quickMatExtras" style="display:none;">
         <button id="quickMatBlocksBtn" class="active" title="Toggle per-atom matrix row blocks">Blocks</button>
-        <button id="quickMatMinaoBtn" title="Color diagonal blocks by projected MINAO density matrix values">MINAO P</button>
+        <button id="quickMatMinaoBtn" title="Color diagonal blocks by the isolated-atom MINAO projection P (see the Density tab for the full molecular density)">Atomic P</button>
       </div>
     </div>
   </div>
@@ -230,7 +234,7 @@
       <label>Matrix Block Values</label>
       <div class="panel-seg" id="matColorModeSeg">
         <button type="button" data-matmode="shell" class="active">Shell Structure</button>
-        <button type="button" data-matmode="minao">MINAO Density P<sub>μν</sub></button>
+        <button type="button" data-matmode="minao">Atomic MINAO P<sub>μν</sub></button>
       </div>
       <label>Basis Set</label>
       <div class="panel-seg" id="matBasisSeg">
@@ -240,7 +244,7 @@
         <button type="button" data-basis="def2-tzvp">def2-TZVP</button>
       </div>
       <div class="range-row"><label>Block Scale</label><input type="range" id="matScaleRange" min="0.5" max="2.0" step="0.05" value="1.0"><span class="range-val" id="matScaleVal">1.00</span></div>
-      <div class="hint">Each atom carries its row-slice of the molecular matrix in the selected AO basis. Switch to MINAO Density to inspect the projected ANO initial-guess density matrix elements P<sub>μν</sub>.</div>
+      <div class="hint">Each atom carries its row-slice of the molecular matrix in the selected AO basis. “Atomic MINAO P” colors the diagonal blocks by the isolated-atom ANO projection (no inter-atomic terms). For the full molecular MINAO density in real space, use the Density tab.</div>
     </div>
 
     <!-- 4. Spherical Harmonics Options -->
@@ -265,7 +269,6 @@
         <button type="button" data-mode="shells" class="active">Shells</button>
         <button type="button" data-mode="all_m">2ℓ+1</button>
         <button type="button" data-mode="lcao">LCAO</button>
-        <button type="button" data-mode="minao">MINAO Density</button>
       </div>
       <label>Shell Filter</label>
       <div class="panel-seg" id="panelGtoFilterSeg">
@@ -280,7 +283,7 @@
       <div class="panel-seg" id="panelGtoColorSeg">
         <button type="button" data-color="shell" class="active">By Shell</button>
         <button type="button" data-color="phase">By Phase (+/−)</button>
-        <button type="button" data-color="minao">MINAO P<sub>μμ</sub></button>
+        <button type="button" data-color="minao">Atomic MINAO P<sub>μμ</sub></button>
       </div>
       <div class="toggle-row"><span>Show Shell Cards</span><label class="toggle-switch"><input type="checkbox" id="gtoCardsToggle" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
       <div class="toggle-row"><span>Overlay Matrix Blocks</span><label class="toggle-switch"><input type="checkbox" id="gtoMatrixOverlayToggle"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
@@ -293,6 +296,34 @@
         <canvas id="radialCanvas" width="340" height="120"></canvas>
         <div class="basis-summary" id="basisSummaryText"></div>
       </div>
+    </div>
+
+    <!-- 6. Density View Options -->
+    <div class="viz-section" id="vizSec-density">
+      <label>Density Source</label>
+      <div class="panel-seg" id="densSourceSeg">
+        <button type="button" data-dsrc="projected" class="active">Projected (basis)</button>
+        <button type="button" data-dsrc="ano">ANO reference</button>
+      </div>
+      <label>Basis Set <span style="text-transform:none;letter-spacing:0;opacity:.7">(projected only)</span></label>
+      <div class="panel-seg" id="densBasisSeg">
+        <button type="button" data-basis="sto-3g" class="active">STO-3G</button>
+        <button type="button" data-basis="def2-svp">def2-SVP</button>
+        <button type="button" data-basis="def2-svpd">def2-SVPD</button>
+        <button type="button" data-basis="def2-tzvp">def2-TZVP</button>
+      </div>
+      <div class="range-row"><label>Isovalue ρ</label><input type="range" id="densIsoRange" min="-3" max="-0.3" step="0.02" value="-1.7"><span class="range-val" id="densIsoVal">0.020</span></div>
+      <div class="hint">Surface of constant electron density ρ(r) in e/a₀³ (logarithmic slider). Typical chemical surfaces use 0.001–0.05.</div>
+      <div class="toggle-row"><span>Nested Contours (6×, 36×)</span><label class="toggle-switch"><input type="checkbox" id="densNestedToggle" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
+      <div class="range-row"><label>Opacity</label><input type="range" id="densOpacityRange" min="0.15" max="1.0" step="0.05" value="0.55"><span class="range-val" id="densOpacityVal">0.55</span></div>
+      <label>Grid Resolution</label>
+      <div class="panel-seg" id="densResSeg">
+        <button type="button" data-dres="coarse">Coarse</button>
+        <button type="button" data-dres="medium" class="active">Medium</button>
+        <button type="button" data-dres="fine">Fine</button>
+      </div>
+      <div class="hint" id="densStatusText"></div>
+      <div class="hint"><b>Projected</b> follows PySCF <code>init_guess_by_minao</code>: the occupied free-atom ANO orbitals are projected onto the molecular basis, P = S⁻¹ S<sub>ANO</sub> n S<sub>ANO</sub>ᵀ S⁻¹, and the density is ρ(r) = Σ P<sub>μν</sub> χ<sub>μ</sub>(r) χ<sub>ν</sub>(r) evaluated on a real-space grid, including all inter-atomic terms. <b>ANO reference</b> is the basis-free sum of the atomic densities before projection. Neutral atoms are assumed, as in PySCF.</div>
     </div>
 
     <div class="panel-actions" style="margin-top:auto; padding-top:12px;">
@@ -326,6 +357,430 @@ function getBasisCount(z, basisName){
 }
 
 const BOHR_PER_ANG=1.8897261246;
+
+// Occupied free-atom ANO reference orbitals used by PySCF init_guess_by_minao (Z=1..18, occ per m-component)
+const MINAO_ANO={"1":[{"l":0,"occ":1.0,"exps":[188.61445,28.276596,6.42483,1.815041,0.591063,0.212149,0.079891,0.027962],"coeffs":[0.00096385,0.00749196,0.03759541,0.14339498,0.3486363,0.43829736,0.16510661,0.02102287]}],"2":[{"l":0,"occ":2.0,"exps":[1149.2705,172.04457,39.080465,11.036173,3.564152,1.240443,0.447316,0.164206,0.057472],"coeffs":[0.00035774,0.00277289,0.01429838,0.05586749,0.16336284,0.33133146,0.41429728,0.18903228,0.00515606]}],"3":[{"l":0,"occ":2.0,"exps":[9497.9344,1416.8112,321.45994,91.124163,29.999891,11.017631,4.372801,1.831256,0.802261,0.362648,0.113995,0.051237,0.022468,0.00786],"coeffs":[9.669e-05,0.00060871,0.00310152,0.01266905,0.04248013,0.11501833,0.23986501,0.35843001,0.30485278,0.08824262,-0.00084459,-0.00794396,-0.00376442,-8.869e-05]},{"l":0,"occ":1.0,"exps":[9497.9344,1416.8112,321.45994,91.124163,29.999891,11.017631,4.372801,1.831256,0.802261,0.362648,0.113995,0.051237,0.022468,0.00786],"coeffs":[-1.245e-05,-7.839e-05,-0.00040071,-0.00164525,-0.0056346,-0.01590781,-0.03612582,-0.06459928,-0.10083218,-0.09757614,0.23012159,0.61023898,0.28494061,0.0040269]}],"4":[{"l":0,"occ":2.0,"exps":[22628.599,3372.3181,760.3504,211.74048,67.223468,23.372177,8.721373,3.468091,1.452144,0.608615,0.257686,0.104176,0.042427,0.014849],"coeffs":[8.444e-05,0.00046015,0.00228539,0.00964813,0.0349447,0.10610999,0.24582404,0.38624288,0.31055261,0.06415934,-0.00226505,-0.00052175,-0.00087575,0.00012422]},{"l":0,"occ":2.0,"exps":[22628.599,3372.3181,760.3504,211.74048,67.223468,23.372177,8.721373,3.468091,1.452144,0.608615,0.257686,0.104176,0.042427,0.014849],"coeffs":[-1.587e-05,-8.657e-05,-0.00043022,-0.00182508,-0.00668275,-0.0209512,-0.05200309,-0.09849177,-0.13558007,-0.06429876,0.3125415,0.62704686,0.21102315,-0.00410467]}],"5":[{"l":0,"occ":2.0,"exps":[33360.217,4972.0952,1125.6417,316.49136,102.00726,36.295873,13.97141,5.741156,2.494268,1.114202,0.421549,0.169633,0.068535,0.023987],"coeffs":[0.00010397,0.00052544,0.00250906,0.01031888,0.03636633,0.1064608,0.24039999,0.37485812,0.3100067,0.07922456,-0.00494759,-0.00773712,-0.00150108,-0.00013333]},{"l":0,"occ":2.0,"exps":[33360.217,4972.0952,1125.6417,316.49136,102.00726,36.295873,13.97141,5.741156,2.494268,1.114202,0.421549,0.169633,0.068535,0.023987],"coeffs":[-2.03e-05,-0.00010257,-0.00049113,-0.00202657,-0.00726101,-0.02197722,-0.05408428,-0.10224026,-0.14235952,-0.0465869,0.37994029,0.58904636,0.17490751,-0.00114203]},{"l":1,"occ":0.333333333,"exps":[55.0,13.366101,4.135394,1.481256,0.602136,0.255636,0.111151,0.047648,0.016677],"coeffs":[0.0012298,0.00882738,0.0384334,0.11500318,0.2733674,0.40619721,0.30149679,0.07684809,-8.17e-06]}],"6":[{"l":0,"occ":2.0,"exps":[50557.501,7524.7856,1694.3276,472.82279,151.71075,53.918746,20.659311,8.383976,3.577015,1.547118,0.613013,0.246068,0.099087,0.03468],"coeffs":[0.0001128874,0.0005295373,0.0024500383,0.0100539847,0.0354539806,0.104407109,0.241289492,0.383422548,0.307851439,0.0687244299,0.0002224445,0.0019767489,0.0020578594,0.000418202]},{"l":0,"occ":2.0,"exps":[50557.501,7524.7856,1694.3276,472.82279,151.71075,53.918746,20.659311,8.383976,3.577015,1.547118,0.613013,0.246068,0.099087,0.03468],"coeffs":[-2.50742e-05,-0.0001175945,-0.0005456275,-0.0022450771,-0.0080434718,-0.0244258871,-0.0613679118,-0.117776783,-0.155048778,-0.0193331686,0.399693068,0.558942095,0.171119502,0.0074562446]},{"l":1,"occ":0.666666667,"exps":[83.333155,19.557611,6.080365,2.179317,0.86515,0.361944,0.15474,0.065429,0.0229],"coeffs":[0.001344656,0.010235555,0.045200671,0.14107562,0.304738809,0.399528101,0.271916343,0.0585766933,-0.0001263813]}],"7":[{"l":0,"occ":2.0,"exps":[74761.715,11123.654,2512.6857,703.77729,225.47879,79.61581,30.237283,12.263622,5.265086,2.333471,0.901856,0.358336,0.141093,0.049383],"coeffs":[0.00011826,0.00051729,0.00226666,0.00914529,0.03239343,0.09770793,0.23170368,0.37688989,0.31774207,0.08211309,0.00331209,0.00372082,0.00316542,0.00045958]},{"l":0,"occ":2.0,"exps":[74761.715,11123.654,2512.6857,703.77729,225.47879,79.61581,30.237283,12.263622,5.265086,2.333471,0.901856,0.358336,0.141093,0.049383],"coeffs":[-2.707e-05,-0.00011837,-0.00052038,-0.00210293,-0.0075682,-0.02346767,-0.06042901,-0.11705491,-0.15553215,-0.02468935,0.36250545,0.5550845,0.21483769,0.00898385]},{"l":1,"occ":1.0,"exps":[126.66657,29.837389,9.394038,3.405104,1.35,0.557696,0.232449,0.094264,0.032992],"coeffs":[0.00123363,0.00949341,0.04293962,0.13629254,0.29213625,0.38878876,0.29468014,0.08012876,0.00054052]}],"8":[{"l":0,"occ":2.0,"exps":[105374.95,15679.24,3534.5447,987.36516,315.97875,111.65428,42.699451,17.395596,7.438309,3.222862,1.253877,0.495155,0.191665,0.067083],"coeffs":[0.00012386,0.00051201,0.00215291,0.00852844,0.03018049,0.09099702,0.21779364,0.36862457,0.33667073,0.0965763,0.00214452,0.00119435,0.00053902,0.00021034]},{"l":0,"occ":2.0,"exps":[105374.95,15679.24,3534.5447,987.36516,315.97875,111.65428,42.699451,17.395596,7.438309,3.222862,1.253877,0.495155,0.191665,0.067083],"coeffs":[-2.815e-05,-0.0001163,-0.00049092,-0.00194616,-0.0070053,-0.02167814,-0.05641213,-0.1127053,-0.15891197,-0.03355083,0.35319028,0.55341993,0.23018391,0.01127267]},{"l":1,"occ":1.33333333,"exps":[200.0,46.533367,14.621809,5.313064,2.102525,0.850223,0.337597,0.128892,0.045112],"coeffs":[0.0009173,0.00737714,0.03483515,0.1144397,0.25549664,0.37225574,0.33233149,0.14008479,0.02395784]}],"9":[{"l":0,"occ":2.0,"exps":[103109.46,15281.007,3441.5392,967.09483,314.03534,113.4423,44.644727,18.942874,8.532743,3.919401,1.568157,0.62329,0.240861,0.084301],"coeffs":[0.00017131,0.0007124,0.00299048,0.01164037,0.03968643,0.11285461,0.24736507,0.36727027,0.2896287,0.07786682,0.00456214,0.00246888,0.00110631,0.00017397]},{"l":0,"occ":2.0,"exps":[103109.46,15281.007,3441.5392,967.09483,314.03534,113.4423,44.644727,18.942874,8.532743,3.919401,1.568157,0.62329,0.240861,0.084301],"coeffs":[-4.045e-05,-0.00016823,-0.00070843,-0.002768,-0.00961138,-0.02833958,-0.06839344,-0.12373793,-0.15128597,-0.00909991,0.37162577,0.55002144,0.20923187,0.00807464]},{"l":1,"occ":1.66666667,"exps":[245.33029,56.919005,17.604568,6.274995,2.44703,0.99506,0.403973,0.15481,0.054184],"coeffs":[0.00102486,0.00834429,0.04078927,0.13513706,0.27988308,0.35979664,0.30553474,0.13547039,0.02804449]}],"10":[{"l":0,"occ":2.0,"exps":[166165.08,23107.524,5060.1539,1384.6123,436.51258,153.47148,59.389087,24.861967,11.015704,4.965175,1.936503,0.765728,0.295538,0.103438],"coeffs":[0.00015322,0.00063525,0.00257498,0.01012885,0.03583421,0.10552627,0.23826277,0.36925661,0.3051996,0.08372513,0.00364154,0.00095748,3.422e-05,2.585e-05]},{"l":0,"occ":2.0,"exps":[166165.08,23107.524,5060.1539,1384.6123,436.51258,153.47148,59.389087,24.861967,11.015704,4.965175,1.936503,0.765728,0.295538,0.103438],"coeffs":[-3.648e-05,-0.00015123,-0.0006154,-0.00242556,-0.00874684,-0.02660696,-0.06624127,-0.12377321,-0.15899506,-0.00748442,0.39215991,0.55576031,0.18547321,-0.00018935]},{"l":1,"occ":2.0,"exps":[234.945,55.077385,17.389549,6.389537,2.542082,1.033764,0.418788,0.164627,0.057619],"coeffs":[0.00167414,0.0129102,0.05821477,0.17090334,0.31469958,0.37321923,0.26612246,0.07005722,0.00061498]}],"11":[{"l":0,"occ":2.0,"exps":[138773.72,20325.899,5878.6049,2015.4373,739.62658,280.82116,108.71501,42.601572,16.829817,6.6864486,2.6674877,1.0674621,0.4281891,0.1720801,0.0692588,0.0279092,0.0111633],"coeffs":[-0.00023376,-0.00083756,-0.00223519,-0.00719514,-0.02202837,-0.06644081,-0.17526013,-0.36453833,-0.41539688,-0.13137206,0.03084158,0.04634176,0.02075069,-0.00159087,0.00161589,0.00075928,-0.00019671]},{"l":0,"occ":2.0,"exps":[138773.72,20325.899,5878.6049,2015.4373,739.62658,280.82116,108.71501,42.601572,16.829817,6.6864486,2.6674877,1.0674621,0.4281891,0.1720801,0.0692588,0.0279092,0.0111633],"coeffs":[3.606e-05,0.00012911,0.00034765,0.00111486,0.00350829,0.01084624,0.0317435,0.08041137,0.14945585,0.04718019,-0.35966533,-0.56996925,-0.22374305,0.00609226,-0.00066341,0.00496335,0.00158587]},{"l":0,"occ":1.0,"exps":[138773.72,20325.899,5878.6049,2015.4373,739.62658,280.82116,108.71501,42.601572,16.829817,6.6864486,2.6674877,1.0674621,0.4281891,0.1720801,0.0692588,0.0279092,0.0111633],"coeffs":[8.6e-06,3.078e-05,8.261e-05,0.00026504,0.00082544,0.00252128,0.00708604,0.01667497,0.02722067,0.00850228,-0.0571715,-0.1170199,-0.15737074,-0.02512969,0.54766553,0.55409532,0.0304476]},{"l":1,"occ":2.0,"exps":[383.79172,94.398072,32.361507,12.054352,4.6417186,1.8172876,0.7182712,0.2855803,0.1139947,0.0456292,0.018301,0.0073204],"coeffs":[0.00109238,0.0075485,0.03295923,0.11716963,0.277724,0.39797704,0.32348004,0.0940172,9.929e-05,0.00123505,-0.00084133,0.00025054]}],"12":[{"l":0,"occ":2.0,"exps":[169973.87,24699.066,7175.4851,2478.792,917.73259,351.7514,137.51557,54.430286,21.722569,8.7194484,3.5147166,1.4212132,0.5760765,0.2339525,0.095156,0.038751,0.0155004],"coeffs":[0.00024355,0.00085371,0.00219011,0.00686871,0.02059981,0.06132191,0.16129309,0.33935412,0.40732574,0.15084091,0.00194781,0.00414865,-0.00189378,0.00123638,-0.00063591,0.00043567,-0.00011801]},{"l":0,"occ":2.0,"exps":[169973.87,24699.066,7175.4851,2478.792,917.73259,351.7514,137.51557,54.430286,21.722569,8.7194484,3.5147166,1.4212132,0.5760765,0.2339525,0.095156,0.038751,0.0155004],"coeffs":[-6.177e-05,-0.00021649,-0.00055828,-0.00174842,-0.00533167,-0.01613701,-0.04536757,-0.10906193,-0.18731125,-0.08489275,0.33678701,0.59706674,0.22964051,-0.00685819,0.00730544,-0.00279433,0.0010097]},{"l":0,"occ":2.0,"exps":[169973.87,24699.066,7175.4851,2478.792,917.73259,351.7514,137.51557,54.430286,21.722569,8.7194484,3.5147166,1.4212132,0.5760765,0.2339525,0.095156,0.038751,0.0155004],"coeffs":[1.224e-05,4.289e-05,0.00011076,0.00034622,0.00105941,0.00320245,0.00907006,0.02195549,0.03889878,0.01786527,-0.07912226,-0.18500189,-0.20342474,0.12761321,0.65585322,0.39988244,-0.01610363]},{"l":1,"occ":2.0,"exps":[557.13078,135.48388,47.212958,18.000955,7.1146607,2.863024,1.1640185,0.4763047,0.1957356,0.0806783,0.0333266,0.0133306],"coeffs":[0.00086768,0.00602367,0.02608289,0.09440931,0.24158128,0.38736461,0.35599535,0.12251693,0.00330916,0.00227451,-0.00089923,0.000289]}],"13":[{"l":0,"occ":2.0,"exps":[208459.49,29971.598,8764.4565,3060.7073,1147.4963,445.75595,176.70642,70.94362,28.724,11.698923,4.7853697,1.9637518,0.8078594,0.3329906,0.1374693,0.0568238,0.0227295],"coeffs":[-0.00025471,-0.00087651,-0.00215002,-0.00653763,-0.01909664,-0.05582837,-0.14657021,-0.31437738,-0.41306555,-0.19014467,-0.00498754,-0.00064625,0.00363124,-0.00087291,0.00468767,0.00156474,0.00022127]},{"l":0,"occ":2.0,"exps":[208459.49,29971.598,8764.4565,3060.7073,1147.4963,445.75595,176.70642,70.94362,28.724,11.698923,4.7853697,1.9637518,0.8078594,0.3329906,0.1374693,0.0568238,0.0227295],"coeffs":[6.355e-05,0.00021877,0.00053913,0.00163873,0.00486105,0.0144528,0.04039738,0.09818091,0.17897833,0.11784455,-0.27332852,-0.6068182,-0.27313593,0.00207629,-0.02898325,-0.01005272,-0.00170923]},{"l":0,"occ":2.0,"exps":[208459.49,29971.598,8764.4565,3060.7073,1147.4963,445.75595,176.70642,70.94362,28.724,11.698923,4.7853697,1.9637518,0.8078594,0.3329906,0.1374693,0.0568238,0.0227295],"coeffs":[1.918e-05,6.6e-05,0.00016277,0.000494,0.00146727,0.00435045,0.0121611,0.02939399,0.05371585,0.03555838,-0.08613674,-0.24640039,-0.263497,0.19792275,0.70432169,0.30590573,8.292e-05]},{"l":1,"occ":2.0,"exps":[677.76458,164.83442,57.683424,22.108674,8.7877514,3.5570874,1.454878,0.5989363,0.2476373,0.1026995,0.0426853,0.0170741],"coeffs":[0.00088116,0.00606125,0.02617123,0.09516853,0.24517837,0.39836749,0.35288931,0.10257012,0.00129955,0.00121243,-0.00061501,0.00010438]},{"l":1,"occ":0.333333333,"exps":[677.76458,164.83442,57.683424,22.108674,8.7877514,3.5570874,1.454878,0.5989363,0.2476373,0.1026995,0.0426853,0.0170741],"coeffs":[-0.00017798,-0.0012217,-0.00533943,-0.01962534,-0.05221661,-0.08474169,-0.08463894,0.02346148,0.35020787,0.51720241,0.23206169,0.01110319]}],"14":[{"l":0,"occ":2.0,"exps":[250095.97,35803.2,10522.483,3701.7745,1399.3933,548.38895,219.36269,88.882259,36.323377,14.933463,6.1663485,2.5545565,1.0609507,0.4415024,0.1840168,0.0767962,0.0307185],"coeffs":[0.00026613,0.00089764,0.00212469,0.00629672,0.01800167,0.05190702,0.13606054,0.29538862,0.41105148,0.21704431,0.01343409,0.00499428,-0.00225175,0.00162199,-0.00120677,8.815e-05,-7.96e-05]},{"l":0,"occ":2.0,"exps":[250095.97,35803.2,10522.483,3701.7745,1399.3933,548.38895,219.36269,88.882259,36.323377,14.933463,6.1663485,2.5545565,1.0609507,0.4415024,0.1840168,0.0767962,0.0307185],"coeffs":[-7.09e-05,-0.00023927,-0.00056858,-0.00168609,-0.00488533,-0.01432188,-0.03971981,-0.09670619,-0.18079695,-0.14216051,0.23172028,0.61842967,0.30898517,-0.00074938,0.01946349,0.0051559,0.00176217]},{"l":0,"occ":2.0,"exps":[250095.97,35803.2,10522.483,3701.7745,1399.3933,548.38895,219.36269,88.882259,36.323377,14.933463,6.1663485,2.5545565,1.0609507,0.4415024,0.1840168,0.0767962,0.0307185],"coeffs":[1.997e-05,6.735e-05,0.00016035,0.00047425,0.00138023,0.0040357,0.01128617,0.02759765,0.05315988,0.04284781,-0.07589919,-0.26717907,-0.29031418,0.24510187,0.69391253,0.28637255,0.00995113]},{"l":1,"occ":2.0,"exps":[843.53382,204.90726,72.248787,27.961365,11.232282,4.5969373,1.9014833,0.7917828,0.3311662,0.1389423,0.0584257,0.0233703],"coeffs":[0.00084015,0.00570773,0.02447259,0.08937636,0.23537756,0.39727318,0.3616336,0.10491252,0.00172831,0.00137807,-0.00059067,0.00014346]},{"l":1,"occ":0.666666667,"exps":[843.53382,204.90726,72.248787,27.961365,11.232282,4.5969373,1.9014833,0.7917828,0.3311662,0.1389423,0.0584257,0.0233703],"coeffs":[-0.00018945,-0.00128409,-0.00557534,-0.02055343,-0.05591214,-0.09599757,-0.09912146,0.04293202,0.37825119,0.50496614,0.20539815,0.00868719]}],"15":[{"l":0,"occ":2.0,"exps":[296647.55,42380.03,12503.856,4422.4937,1681.8478,663.2149,267.00585,108.89592,44.797314,18.540312,7.7070995,3.214375,1.3440127,0.563087,0.236287,0.0992811,0.0397124],"coeffs":[-0.00027797,-0.00091959,-0.00211157,-0.00611761,-0.01715624,-0.04890586,-0.12806118,-0.28085596,-0.4087906,-0.23993783,-0.02012924,-0.00521104,-0.00116148,0.00358996,0.01464288,0.00688267,0.00053848]},{"l":0,"occ":2.0,"exps":[296647.55,42380.03,12503.856,4422.4937,1681.8478,663.2149,267.00585,108.89592,44.797314,18.540312,7.7070995,3.214375,1.3440127,0.563087,0.236287,0.0992811,0.0397124],"coeffs":[6.597e-05,0.00021845,0.00050333,0.00146103,0.00414748,0.01203941,0.03328992,0.08185516,0.1581437,0.1418892,-0.17941345,-0.55193057,-0.26993899,-0.04881087,-0.14557896,-0.08041116,-0.00890685]},{"l":0,"occ":2.0,"exps":[296647.55,42380.03,12503.856,4422.4937,1681.8478,663.2149,267.00585,108.89592,44.797314,18.540312,7.7070995,3.214375,1.3440127,0.563087,0.236287,0.0992811,0.0397124],"coeffs":[4.245e-05,0.00014048,0.00032396,0.00093809,0.0026668,0.00769959,0.02123603,0.05143269,0.09789995,0.08582905,-0.10538575,-0.40533324,-0.36679596,0.25276238,0.63109218,0.30933799,0.02196197]},{"l":1,"occ":2.0,"exps":[1018.4122,247.3982,87.790482,34.2486,13.877014,5.7303098,2.3920068,1.0052767,0.4243929,0.1797306,0.076291,0.0305164],"coeffs":[0.00082311,0.00550722,0.0234234,0.08569103,0.22888043,0.39711167,0.36790523,0.10563709,-0.00035881,-0.00051645,-0.00132446,4.52e-06]},{"l":1,"occ":1.0,"exps":[1018.4122,247.3982,87.790482,34.2486,13.877014,5.7303098,2.3920068,1.0052767,0.4243929,0.1797306,0.076291,0.0305164],"coeffs":[-0.00019583,-0.00130831,-0.00563573,-0.0208589,-0.05767611,-0.10251124,-0.10593163,0.06090978,0.39366206,0.47135131,0.20496739,0.03080337]}],"16":[{"l":0,"occ":2.0,"exps":[346348.23,49391.146,14610.99,5187.2095,1980.9676,784.63139,317.32779,130.01976,53.738208,22.345896,9.3332512,3.9111868,1.6432066,0.6917456,0.2916736,0.1231441,0.0492576],"coeffs":[0.00029092,0.00094665,0.00211923,0.00602161,0.01659726,0.04683989,0.12242581,0.27022435,0.40541657,0.25571527,0.02671693,0.00390332,-0.00204189,0.00149034,-0.00062107,0.00044167,-3.24e-06]},{"l":0,"occ":2.0,"exps":[346348.23,49391.146,14610.99,5187.2095,1980.9676,784.63139,317.32779,130.01976,53.738208,22.345896,9.3332512,3.9111868,1.6432066,0.6917456,0.2916736,0.1231441,0.0492576],"coeffs":[-8.101e-05,-0.00026388,-0.00059263,-0.00168762,-0.00470357,-0.01350607,-0.03711959,-0.09114723,-0.17780418,-0.17069592,0.17423163,0.63283682,0.35886635,-0.00096444,0.00659942,-0.00522266,0.00029385]},{"l":0,"occ":2.0,"exps":[346348.23,49391.146,14610.99,5187.2095,1980.9676,784.63139,317.32779,130.01976,53.738208,22.345896,9.3332512,3.9111868,1.6432066,0.6917456,0.2916736,0.1231441,0.0492576],"coeffs":[2.28e-05,7.421e-05,0.00016719,0.00047372,0.00133106,0.00379801,0.01058108,0.0260197,0.05279001,0.05191878,-0.05692828,-0.2909519,-0.31632828,0.29309938,0.66787427,0.28725199,0.01516887]},{"l":1,"occ":2.0,"exps":[1129.1269,274.03515,97.402584,38.085518,15.471033,6.405659,2.6812828,1.130005,0.4783995,0.2031805,0.0864923,0.0345969],"coeffs":[0.00090586,0.00600033,0.02531166,0.09198941,0.24165028,0.41029096,0.35219287,0.08281645,9.28e-05,-0.00223897,-0.0013105,-0.00022092]},{"l":1,"occ":1.33333333,"exps":[1129.1269,274.03515,97.402584,38.085518,15.471033,6.405659,2.6812828,1.130005,0.4783995,0.2031805,0.0864923,0.0345969],"coeffs":[-0.00022454,-0.0014885,-0.00634942,-0.02344282,-0.06370257,-0.11197083,-0.10347278,0.10903888,0.41838741,0.43694091,0.18619701,0.02837119]}],"17":[{"l":0,"occ":2.0,"exps":[399432.47,56908.833,16874.769,6010.0278,2303.283,915.65994,371.72009,152.89109,63.436303,26.481723,11.104112,4.6716289,1.970452,0.8327946,0.3525409,0.1494341,0.0597736],"coeffs":[0.00030484,0.0009769,0.00213829,0.00596941,0.01618189,0.04523017,0.11792451,0.26154412,0.40192154,0.26874482,0.03281694,0.00355918,-0.00170778,0.00129735,-0.00065905,0.00024579,-1.46e-06]},{"l":0,"occ":2.0,"exps":[399432.47,56908.833,16874.769,6010.0278,2303.283,915.65994,371.72009,152.89109,63.436303,26.481723,11.104112,4.6716289,1.970452,0.8327946,0.3525409,0.1494341,0.0597736],"coeffs":[-8.544e-05,-0.00027415,-0.00060181,-0.00168491,-0.0046144,-0.0131294,-0.03590977,-0.08838331,-0.17459524,-0.17768036,0.15212083,0.62550754,0.36355752,0.00960204,0.02635221,0.00476606,0.00086954]},{"l":0,"occ":2.0,"exps":[399432.47,56908.833,16874.769,6010.0278,2303.283,915.65994,371.72009,152.89109,63.436303,26.481723,11.104112,4.6716289,1.970452,0.8327946,0.3525409,0.1494341,0.0597736],"coeffs":[2.805e-05,8.993e-05,0.00019805,0.00055165,0.00152335,0.00430471,0.01193457,0.02937135,0.06021462,0.06257166,-0.05661174,-0.32750975,-0.34199199,0.31850883,0.66176117,0.27830911,0.01682723]},{"l":1,"occ":2.0,"exps":[1288.9716,312.2443,111.34634,43.736087,17.856524,7.4327659,3.1282538,1.3257214,0.5644191,0.2410741,0.1032089,0.0412836],"coeffs":[0.0009357,0.00612519,0.02562804,0.09281756,0.2434616,0.41401588,0.34722988,0.07646871,0.00212249,-0.00079088,-0.00020296,-9.274e-05]},{"l":1,"occ":1.66666667,"exps":[1288.9716,312.2443,111.34634,43.736087,17.856524,7.4327659,3.1282538,1.3257214,0.5644191,0.2410741,0.1032089,0.0412836],"coeffs":[-0.00024782,-0.00162654,-0.00687102,-0.02535755,-0.06874067,-0.12202766,-0.10596481,0.13708383,0.42571611,0.41428846,0.1820407,0.03011165]}],"18":[{"l":0,"occ":2.0,"exps":[455476.77,64817.743,19256.987,6877.0073,2643.4877,1054.2375,429.37122,177.18859,73.763945,30.897007,12.999482,5.4876793,2.3225716,0.9849807,0.4183973,0.1779594,0.0711838],"coeffs":[0.00031986,0.00101162,0.00217022,0.00596295,0.01590812,0.04404689,0.11446022,0.25462867,0.39847766,0.27894996,0.03833534,0.00311861,-0.00138467,0.00100274,-0.00064318,0.00028202,-7.628e-05]},{"l":0,"occ":2.0,"exps":[455476.77,64817.743,19256.987,6877.0073,2643.4877,1054.2375,429.37122,177.18859,73.763945,30.897007,12.999482,5.4876793,2.3225716,0.9849807,0.4183973,0.1779594,0.0711838],"coeffs":[-9.153e-05,-0.00028988,-0.00062361,-0.00171911,-0.00463124,-0.01305687,-0.03553933,-0.08757056,-0.17473693,-0.18579813,0.13690889,0.63466878,0.38201567,0.00497502,0.01173135,-0.00445592,0.00129127]},{"l":0,"occ":2.0,"exps":[455476.77,64817.743,19256.987,6877.0073,2643.4877,1054.2375,429.37122,177.18859,73.763945,30.897007,12.999482,5.4876793,2.3225716,0.9849807,0.4183973,0.1779594,0.0711838],"coeffs":[2.891e-05,9.148e-05,0.00019752,0.00054129,0.0014722,0.00411632,0.01137795,0.02799526,0.05815426,0.06315233,-0.04875208,-0.33008541,-0.34950342,0.34296502,0.68110441,0.25594259,0.00454061]},{"l":1,"occ":2.0,"exps":[1462.4962,354.06731,126.69779,49.989095,20.509295,8.5804641,3.6301049,1.546528,0.6619369,0.2842428,0.1223463,0.0489385],"coeffs":[0.00096179,0.0062065,0.02575738,0.0929804,0.24391579,0.41628552,0.34411686,0.07291779,0.00351385,0.00029035,0.00047604,-8.546e-05]},{"l":1,"occ":2.0,"exps":[1462.4962,354.06731,126.69779,49.989095,20.509295,8.5804641,3.6301049,1.546528,0.6619369,0.2842428,0.1223463,0.0489385],"coeffs":[-0.00027562,-0.00178593,-0.00747423,-0.02756036,-0.07468727,-0.13394216,-0.11071636,0.16257537,0.44876071,0.41165221,0.14724752,0.00679005]}]};
+
+// ===== BEGIN DENSITY MODULE =====
+// Real-space MINAO electron density. Mirrors PySCF init_guess_by_minao:
+//   T = S22^-1 S21 (projection of occupied ANO orbitals onto the molecular basis),
+//   P = T diag(occ) T^T,  rho(r) = sum_mu,nu P_mu,nu chi_mu(r) chi_nu(r).
+const DENS_CART=[
+  [[0,0,0]],
+  [[1,0,0],[0,1,0],[0,0,1]],
+  [[2,0,0],[1,1,0],[1,0,1],[0,2,0],[0,1,1],[0,0,2]],
+  [[3,0,0],[2,1,0],[2,0,1],[1,2,0],[1,1,1],[1,0,2],[0,3,0],[0,2,1],[0,1,2],[0,0,3]]
+];
+// real solid harmonics r^l Y_lm (orthonormal Y), m=-l..l ; terms [coef,a,b,c] for x^a y^b z^c
+const DENS_SOLID=[
+  [[[0.28209479177,0,0,0]]],
+  [[[0.48860251190,0,1,0]],[[0.48860251190,0,0,1]],[[0.48860251190,1,0,0]]],
+  [
+    [[1.09254843059,1,1,0]],
+    [[1.09254843059,0,1,1]],
+    [[0.63078313051,0,0,2],[-0.31539156526,2,0,0],[-0.31539156526,0,2,0]],
+    [[1.09254843059,1,0,1]],
+    [[0.54627421529,2,0,0],[-0.54627421529,0,2,0]]
+  ],
+  [
+    [[1.77013076978,2,1,0],[-0.59004358993,0,3,0]],
+    [[2.89061144264,1,1,1]],
+    [[1.82818316,0,1,2],[-0.45704579,2,1,0],[-0.45704579,0,3,0]],
+    [[0.74635266518,0,0,3],[-1.11952899777,2,0,1],[-1.11952899777,0,2,1]],
+    [[1.82818316,1,0,2],[-0.45704579,3,0,0],[-0.45704579,1,2,0]],
+    [[1.44530572132,2,0,1],[-1.44530572132,0,2,1]],
+    [[0.59004358993,3,0,0],[-1.77013076978,1,2,0]]
+  ]
+];
+const DENS_TSPH=DENS_SOLID.map((comps,l)=>{
+  const cart=DENS_CART[l], nc=cart.length, T=new Float64Array(comps.length*nc);
+  comps.forEach((terms,m)=>terms.forEach(t=>{
+    const idx=cart.findIndex(c=>c[0]===t[1]&&c[1]===t[2]&&c[2]===t[3]);
+    T[m*nc+idx]+=t[0];
+  }));
+  return T;
+});
+const DENS_DFACT=[1,3,15,105];
+
+function densMakeShell(cx,cy,cz,l,exps,coeffs,atom){
+  const np=exps.length, C=new Float64Array(np), E=new Float64Array(np);
+  const df=DENS_DFACT[l];
+  let s=0;
+  for(let j=0;j<np;j++) for(let k=0;k<np;k++){
+    s+=coeffs[j]*coeffs[k]*Math.pow(2*Math.sqrt(exps[j]*exps[k])/(exps[j]+exps[k]),l+1.5);
+  }
+  const nc=1/Math.sqrt(s);
+  for(let k=0;k<np;k++){
+    const a=exps[k];
+    const nk=Math.sqrt(Math.pow(2,2*l+3.5)*Math.pow(a,l+1.5)/(df*Math.sqrt(Math.PI)));
+    C[k]=coeffs[k]*nk*nc; E[k]=a;
+  }
+  // radial cutoff where |sum C r^l e^{-a r^2}| falls below tolerance
+  let cut=0.5;
+  for(let r=0.1;r<40;r+=0.1){
+    let f=0; for(let k=0;k<np;k++) f+=C[k]*Math.exp(-E[k]*r*r);
+    if(Math.abs(f)*Math.pow(r,l)>5e-5) cut=r+0.1;
+  }
+  return {x:cx,y:cy,z:cz,l,np,C,E,cut,cut2:cut*cut,nf:2*l+1,off:0,atom};
+}
+
+function densAssignOffsets(shells){
+  let n=0; for(const s of shells){ s.off=n; n+=s.nf; } return n;
+}
+
+// 1D overlap table S[i][j] (i<=la, j<=lb), stride 4
+function densOverlap1D(S,la,lb,pa,pb,p2inv,s00){
+  S[0]=s00;
+  for(let i=0;i<la;i++){
+    S[(i+1)*4]=pa*S[i*4]+(i>0?i*p2inv*S[(i-1)*4]:0);
+  }
+  for(let j=0;j<lb;j++){
+    for(let i=0;i<=la;i++){
+      let v=pb*S[i*4+j];
+      if(i>0) v+=i*p2inv*S[(i-1)*4+j];
+      if(j>0) v+=j*p2inv*S[i*4+j-1];
+      S[i*4+j+1]=v;
+    }
+  }
+}
+
+// overlap block (spherical) for shells A,B, written into M (row-major, ncols)
+function densShellBlock(A,B,M,ncols,sym){
+  const la=A.l, lb=B.l, cA=DENS_CART[la], cB=DENS_CART[lb];
+  const nca=cA.length, ncb=cB.length;
+  const blk=densShellBlock.blk||(densShellBlock.blk=new Float64Array(100));
+  const tmp=densShellBlock.tmp||(densShellBlock.tmp=new Float64Array(100));
+  const Sx=densShellBlock.Sx||(densShellBlock.Sx=new Float64Array(16));
+  const Sy=densShellBlock.Sy||(densShellBlock.Sy=new Float64Array(16));
+  const Sz=densShellBlock.Sz||(densShellBlock.Sz=new Float64Array(16));
+  for(let i=0;i<nca*ncb;i++) blk[i]=0;
+  const dx=A.x-B.x, dy=A.y-B.y, dz=A.z-B.z, R2=dx*dx+dy*dy+dz*dz;
+  let any=false;
+  for(let ia=0;ia<A.np;ia++){
+    const a=A.E[ia];
+    for(let ib=0;ib<B.np;ib++){
+      const b=B.E[ib], p=a+b, mu=a*b/p;
+      if(mu*R2>42) continue;
+      any=true;
+      const px=(a*A.x+b*B.x)/p, py=(a*A.y+b*B.y)/p, pz=(a*A.z+b*B.z)/p;
+      const p2=0.5/p, base=Math.sqrt(Math.PI/p);
+      densOverlap1D(Sx,la,lb,px-A.x,px-B.x,p2,base*Math.exp(-mu*dx*dx));
+      densOverlap1D(Sy,la,lb,py-A.y,py-B.y,p2,base*Math.exp(-mu*dy*dy));
+      densOverlap1D(Sz,la,lb,pz-A.z,pz-B.z,p2,base*Math.exp(-mu*dz*dz));
+      const cc=A.C[ia]*B.C[ib];
+      for(let u=0;u<nca;u++){
+        const ca=cA[u];
+        for(let v=0;v<ncb;v++){
+          const cb=cB[v];
+          blk[u*ncb+v]+=cc*Sx[ca[0]*4+cb[0]]*Sy[ca[1]*4+cb[1]]*Sz[ca[2]*4+cb[2]];
+        }
+      }
+    }
+  }
+  if(!any) return false;
+  const TA=DENS_TSPH[la], TB=DENS_TSPH[lb], na=2*la+1, nb=2*lb+1;
+  // tmp = TA * blk  (na x ncb)
+  for(let m=0;m<na;m++) for(let v=0;v<ncb;v++){
+    let s=0; for(let u=0;u<nca;u++) s+=TA[m*nca+u]*blk[u*ncb+v];
+    tmp[m*ncb+v]=s;
+  }
+  for(let m=0;m<na;m++) for(let k=0;k<nb;k++){
+    let s=0; for(let v=0;v<ncb;v++) s+=tmp[m*ncb+v]*TB[k*ncb+v];
+    M[(A.off+m)*ncols+B.off+k]=s;
+    if(sym) M[(B.off+k)*ncols+A.off+m]=s;
+  }
+  return true;
+}
+
+function densYield(){ return new Promise(r=>setTimeout(r,0)); }
+
+async function densOverlapMatrix(sA,sB,nA,nB,sym,tok){
+  const M=new Float64Array(nA*nB);
+  let t0=performance.now();
+  for(let i=0;i<sA.length;i++){
+    const j0=sym?i:0;
+    for(let j=j0;j<sB.length;j++) densShellBlock(sA[i],sB[j],M,nB,sym&&j!==i);
+    if(performance.now()-t0>40){ await densYield(); t0=performance.now(); if(tok.cancelled) return null; }
+  }
+  return M;
+}
+
+// in-place Cholesky of SPD matrix (row-major, lower stored in L), returns false if failed
+async function densCholesky(A,n,tok){
+  let t0=performance.now();
+  for(let j=0;j<n;j++){
+    const rj=j*n;
+    let d=A[rj+j];
+    for(let k=0;k<j;k++) d-=A[rj+k]*A[rj+k];
+    if(d<=1e-12) return false;
+    d=Math.sqrt(d); A[rj+j]=d;
+    for(let i=j+1;i<n;i++){
+      const ri=i*n;
+      let s=A[ri+j];
+      for(let k=0;k<j;k++) s-=A[ri+k]*A[rj+k];
+      A[ri+j]=s/d;
+    }
+    if(performance.now()-t0>40){ await densYield(); t0=performance.now(); if(tok.cancelled) return null; }
+  }
+  return true;
+}
+
+// solve L L^T X = B in place (B is n x m row-major)
+function densCholSolve(L,n,B,m){
+  for(let i=0;i<n;i++){
+    const ri=i*n, bi=i*m;
+    for(let k=0;k<i;k++){
+      const l=L[ri+k]; if(l===0) continue;
+      const bk=k*m;
+      for(let c=0;c<m;c++) B[bi+c]-=l*B[bk+c];
+    }
+    const d=1/L[ri+i];
+    for(let c=0;c<m;c++) B[bi+c]*=d;
+  }
+  for(let i=n-1;i>=0;i--){
+    const bi=i*m;
+    for(let k=i+1;k<n;k++){
+      const l=L[k*n+i]; if(l===0) continue;
+      const bk=k*m;
+      for(let c=0;c<m;c++) B[bi+c]-=l*B[bk+c];
+    }
+    const d=1/L[i*n+i];
+    for(let c=0;c<m;c++) B[bi+c]*=d;
+  }
+}
+
+function densEvalAng(l,x,y,z,o){
+  if(l===0){ o[0]=0.28209479177; }
+  else if(l===1){ o[0]=0.48860251190*y; o[1]=0.48860251190*z; o[2]=0.48860251190*x; }
+  else if(l===2){
+    const xx=x*x,yy=y*y,zz=z*z;
+    o[0]=1.09254843059*x*y; o[1]=1.09254843059*y*z;
+    o[2]=0.31539156526*(2*zz-xx-yy);
+    o[3]=1.09254843059*x*z; o[4]=0.54627421529*(xx-yy);
+  } else {
+    const xx=x*x,yy=y*y,zz=z*z;
+    o[0]=0.59004358993*y*(3*xx-yy);
+    o[1]=2.89061144264*x*y*z;
+    o[2]=0.45704579*y*(4*zz-xx-yy);
+    o[3]=0.37317633259*z*(2*zz-3*xx-3*yy);
+    o[4]=0.45704579*x*(4*zz-xx-yy);
+    o[5]=1.44530572132*z*(xx-yy);
+    o[6]=0.59004358993*x*(xx-3*yy);
+  }
+}
+
+// atoms: [{z,x,y,zc}] in Angstrom. basis: name. source: 'projected'|'ano'
+async function computeMinaoDensity(atoms,basisName,source,maxPoints,tok,onStatus){
+  const B=BOHR_PER_ANG;
+  const status=(s)=>{ if(onStatus) onStatus(s); };
+  const ano=[], wANO=[]; // reference orbitals
+  for(let ai=0;ai<atoms.length;ai++){
+    const at=atoms[ai], ref=MINAO_ANO[String(at.z)];
+    if(!ref) throw new Error('MINAO reference not available for Z='+at.z);
+    for(const o of ref){
+      const sh=densMakeShell(at.x*B,at.y*B,at.zc*B,o.l,o.exps,o.coeffs,ai);
+      ano.push(sh);
+    }
+  }
+  const nAno=densAssignOffsets(ano);
+  for(const s of ano){ for(let m=0;m<s.nf;m++) wANO.push(0); }
+  { let k=0; for(let ai=0;ai<atoms.length;ai++){ for(const o of MINAO_ANO[String(atoms[ai].z)]){ for(let m=0;m<2*o.l+1;m++) wANO[k++]=o.occ; } } }
+  let nElec=0; for(const w of wANO) nElec+=w;
+  let shells, n, P=null, wDiag=null;
+  if(source==='ano'){
+    shells=ano; n=nAno; wDiag=Float64Array.from(wANO);
+  } else {
+    shells=[];
+    for(let ai=0;ai<atoms.length;ai++){
+      const at=atoms[ai];
+      for(const sh of getBasisShells(at.z,basisName)){
+        shells.push(densMakeShell(at.x*B,at.y*B,at.zc*B,sh.l,sh.exps,sh.coeffs,ai));
+      }
+    }
+    n=densAssignOffsets(shells);
+    status('Overlap integrals ('+n+' basis functions)…');
+    const S22=await densOverlapMatrix(shells,shells,n,n,true,tok); if(!S22) return null;
+    const S21=await densOverlapMatrix(shells,ano,n,nAno,false,tok); if(!S21) return null;
+    status('Projecting ANO orbitals (Cholesky)…');
+    await densYield();
+    const ok=await densCholesky(S22,n,tok);
+    if(ok===null) return null;
+    if(!ok) throw new Error('Basis overlap matrix is singular');
+    densCholSolve(S22,n,S21,nAno);
+    status('Building density matrix…');
+    await densYield();
+    const T=S21; // n x nAno
+    P=new Float64Array(n*n);
+    // weighted copy for speed
+    const TW=new Float64Array(n*nAno);
+    for(let i=0;i<n;i++) for(let a=0;a<nAno;a++) TW[i*nAno+a]=T[i*nAno+a]*wANO[a];
+    let t0=performance.now();
+    for(let i=0;i<n;i++){
+      const ti=i*nAno;
+      for(let j=0;j<=i;j++){
+        const tj=j*nAno; let s=0;
+        for(let a=0;a<nAno;a++) s+=TW[ti+a]*T[tj+a];
+        P[i*n+j]=s; P[j*n+i]=s;
+      }
+      if(performance.now()-t0>40){ await densYield(); t0=performance.now(); if(tok.cancelled) return null; }
+    }
+  }
+  // ---- real-space grid ----
+  let minx=1e9,miny=1e9,minz=1e9,maxx=-1e9,maxy=-1e9,maxz=-1e9;
+  for(const a of atoms){
+    minx=Math.min(minx,a.x);maxx=Math.max(maxx,a.x);
+    miny=Math.min(miny,a.y);maxy=Math.max(maxy,a.y);
+    minz=Math.min(minz,a.zc);maxz=Math.max(maxz,a.zc);
+  }
+  const margin=3.6;
+  const ox=minx-margin, oy=miny-margin, oz=minz-margin;
+  const Lx=maxx-minx+2*margin, Ly=maxy-miny+2*margin, Lz=maxz-minz+2*margin;
+  let h=Math.cbrt(Lx*Ly*Lz/maxPoints); h=Math.max(h,0.09);
+  const nx=Math.ceil(Lx/h)+1, ny=Math.ceil(Ly/h)+1, nz=Math.ceil(Lz/h)+1;
+  const vals=new Float32Array(nx*ny*nz);
+  const hb=h*B, oxb=ox*B, oyb=oy*B, ozb=oz*B;
+  const BS=8;
+  const nbx=Math.ceil(nx/BS), nby=Math.ceil(ny/BS), nbz=Math.ceil(nz/BS);
+  const totalBlocks=nbx*nby*nbz;
+  let doneBlocks=0, integral=0;
+  const ang=new Float64Array(7);
+  const idxBuf=new Int32Array(8192), valBuf=new Float64Array(8192);
+  let t0=performance.now();
+  status('Evaluating density on grid…');
+  const act=[];
+  for(let bk=0;bk<nbz;bk++) for(let bj=0;bj<nby;bj++) for(let bi=0;bi<nbx;bi++){
+    const i0=bi*BS,j0=bj*BS,k0=bk*BS;
+    const i1=Math.min(nx-1,i0+BS-1), j1=Math.min(ny-1,j0+BS-1), k1=Math.min(nz-1,k0+BS-1);
+    const lox=oxb+i0*hb, hix=oxb+i1*hb, loy=oyb+j0*hb, hiy=oyb+j1*hb, loz=ozb+k0*hb, hiz=ozb+k1*hb;
+    act.length=0;
+    for(const s of shells){
+      const ex=Math.max(lox-s.x,0,s.x-hix), ey=Math.max(loy-s.y,0,s.y-hiy), ez=Math.max(loz-s.z,0,s.z-hiz);
+      if(ex*ex+ey*ey+ez*ez<=s.cut2) act.push(s);
+    }
+    doneBlocks++;
+    if(act.length===0) continue;
+    for(let k=k0;k<=k1;k++){
+      const z=ozb+k*hb;
+      for(let j=j0;j<=j1;j++){
+        const y=oyb+j*hb;
+        for(let i=i0;i<=i1;i++){
+          const x=oxb+i*hb;
+          let cnt=0;
+          for(let q=0;q<act.length;q++){
+            const s=act[q];
+            const dx=x-s.x, dy=y-s.y, dz=z-s.z, r2=dx*dx+dy*dy+dz*dz;
+            if(r2>s.cut2) continue;
+            let rad=0;
+            for(let p=0;p<s.np;p++) rad+=s.C[p]*Math.exp(-s.E[p]*r2);
+            if(rad===0) continue;
+            densEvalAng(s.l,dx,dy,dz,ang);
+            for(let m=0;m<s.nf;m++){ idxBuf[cnt]=s.off+m; valBuf[cnt]=rad*ang[m]; cnt++; }
+          }
+          let rho=0;
+          if(wDiag){
+            for(let a=0;a<cnt;a++) rho+=wDiag[idxBuf[a]]*valBuf[a]*valBuf[a];
+          } else {
+            for(let a=0;a<cnt;a++){
+              const va=valBuf[a], row=idxBuf[a]*n;
+              let s=P[row+idxBuf[a]]*va;
+              for(let b=0;b<a;b++) s+=2*P[row+idxBuf[b]]*valBuf[b];
+              rho+=va*s;
+            }
+          }
+          vals[i+nx*(j+ny*k)]=rho;
+        }
+      }
+    }
+    if(performance.now()-t0>40){
+      status('Evaluating density on grid… '+Math.round(100*doneBlocks/totalBlocks)+'%');
+      await densYield(); t0=performance.now(); if(tok.cancelled) return null;
+    }
+  }
+  let sum=0; for(let i=0;i<vals.length;i++) sum+=vals[i];
+  integral=sum*hb*hb*hb;
+  return {nx,ny,nz,h,ox,oy,oz,vals,integral,nElec,nBasis:n,source,maxRho:vals.reduce((m,v)=>v>m?v:m,0)};
+}
+
+// ---- Marching tetrahedra ----
+const DENS_CORNER=[[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,0,1],[1,0,1],[1,1,1],[0,1,1]];
+const DENS_TETS=[[0,5,1,6],[0,1,2,6],[0,2,3,6],[0,3,7,6],[0,7,4,6],[0,4,5,6]];
+
+function densIsoMesh(grid,iso){
+  const {nx,ny,nz,h,ox,oy,oz,vals}=grid;
+  let pos=new Float32Array(30000), nrm=new Float32Array(30000), nv=0;
+  function ensure(extra){
+    if((nv+extra)*3>pos.length){
+      const np=new Float32Array(pos.length*2); np.set(pos); pos=np;
+      const nn=new Float32Array(nrm.length*2); nn.set(nrm); nrm=nn;
+    }
+  }
+  const sx=1, sy=nx, sz=nx*ny;
+  function grad(i,j,k,o){
+    const ia=i>0?i-1:i, ib=i<nx-1?i+1:i, ja=j>0?j-1:j, jb=j<ny-1?j+1:j, ka=k>0?k-1:k, kb=k<nz-1?k+1:k;
+    o[0]=(vals[ib+nx*(j+ny*k)]-vals[ia+nx*(j+ny*k)])/(ib-ia||1);
+    o[1]=(vals[i+nx*(jb+ny*k)]-vals[i+nx*(ja+ny*k)])/(jb-ja||1);
+    o[2]=(vals[i+nx*(j+ny*kb)]-vals[i+nx*(j+ny*ka)])/(kb-ka||1);
+  }
+  const g1=new Float64Array(3), g2=new Float64Array(3);
+  const cv=new Float64Array(8), cci=new Int32Array(8), ccj=new Int32Array(8), cck=new Int32Array(8);
+  const vp=new Float64Array(12), vn=new Float64Array(12);
+  let ne=0;
+  function edge(p,q,i,j,k){
+    // p inside, q outside (any order); returns writes vertex at vp/vn[ne]
+    const a=cv[p], b=cv[q];
+    let t=(iso-a)/(b-a); if(!(t>=0)) t=0; else if(t>1) t=1;
+    const pi=cci[p],pj=ccj[p],pk=cck[p],qi=cci[q],qj=ccj[q],qk=cck[q];
+    vp[ne*3]=ox+h*(pi+t*(qi-pi)); vp[ne*3+1]=oy+h*(pj+t*(qj-pj)); vp[ne*3+2]=oz+h*(pk+t*(qk-pk));
+    grad(pi,pj,pk,g1); grad(qi,qj,qk,g2);
+    vn[ne*3]=-(g1[0]+t*(g2[0]-g1[0])); vn[ne*3+1]=-(g1[1]+t*(g2[1]-g1[1])); vn[ne*3+2]=-(g1[2]+t*(g2[2]-g1[2]));
+    ne++;
+  }
+  function emitTri(a,b,c){
+    // orient by averaged outward normal (-grad rho)
+    const nxm=vn[a*3]+vn[b*3]+vn[c*3], nym=vn[a*3+1]+vn[b*3+1]+vn[c*3+1], nzm=vn[a*3+2]+vn[b*3+2]+vn[c*3+2];
+    const ux=vp[b*3]-vp[a*3], uy=vp[b*3+1]-vp[a*3+1], uz=vp[b*3+2]-vp[a*3+2];
+    const wx=vp[c*3]-vp[a*3], wy=vp[c*3+1]-vp[a*3+1], wz=vp[c*3+2]-vp[a*3+2];
+    const cx=uy*wz-uz*wy, cy=uz*wx-ux*wz, cz=ux*wy-uy*wx;
+    const order=(cx*nxm+cy*nym+cz*nzm)>=0?[a,b,c]:[a,c,b];
+    ensure(3);
+    for(const v of order){
+      const l=Math.hypot(vn[v*3],vn[v*3+1],vn[v*3+2])||1;
+      pos[nv*3]=vp[v*3]; pos[nv*3+1]=vp[v*3+1]; pos[nv*3+2]=vp[v*3+2];
+      nrm[nv*3]=vn[v*3]/l; nrm[nv*3+1]=vn[v*3+1]/l; nrm[nv*3+2]=vn[v*3+2]/l;
+      nv++;
+    }
+  }
+  for(let k=0;k<nz-1;k++) for(let j=0;j<ny-1;j++) for(let i=0;i<nx-1;i++){
+    const base=i+nx*(j+ny*k);
+    let mn=Infinity,mx=-Infinity;
+    for(let c=0;c<8;c++){
+      const d=DENS_CORNER[c];
+      const v=vals[base+d[0]*sx+d[1]*sy+d[2]*sz];
+      cv[c]=v; if(v<mn)mn=v; if(v>mx)mx=v;
+    }
+    if(mx<iso||mn>=iso) continue;
+    for(let c=0;c<8;c++){ const d=DENS_CORNER[c]; cci[c]=i+d[0]; ccj[c]=j+d[1]; cck[c]=k+d[2]; }
+    for(const t of DENS_TETS){
+      const ins=[],outs=[];
+      for(let q=0;q<4;q++) (cv[t[q]]>=iso?ins:outs).push(t[q]);
+      ne=0;
+      if(ins.length===0||ins.length===4) continue;
+      if(ins.length===1){
+        edge(ins[0],outs[0]);edge(ins[0],outs[1]);edge(ins[0],outs[2]);
+        emitTri(0,1,2);
+      } else if(ins.length===3){
+        edge(outs[0],ins[0]);edge(outs[0],ins[1]);edge(outs[0],ins[2]);
+        emitTri(0,1,2);
+      } else {
+        edge(ins[0],outs[0]);edge(ins[0],outs[1]);edge(ins[1],outs[1]);edge(ins[1],outs[0]);
+        emitTri(0,1,2);emitTri(0,2,3);
+      }
+    }
+  }
+  return {pos:pos.slice(0,nv*3),nrm:nrm.slice(0,nv*3),count:nv};
+}
+// ===== END DENSITY MODULE =====
+
 let BOND_RADIUS=0.08;
 const BOND_COLOR=0x888888, BOND_TOLERANCE=0.35, BG_COLOR=0xf8f7f4;
 let molAtomScale=1.0;
@@ -351,7 +806,7 @@ let matColorMode='shell'; // 'shell' | 'minao'
 
 // GTO state & colors
 let currentBasis='sto-3g'; // 'sto-3g' | 'def2-svp' | 'def2-svpd' | 'def2-tzvp'
-let gtoMode='shells'; // 'shells' | 'all_m' | 'lcao' | 'minao'
+let gtoMode='shells'; // 'shells' | 'all_m' | 'lcao'
 let gtoShellFilter='all'; // 'all' | 'valence' | 's' | 'p' | 'd' | 'f'
 let gtoColorMode='shell'; // 'shell' | 'phase' | 'minao'
 let showGtoCards=true;
@@ -359,6 +814,17 @@ let showGtoMatrixOverlay=false;
 let gtoIsovalue=0.10;
 let gtoScale=0.46;
 let gtoOpacity=0.78;
+
+// Density (real-space MINAO) state
+let densSource='projected'; // 'projected' | 'ano'
+let densIso=0.02;           // e/a0^3
+let densNested=true;
+let densOpacity=0.55;
+let densRes='medium';       // 'coarse' | 'medium' | 'fine'
+const DENS_RES_POINTS={coarse:120000, medium:350000, fine:900000};
+const DENS_LEVEL_COLORS=[0x4a90d9,0x47b068,0xd9602e];
+let densGrid=null, densGridKey='', densBusyKey='', densToken=null, densStatus='', densError='', densMaxR=0;
+let densMeshes=[];
 
 const SHELL_L_COLORS={
   0:{pos:0x4a90d9, neg:0x2b5c8f, inner:0x2d66a6, outer:0x6bc2f5},
@@ -425,10 +891,11 @@ let matBlocksGroup=new THREE.Group(); scene.add(matBlocksGroup); matBlocksGroup.
 let shGroup=new THREE.Group(); scene.add(shGroup); shGroup.visible=false;
 let gtoGroup=new THREE.Group(); scene.add(gtoGroup); gtoGroup.visible=false;
 let gtoCardGroup=new THREE.Group(); scene.add(gtoCardGroup); gtoCardGroup.visible=false;
+let densGroup=new THREE.Group(); scene.add(densGroup); densGroup.visible=false;
 
 let atomMeshes=[], bondMeshes=[], showBonds=true;
 let currentAtomZ=[], currentPositions=[], currentCenter=[0,0,0];
-let viewMode='molecule'; // 'molecule'|'gnn'|'matrix'|'sh'|'gto'
+let viewMode='molecule'; // 'molecule'|'gnn'|'matrix'|'sh'|'gto'|'density'
 let showFeatures=false, useCurvedArrows=false, monoNodes=false;
 let edgeOpacity=0.5;
 
@@ -532,6 +999,7 @@ function buildMolecule(az,pos){
   buildMatrix(az,pos,cx,cy,cz);
   buildSH(az,pos,cx,cy,cz);
   buildGTO(az,pos,cx,cy,cz);
+  buildDensityBase(az,pos,cx,cy,cz);
   drawRadialPlot();
   setView(viewMode);
   updateLegend(); updateLabel(az); fitCamera();
@@ -1075,44 +1543,6 @@ function getShellLobeColor(sh,positive,sameLIndex){
   }
 }
 
-// Build radial table for MINAO electron density rho(r) (or sqrt(rho(r)) so isovalue slider works smoothly)
-function buildAtomMinaoDensityRadialTable(z, basisName){
-  const allShells=getBasisShells(z, basisName);
-  const dmByL=getBasisMinaoDM(z, basisName);
-  const radByShell=allShells.map(sh=>buildShellRadialTable(sh));
-  const table=new Float64Array(GTO_NR);
-  let iPeak=0, valPeak=-1;
-
-  // Group shell indices by l, keeping only shells that pass current filter
-  for(let ir=0;ir<GTO_NR;ir++){
-    let rho=0;
-    for(let l=0;l<=3;l++){
-      const dmL=dmByL[l];
-      if(!dmL) continue;
-      const shIndices=[];
-      allShells.forEach((sh,idx)=>{if(sh.l===l) shIndices.push(idx);});
-      const deg=(2*l+1)/(4*Math.PI);
-      for(let a=0;a<shIndices.length;a++){
-        const ia=shIndices[a];
-        if(!shellPassesFilter(allShells[ia])) continue;
-        const ra=radByShell[ia].table[ir];
-        for(let b=0;b<shIndices.length;b++){
-          const ib=shIndices[b];
-          if(!shellPassesFilter(allShells[ib])) continue;
-          const rb=radByShell[ib].table[ir];
-          const pVal=dmL[a]?.[b]||0;
-          rho+=deg*pVal*ra*rb;
-        }
-      }
-    }
-    // Store sqrt(max(0, rho)) so its amplitude matches orbital amplitude scale [0.01 .. 0.35]
-    const amp=Math.sqrt(Math.max(0, rho));
-    table[ir]=amp;
-    if(amp>valPeak){valPeak=amp;iPeak=ir;}
-  }
-  return {table,iPeak,valPeak};
-}
-
 // Compute local orthonormal frame (ex, ey, ez) per atom aligned with primary bond
 function computeAtomLocalFrames(az,npos,bonds){
   return npos.map((p,i)=>{
@@ -1233,39 +1663,6 @@ function buildGTO(az,pos,cx,cy,cz){
         gtoGroup.add(mesh);
         gtoLobeMeshes.push({mesh,type:'lcao',positive,dirs:localAngles,shellAngs,shellTables});
       });
-    } else if(gtoMode==='minao'){
-      // Projected MINAO electron density rho_A(r) in the selected basis
-      const densRad=buildAtomMinaoDensityRadialTable(z,currentBasis);
-      const unitAng=localAngles.map(()=>1.0);
-      // Outer valence density isosurface (at sqrt(rho) = gtoIsovalue)
-      const geo=new THREE.SphereGeometry(1,gtoRes,gtoRes);
-      setSingleGTOVertices(geo,localAngles,unitAng,densRad,gtoIsovalue,true);
-      const totPop=filteredShells.reduce((s,sh)=>s+(2*sh.l+1)*(sh.minaoQ||0),0);
-      const col=minaoValueColor(Math.min(2.2, totPop/Math.max(1,filteredShells.length)));
-      const mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({
-        color:col, roughness:0.22, metalness:0.08,
-        transparent:true, opacity:gtoOpacity*0.82, side:THREE.DoubleSide, depthWrite:false
-      }));
-      mesh.position.copy(atomPos);
-      mesh.castShadow=true;
-      mesh.renderOrder=3;
-      gtoGroup.add(mesh);
-      gtoLobeMeshes.push({mesh,type:'single',positive:true,dirs:localAngles,angVals:unitAng,radInfo:densRad,sameLIdx:0,l:0,core:false,hasHigherL:false});
-
-      // Inner high-density core contour (at 3.5x isovalue) so core vs valence shells are visible in 3D
-      if(z>2 && gtoShellFilter==='all'){
-        const coreGeo=new THREE.SphereGeometry(1,36,36);
-        setSingleGTOVertices(coreGeo,localAngles,unitAng,densRad,gtoIsovalue*3.5,true);
-        const coreMesh=new THREE.Mesh(coreGeo,new THREE.MeshStandardMaterial({
-          color:0xb83227, roughness:0.25, metalness:0.1,
-          transparent:true, opacity:Math.min(0.92,gtoOpacity+0.12), side:THREE.DoubleSide, depthWrite:false
-        }));
-        coreMesh.position.copy(atomPos);
-        coreMesh.castShadow=true;
-        coreMesh.renderOrder=2;
-        gtoGroup.add(coreMesh);
-        gtoLobeMeshes.push({mesh:coreMesh,type:'single',positive:true,dirs:localAngles,angVals:unitAng,radInfo:densRad,sameLIdx:0,l:0,core:true,hasHigherL:false,isoMult:3.5});
-      }
     } else {
       // 'shells' (1 representative m per shell) or 'all_m' (all 2l+1 m values per shell)
       // Sort shells from tightest (innermost) to most diffuse (outermost) for clean nested transparency
@@ -1324,7 +1721,7 @@ function buildGTO(az,pos,cx,cy,cz){
     const cellW=0.044, cellH=0.036, colGap=0.014;
     const nCols=allShells.length;
     const totalCardW=nCols*cellW+Math.max(0,nCols-1)*colGap;
-    const useMinaoCard=(gtoMode==='minao'||gtoColorMode==='minao');
+    const useMinaoCard=(gtoColorMode==='minao');
 
     allShells.forEach((sh,si)=>{
       const xCenter=-totalCardW/2+si*(cellW+colGap)+cellW/2;
@@ -1415,8 +1812,8 @@ function drawRadialPlot(){
   ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+ph); ctx.lineTo(padL+pw,padT+ph);
   ctx.stroke();
 
-  // Isovalue reference line (scaled by Y_00 = 0.282 for orbitals, or direct for MINAO sqrt(rho))
-  const isoR=Math.min(yMaxPlot, (gtoMode==='minao')?gtoIsovalue:(gtoIsovalue/0.282095));
+  // Isovalue reference line (|chi| = c corresponds to |R| = c / Y_00)
+  const isoR=Math.min(yMaxPlot, gtoIsovalue/0.282095);
   const yIso=padT+ph-(isoR/yMaxPlot)*ph;
   ctx.strokeStyle='rgba(255,255,255,0.28)';
   ctx.setLineDash([3,3]);
@@ -1430,8 +1827,8 @@ function drawRadialPlot(){
     if(!shellPassesFilter(sh)) return;
     const {table}=buildShellRadialTable(sh);
     ctx.strokeStyle=sh.core?'#3d6ea8':(colMap[sh.l]||'#ccc');
-    ctx.lineWidth=sh.core?1.0:(gtoMode==='minao'?1.1:1.6);
-    ctx.globalAlpha=(gtoMode==='minao')?0.45:1.0;
+    ctx.lineWidth=sh.core?1.0:1.6;
+    ctx.globalAlpha=1.0;
     if(sh.exps.length===1 && !sh.core) ctx.setLineDash([4,2]);
     else ctx.setLineDash([]);
     ctx.beginPath();
@@ -1448,27 +1845,10 @@ function drawRadialPlot(){
   ctx.globalAlpha=1.0;
   ctx.setLineDash([]);
 
-  // Overlay total MINAO radial density curve sqrt(rho(r)) in bright gold/coral when in MINAO mode or color scheme
-  if(gtoMode==='minao'||gtoColorMode==='minao'){
-    const densRad=buildAtomMinaoDensityRadialTable(plotZ,currentBasis);
-    ctx.strokeStyle='#ff6b4a';
-    ctx.lineWidth=2.2;
-    ctx.beginPath();
-    for(let i=0;i<GTO_NR;i++){
-      const rAng=i*GTO_DR;
-      if(rAng>rMaxPlot) break;
-      const x=padL+(rAng/rMaxPlot)*pw;
-      const v=Math.min(yMaxPlot, densRad.table[i]);
-      const y=padT+ph-(v/yMaxPlot)*ph;
-      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    }
-    ctx.stroke();
-  }
-
   // Labels
   ctx.fillStyle='#999';
   ctx.font='9px "DM Mono", monospace';
-  const modeTag=(gtoMode==='minao'||gtoColorMode==='minao')?' · MINAO √ρ(r)':'';
+  const modeTag='';
   ctx.fillText(`${elem.symbol} (${currentBasis.toUpperCase()})${modeTag}`, padL+4, padT+9);
   ctx.fillText('0', padL-4, padT+ph+12);
   ctx.fillText('1.2 Å', padL+pw*0.5-12, padT+ph+12);
@@ -1486,11 +1866,11 @@ function drawRadialPlot(){
     const nAO=getBasisCount(z,currentBasis);
     const desc=shs.map(sh=>{
       const pStr=(sh.minaoP||0).toFixed(2);
-      return `${sh.label}(${sh.exps.length}p, P=${pStr})`;
+      return `${sh.label}(${sh.exps.length}p, Pₐ=${pStr})`;
     }).join(' ');
     return `<b>${el.symbol}</b> [${nAO} AOs]: ${desc}`;
   });
-  lines.push(`Total: <b>${totalAO} CGTOs</b> · Projected MINAO Tr(PS) = <b>${totalMinaoE.toFixed(2)} e⁻</b>`);
+  lines.push(`Total: <b>${totalAO} CGTOs</b> · isolated-atom MINAO ΣTr(PS) = <b>${totalMinaoE.toFixed(2)} e⁻</b> (full molecular density: Density tab)`);
   const sumEl=document.getElementById('basisSummaryText');
   if(sumEl) sumEl.innerHTML=lines.join('<br>');
 }
@@ -1498,18 +1878,158 @@ function drawRadialPlot(){
 // ═══════════════════════════════════════════
 // View management
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// Density view (real-space MINAO electron density)
+// ═══════════════════════════════════════════
+function densAtoms(){
+  const [cx,cy,cz]=currentCenter;
+  return currentAtomZ.map((z,i)=>({z,x:currentPositions[i][0]-cx,y:currentPositions[i][1]-cy,zc:currentPositions[i][2]-cz}));
+}
+
+function densCurrentKey(){
+  return [densSource, densSource==='ano'?'':currentBasis, densRes,
+    currentAtomZ.join(','), currentPositions.map(p=>p.join(',')).join(';')].join('|');
+}
+
+function disposeDensMeshes(){
+  densMeshes.forEach(m=>{densGroup.remove(m);m.geometry.dispose();m.material.dispose();});
+  densMeshes=[]; densMaxR=0;
+}
+
+function buildDensityBase(az,pos,cx,cy,cz){
+  if(densToken) densToken.cancelled=true;
+  densToken=null; densBusyKey=''; densGrid=null; densGridKey=''; densError=''; densStatus='';
+  densMeshes=[]; densMaxR=0;
+  scene.remove(densGroup); densGroup=new THREE.Group();
+  const npos=pos.map(p=>new THREE.Vector3(p[0]-cx,p[1]-cy,p[2]-cz));
+  detectBonds(az,pos).forEach(([i,j])=>{
+    makeCylinder(npos[i],npos[j],0.03,
+      new THREE.MeshStandardMaterial({color:0x888888,roughness:0.5}),densGroup);
+  });
+  az.forEach((z,i)=>{
+    const e=getElement(z);
+    const m=new THREE.Mesh(sphereGeo,new THREE.MeshStandardMaterial({color:e.color,roughness:0.3,metalness:0.05}));
+    m.scale.setScalar(e.radius*0.3); m.position.copy(npos[i]); m.castShadow=true;
+    densGroup.add(m);
+  });
+  densGroup.visible=(viewMode==='density');
+  scene.add(densGroup);
+}
+
+function setDensStatus(s){
+  densStatus=s;
+  const a=document.getElementById('densStatusText'); if(a) a.textContent=s;
+  const b=document.getElementById('densLegendStatus'); if(b) b.textContent=s;
+}
+
+function densLevelOpacity(i){
+  const busy=(densBusyKey!=='');
+  let o=densNested?[densOpacity*0.55,densOpacity*0.8,Math.min(0.95,densOpacity+0.2)][i]:densOpacity;
+  return busy?o*0.3:o;
+}
+function densApplyOpacity(){
+  densMeshes.forEach(m=>{m.material.opacity=densLevelOpacity(m.userData.level);});
+}
+
+function rebuildDensityMeshes(){
+  if(!densGrid) return;
+  disposeDensMeshes();
+  const levels=densNested?[densIso,densIso*6,densIso*36]:[densIso];
+  levels.forEach((lv,i)=>{
+    if(lv>=densGrid.maxRho*0.98) return;
+    const m=densIsoMesh(densGrid,lv);
+    if(!m.count) return;
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.BufferAttribute(m.pos,3));
+    geo.setAttribute('normal',new THREE.BufferAttribute(m.nrm,3));
+    const mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({
+      color:DENS_LEVEL_COLORS[i], roughness:0.35, metalness:0.05,
+      transparent:true, opacity:0.5, side:THREE.FrontSide, depthWrite:false
+    }));
+    mesh.renderOrder=1+i; mesh.userData.level=i; mesh.frustumCulled=false;
+    densGroup.add(mesh); densMeshes.push(mesh);
+    if(i===0){
+      let r2=0; const p=m.pos;
+      for(let k=0;k<p.length;k+=3){const d=p[k]*p[k]+p[k+1]*p[k+1]+p[k+2]*p[k+2]; if(d>r2) r2=d;}
+      densMaxR=Math.sqrt(r2);
+    }
+  });
+  densApplyOpacity();
+  updateFloorPosition();
+  if(viewMode==='density') updateLegend();
+}
+
+async function ensureDensity(){
+  if(viewMode!=='density'||!currentAtomZ.length) return;
+  const key=densCurrentKey();
+  if(densGrid&&densGridKey===key){ rebuildDensityMeshes(); return; }
+  if(densBusyKey===key) return;
+  if(densToken) densToken.cancelled=true;
+  const tok={cancelled:false}; densToken=tok; densBusyKey=key; densError='';
+  densApplyOpacity();
+  setDensStatus('Preparing…');
+  const t0=performance.now();
+  try{
+    await densYield();
+    const grid=await computeMinaoDensity(densAtoms(),currentBasis,densSource,DENS_RES_POINTS[densRes],tok,setDensStatus);
+    if(tok.cancelled||!grid) return;
+    densGrid=grid; densGridKey=key; densBusyKey=''; densToken=null;
+    rebuildDensityMeshes();
+    fitCamera();
+    setDensStatus(`${densSource==='ano'?grid.nBasis+' ANO functions':grid.nBasis+' basis functions'} · grid ${grid.nx}×${grid.ny}×${grid.nz} (h = ${grid.h.toFixed(2)} Å) · ${Math.round(performance.now()-t0)} ms`);
+  }catch(e){
+    if(tok.cancelled) return;
+    densBusyKey=''; densToken=null; densError=e.message||String(e);
+    disposeDensMeshes(); densGrid=null; densGridKey='';
+    setDensStatus('Error: '+densError);
+    updateFloorPosition();
+  }
+}
+
+function densFmt(v){ return v>=0.1?v.toFixed(2):v.toPrecision(2); }
+
+function densityLegendHTML(){
+  const hex=c=>'#'+c.toString(16).padStart(6,'0');
+  const sw=(c,t,first)=>`<div class="legend-item" style="text-transform:none;${first?'margin-top:8px;':''}"><div class="legend-dot" style="background:${hex(c)};border-radius:2px;"></div>${t}</div>`;
+  let s=sw(DENS_LEVEL_COLORS[0],`ρ = ${densFmt(densIso)} e/a₀³`,true);
+  if(densNested){
+    s+=sw(DENS_LEVEL_COLORS[1],`ρ = ${densFmt(densIso*6)}`);
+    s+=sw(DENS_LEVEL_COLORS[2],`ρ = ${densFmt(densIso*36)}`);
+  }
+  const note=(x)=>`<div class="legend-item" style="color:#777;font-size:10px;text-transform:none;">${x}</div>`;
+  let nE=0; currentAtomZ.forEach(z=>{(MINAO_ANO[String(z)]||[]).forEach(o=>{nE+=o.occ*(2*o.l+1);});});
+  s+=note(densSource==='ano'
+    ? 'Free-atom ANO reference<br>(basis-free, before projection)'
+    : `MINAO guess projected onto ${currentBasis.toUpperCase()}<br>ρ = Σ P<sub>μν</sub> χ<sub>μ</sub> χ<sub>ν</sub>`);
+  s+=note(`N<sub>e</sub> = ${nE.toFixed(0)} (neutral-atom guess)`);
+  const preset=EXAMPLE_STRUCTURES[currentPresetKey];
+  if(preset&&preset.charge) s+=note(`charge ${preset.charge>0?'+':''}${preset.charge} not applied (as in PySCF)`);
+  s+=`<div class="legend-item" id="densLegendStatus" style="color:#999;font-size:10px;text-transform:none;">${densStatus||''}</div>`;
+  return s;
+}
+
 const VIZ_MODE_LABELS={
   molecule:'Molecule',
   gnn:'GNN Graph',
   matrix:'AO Matrix',
   sh:'Harmonics',
-  gto:'GTO Basis'
+  gto:'GTO Basis',
+  density:'MINAO Density'
 };
 
 function syncBasisUI(){
-  document.querySelectorAll('#quickBasisToggle button, #panelBasisSeg button, #matBasisSeg button').forEach(b=>{
+  document.querySelectorAll('#quickBasisToggle button, #panelBasisSeg button, #matBasisSeg button, #densBasisSeg button').forEach(b=>{
     b.classList.toggle('active', b.dataset.basis===currentBasis);
   });
+  document.querySelectorAll('#quickDens button, #densSourceSeg button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.dsrc===densSource);
+  });
+  document.querySelectorAll('#densResSeg button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.dres===densRes);
+  });
+  const basisDim=(viewMode==='density'&&densSource==='ano')?'0.4':'1';
+  document.getElementById('quickBasisToggle').style.opacity=basisDim;
+  document.getElementById('densBasisSeg').style.opacity=(densSource==='ano')?'0.4':'1';
   document.querySelectorAll('#quickGtoMode button, #panelGtoModeSeg button').forEach(b=>{
     b.classList.toggle('active', b.dataset.mode===gtoMode);
   });
@@ -1531,7 +2051,7 @@ function syncBasisUI(){
 }
 
 function syncVizPanelSection(mode){
-  ['molecule','gnn','matrix','sh','gto'].forEach(m=>{
+  ['molecule','gnn','matrix','sh','gto','density'].forEach(m=>{
     const sec=document.getElementById(`vizSec-${m}`);
     if(sec) sec.classList.toggle('active', m===mode);
   });
@@ -1550,15 +2070,18 @@ function setView(mode){
   shGroup.visible=(mode==='sh');
   gtoGroup.visible=(mode==='gto');
   gtoCardGroup.visible=(mode==='gto'&&showGtoCards);
+  densGroup.visible=(mode==='density');
 
   document.getElementById('viewMol').classList.toggle('active',mode==='molecule');
   document.getElementById('viewGNN').classList.toggle('active',mode==='gnn');
   document.getElementById('viewMatrix').classList.toggle('active',mode==='matrix');
   document.getElementById('viewSH').classList.toggle('active',mode==='sh');
   document.getElementById('viewGTO').classList.toggle('active',mode==='gto');
+  document.getElementById('viewDens').classList.toggle('active',mode==='density');
 
   const quickBar=document.getElementById('basisQuickBar');
-  quickBar.classList.toggle('visible', mode==='gto'||mode==='matrix');
+  quickBar.classList.toggle('visible', mode==='gto'||mode==='matrix'||mode==='density');
+  document.getElementById('quickDens').style.display=(mode==='density')?'flex':'none';
   document.getElementById('quickGtoMode').style.display=(mode==='gto')?'flex':'none';
   document.getElementById('quickGtoFilter').style.display=(mode==='gto')?'flex':'none';
   document.getElementById('quickGtoExtras').style.display=(mode==='gto')?'flex':'none';
@@ -1566,6 +2089,7 @@ function setView(mode){
   syncBasisUI();
   syncVizPanelSection(mode);
   updateLegend(); fitCamera();
+  if(mode==='density') ensureDensity();
 }
 
 // ═══════════════════════════════════════════
@@ -1597,7 +2121,7 @@ function updateLegend(){
         return `<div class="legend-item" style="color:#666;font-size:10px;text-transform:none;">${sym}[${vals}]</div>`;
       }).join('');
       el.innerHTML=elemItems+
-        `<div class="legend-item" style="margin-top:8px;"><div class="legend-dot" style="background:#b83227;border-radius:2px;"></div>High MINAO P<sub>μμ</sub> (~2.0)</div>`+
+        `<div class="legend-item" style="margin-top:8px;"><div class="legend-dot" style="background:#b83227;border-radius:2px;"></div>High atomic-MINAO P<sub>μμ</sub> (~2.0)</div>`+
         `<div class="legend-item"><div class="legend-dot" style="background:#55b86c;border-radius:2px;"></div>Valence P<sub>μμ</sub> (0.2–1.2)</div>`+
         `<div class="legend-item"><div class="legend-dot" style="background:#7db8e8;border-radius:2px;"></div>Diffuse / Low P<sub>μμ</sub></div>`+
         `<div class="legend-item"><div class="legend-dot" style="background:#e4e3e0;border-radius:2px;"></div>Unoccupied Pol (0.0)</div>`+
@@ -1617,6 +2141,8 @@ function updateLegend(){
       `<div class="legend-item" style="margin-top:8px;"><div class="legend-dot" style="background:#4a90d9;border-radius:2px;"></div>f(θ,φ) = +c</div>`+
       `<div class="legend-item"><div class="legend-dot" style="background:#d94a4a;border-radius:2px;"></div>f(θ,φ) = −c</div>`+
       `<div class="legend-item" style="color:#999;font-size:10px;">\u2113\u2098\u2090\u2093 = ${SH_LMAX}, c = ${shIsovalue.toFixed(2)}</div>`;
+  } else if(viewMode==='density'){
+    el.innerHTML=elemItems+densityLegendHTML();
   } else if(viewMode==='gto'){
     const totalAO=currentAtomZ.reduce((s,z)=>s+getBasisCount(z,currentBasis),0);
     const hasD=unique.some(z=>getBasisShells(z,currentBasis).some(sh=>sh.l===2));
@@ -1629,7 +2155,7 @@ function updateLegend(){
       const code=(counts[0]?counts[0]+'s':'')+(counts[1]?counts[1]+'p':'')+(counts[2]?counts[2]+'d':'')+(counts[3]?counts[3]+'f':'');
       return `${sym}[${code}]`;
     }).join(' ');
-    if(gtoMode==='minao'||gtoColorMode==='minao'){
+    if(gtoColorMode==='minao'){
       const minaoRows=unique.map(z=>{
         const sym=getElement(z).symbol;
         const shs=getBasisShells(z,currentBasis);
@@ -1641,7 +2167,7 @@ function updateLegend(){
         `<div class="legend-item"><div class="legend-dot" style="background:#55b86c;border-radius:2px;"></div>Valence P<sub>μμ</sub> (0.2–1.3)</div>`+
         `<div class="legend-item"><div class="legend-dot" style="background:#7db8e8;border-radius:2px;"></div>Diffuse Split P<sub>μμ</sub> (&lt;0.2)</div>`+
         `<div class="legend-item"><div class="legend-dot" style="background:#cccccc;border-radius:2px;"></div>Unoccupied Pol (0.0)</div>`+
-        `<div class="legend-item" style="color:#777;font-size:10px;margin-top:4px;">${currentBasis.toUpperCase()} · ${totalAO} CGTOs (MINAO)</div>`+
+        `<div class="legend-item" style="color:#777;font-size:10px;margin-top:4px;">${currentBasis.toUpperCase()} · ${totalAO} CGTOs (isolated-atom MINAO P)</div>`+
         minaoRows;
     } else if(gtoMode==='lcao'||gtoColorMode==='phase'){
       el.innerHTML=elemItems+
@@ -1711,6 +2237,12 @@ function computeBoundingRadius(){
       const r=m.position.length()+(m.geometry.userData.maxR||0.8);
       if(r>maxExtent) maxExtent=r;
     });
+  } else if(viewMode==='density'){
+    atomMeshes.forEach((m,i)=>{
+      const r=m.position.length()+0.35;
+      if(r>maxExtent) maxExtent=r;
+    });
+    if(densMaxR>maxExtent) maxExtent=densMaxR+0.1;
   } else if(viewMode==='gto'){
     gtoLobeMeshes.forEach(item=>{
       const r=item.mesh.position.length()+(item.mesh.geometry.userData.maxR||0.8);
@@ -1760,7 +2292,8 @@ function fitCamera(){
   const maxExtent=computeBoundingRadius();
   let maxAtomCenter=0;
   atomMeshes.forEach(m=>{const d=m.position.length();if(d>maxAtomCenter)maxAtomCenter=d;});
-  camBaseDist=Math.max(maxAtomCenter*3.5, maxExtent*2.45, 5);
+  // Density surfaces are large smooth blobs, so the camera needs extra distance to avoid cropping them
+  camBaseDist=Math.max(maxAtomCenter*3.5, maxExtent*(viewMode==='density'?3.6:2.45), 5);
   targetZoom=1; zoom=1;
   updateFloorPosition();
 }
@@ -1829,6 +2362,7 @@ function animate(now){
   shGroup.rotation.x=rotX; shGroup.rotation.y=rotY;
   gtoGroup.rotation.x=rotX; gtoGroup.rotation.y=rotY;
   gtoCardGroup.rotation.x=rotX; gtoCardGroup.rotation.y=rotY;
+  densGroup.rotation.x=rotX; densGroup.rotation.y=rotY;
 
   const dist=camBaseDist*zoom;
   camera.position.set(dist*Math.sin(0.3)*Math.cos(0.2),dist*Math.sin(0.35),dist*Math.cos(0.3)*Math.cos(0.2));
@@ -2008,6 +2542,7 @@ document.getElementById('viewGNN').addEventListener('click',()=>setView('gnn'));
 document.getElementById('viewMatrix').addEventListener('click',()=>setView('matrix'));
 document.getElementById('viewSH').addEventListener('click',()=>setView('sh'));
 document.getElementById('viewGTO').addEventListener('click',()=>setView('gto'));
+document.getElementById('viewDens').addEventListener('click',()=>setView('density'));
 
 document.getElementById('shIsoRange').addEventListener('input',e=>{
   shIsovalue=parseFloat(e.target.value);
@@ -2043,9 +2578,10 @@ function rebuildBasisViews(){
   drawRadialPlot();
   updateFloorPosition();
   updateLegend();
+  if(viewMode==='density') ensureDensity();
 }
 
-document.querySelectorAll('#quickBasisToggle button, #panelBasisSeg button, #matBasisSeg button').forEach(btn=>{
+document.querySelectorAll('#quickBasisToggle button, #panelBasisSeg button, #matBasisSeg button, #densBasisSeg button').forEach(btn=>{
   btn.addEventListener('click',()=>{
     currentBasis=btn.dataset.basis;
     rebuildBasisViews();
@@ -2110,6 +2646,34 @@ document.getElementById('gtoOpacityRange').addEventListener('input',e=>{
       item.mesh.material.opacity=gtoOpacity;
     }
   });
+});
+
+// Density view listeners
+document.querySelectorAll('#quickDens button, #densSourceSeg button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    densSource=btn.dataset.dsrc;
+    syncBasisUI(); updateLegend(); ensureDensity();
+  });
+});
+document.querySelectorAll('#densResSeg button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    densRes=btn.dataset.dres;
+    syncBasisUI(); ensureDensity();
+  });
+});
+document.getElementById('densIsoRange').addEventListener('input',e=>{
+  densIso=Math.pow(10,parseFloat(e.target.value));
+  document.getElementById('densIsoVal').textContent=densFmt(densIso);
+  if(densGrid) rebuildDensityMeshes(); else updateLegend();
+});
+document.getElementById('densNestedToggle').addEventListener('change',e=>{
+  densNested=e.target.checked;
+  if(densGrid) rebuildDensityMeshes(); else updateLegend();
+});
+document.getElementById('densOpacityRange').addEventListener('input',e=>{
+  densOpacity=parseFloat(e.target.value);
+  document.getElementById('densOpacityVal').textContent=densOpacity.toFixed(2);
+  densApplyOpacity();
 });
 
 ['atomZInput','nucPosInput'].forEach(id=>{
@@ -2187,6 +2751,7 @@ function dlURL(url,fn){const l=document.createElement('a');l.download=fn;l.href=
 document.getElementById('exportBtn').addEventListener('click',()=>{
   const prev=viewMode;
   // Molecule
+  densGroup.visible=false;
   molGroup.visible=true;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=false;matBlocksGroup.visible=false;shGroup.visible=false;gtoGroup.visible=false;gtoCardGroup.visible=false;
   const molURL=renderCroppedDataURL();
   // GNN
@@ -2201,6 +2766,12 @@ document.getElementById('exportBtn').addEventListener('click',()=>{
   // GTO
   molGroup.visible=false;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=false;matBlocksGroup.visible=showGtoMatrixOverlay;shGroup.visible=false;gtoGroup.visible=true;gtoCardGroup.visible=showGtoCards;
   const gtoURL=renderCroppedDataURL();
+  // Density (only if already computed, otherwise skipped)
+  let densURL=null;
+  if(densGrid&&densMeshes.length){
+    molGroup.visible=false;gnnGroup.visible=false;gnnFeatGroup.visible=false;matGroup.visible=false;matBlocksGroup.visible=false;shGroup.visible=false;gtoGroup.visible=false;gtoCardGroup.visible=false;densGroup.visible=true;
+    densURL=renderCroppedDataURL();
+  }
   // Restore
   renderer.setClearColor(BG_COLOR,1);scene.background=new THREE.Color(BG_COLOR);
   renderer.setSize(W,H);renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
@@ -2210,6 +2781,7 @@ document.getElementById('exportBtn').addEventListener('click',()=>{
   setTimeout(()=>dlURL(matURL,`molecule_matrix_${currentBasis}.png`),800);
   setTimeout(()=>dlURL(shURL,'molecule_sh.png'),1200);
   setTimeout(()=>dlURL(gtoURL,`molecule_gto_${currentBasis}.png`),1600);
+  if(densURL) setTimeout(()=>dlURL(densURL,`molecule_density_${densSource==='ano'?'ano':currentBasis}.png`),2000);
 });
 
 // ═══════════════════════════════════════════
