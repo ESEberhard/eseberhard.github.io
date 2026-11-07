@@ -2597,15 +2597,49 @@ function updateFloorPosition(){
 // Camera distance depends only on the molecule (not on the active view), so switching tabs never changes the zoom.
 // A fixed halo around the atoms leaves room for orbital lobes and density surfaces; zoom out for anything larger.
 let lastFitSig='';
+function viewportIsNarrow(){
+  return H>W || window.matchMedia('(max-width: 820px)').matches;
+}
+function exportFramesWhole(){
+  // Phones clip a wide molecule in portrait, and a pinch can push the rest off screen.
+  // The saved image still has to contain every atom at the current rotation.
+  return IS_IOS || PHONE || viewportIsNarrow();
+}
+function moleculeRadius(){
+  let r=0.8;
+  atomMeshes.forEach((m,i)=>{
+    const rad=(getElement(currentAtomZ[i]).radius||0.3)*molAtomScale+BOND_RADIUS;
+    r=Math.max(r, m.position.length()+rad);
+  });
+  return r;
+}
+// Distance at which a sphere of this radius, centered on the origin, sits inside the frustum.
+function framedDistance(radius){
+  const aspect=Math.max(0.25, Math.max(W,1)/Math.max(H,1));
+  const vHalf=(camera.fov*Math.PI/180)/2;
+  const hHalf=Math.atan(Math.tan(vHalf)*aspect);
+  const limit=Math.max(0.08, Math.min(vHalf, hHalf));
+  return Math.max(radius*1.22/Math.sin(limit), 2);
+}
+function horizontalLimitsFit(){
+  const aspect=Math.max(W,1)/Math.max(H,1);
+  const vHalf=(camera.fov*Math.PI/180)/2;
+  const hHalf=Math.atan(Math.tan(vHalf)*aspect);
+  return hHalf<vHalf;
+}
 function fitCamera(){
   let maxAtomCenter=0;
   atomMeshes.forEach(m=>{const d=m.position.length();if(d>maxAtomCenter)maxAtomCenter=d;});
-  camBaseDist=Math.max(maxAtomCenter*3.5, (maxAtomCenter+2.0)*2.8, 5);
+  if(horizontalLimitsFit()) camBaseDist=framedDistance(moleculeRadius());
+  else camBaseDist=Math.max(maxAtomCenter*3.5, (maxAtomCenter+2.0)*2.8, 5);
   // only reset the zoom when the geometry actually changed, never for setting tweaks or tab switches
   const sig=currentAtomZ.join(',')+'|'+currentPositions.map(p=>p.map(v=>v.toFixed(4)).join(',')).join(';');
   if(sig!==lastFitSig){ lastFitSig=sig; targetZoom=1; zoom=1; }
   updateFloorPosition();
 }
+const ZOOM_MIN=0.3;
+function zoomMax(){ return (IS_IOS||viewportIsNarrow())?6:3; }
+function clampZoom(z){ return Math.max(ZOOM_MIN, Math.min(zoomMax(), z)); }
 
 // ═══════════════════════════════════════════
 // Parsing
@@ -2629,7 +2663,7 @@ renderer.domElement.addEventListener('mousedown',e=>{isDragging=true;autoRotate=
 renderer.domElement.addEventListener('mousemove',e=>{if(!isDragging)return;targetRotY+=(e.clientX-prevMouse.x)*0.008;targetRotX+=(e.clientY-prevMouse.y)*0.008;targetRotX=Math.max(-Math.PI/2,Math.min(Math.PI/2,targetRotX));prevMouse={x:e.clientX,y:e.clientY};});
 renderer.domElement.addEventListener('mouseup',()=>{isDragging=false;});
 renderer.domElement.addEventListener('mouseleave',()=>{isDragging=false;});
-renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();targetZoom*=e.deltaY>0?1.08:0.92;targetZoom=Math.max(0.3,Math.min(3,targetZoom));},{passive:false});
+renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();targetZoom=clampZoom(targetZoom*(e.deltaY>0?1.08:0.92));},{passive:false});
 let pinchDist=0;
 function touchSpan(e){
   const dx=e.touches[0].clientX-e.touches[1].clientX, dy=e.touches[0].clientY-e.touches[1].clientY;
@@ -2654,7 +2688,7 @@ renderer.domElement.addEventListener('touchmove',e=>{
   e.preventDefault();
   if(e.touches.length>=2 && pinchDist>0){
     const d=touchSpan(e);
-    if(d>0){ targetZoom=Math.max(0.3,Math.min(3,targetZoom*(pinchDist/d))); pinchDist=d; }
+    if(d>0){ targetZoom=clampZoom(targetZoom*(pinchDist/d)); pinchDist=d; }
     return;
   }
   if(!isDragging||e.touches.length!==1) return;
@@ -2694,28 +2728,30 @@ function updateBillboards(){
 // Animation
 // ═══════════════════════════════════════════
 let lastTime=performance.now();
+function applyGroupRotation(){
+  [molGroup,gnnGroup,gnnFeatGroup,matGroup,matBlocksGroup,shGroup,gtoGroup,gtoCardGroup,densGroup].forEach(g=>{
+    if(!g) return;
+    g.rotation.x=rotX; g.rotation.y=rotY;
+  });
+}
+function placeCamera(dist){
+  applyGroupRotation();
+  // A phone fit for a wide molecule sits past the default far plane of 100.
+  const far=Math.max(200, dist*4);
+  if(camera.far!==far){ camera.far=far; camera.updateProjectionMatrix(); }
+  camera.position.set(dist*Math.sin(0.3)*Math.cos(0.2),dist*Math.sin(0.35),dist*Math.cos(0.3)*Math.cos(0.2));
+  camera.lookAt(0,0,0);
+  camera.updateMatrixWorld();
+}
 function animate(now){
   requestAnimationFrame(animate);
+  if(exporting) return;
   const dt=Math.min((now-lastTime)/1000,0.05); lastTime=now;
   if(autoRotate)targetRotY+=0.003;
   rotX+=(targetRotX-rotX)*0.08; rotY+=(targetRotY-rotY)*0.08;
   zoom+=(targetZoom-zoom)*0.08;
 
-  // All rotating groups share rotation
-  molGroup.rotation.x=rotX; molGroup.rotation.y=rotY;
-  gnnGroup.rotation.x=rotX; gnnGroup.rotation.y=rotY;
-  gnnFeatGroup.rotation.x=rotX; gnnFeatGroup.rotation.y=rotY;
-  matGroup.rotation.x=rotX; matGroup.rotation.y=rotY;
-  matBlocksGroup.rotation.x=rotX; matBlocksGroup.rotation.y=rotY;
-  shGroup.rotation.x=rotX; shGroup.rotation.y=rotY;
-  gtoGroup.rotation.x=rotX; gtoGroup.rotation.y=rotY;
-  gtoCardGroup.rotation.x=rotX; gtoCardGroup.rotation.y=rotY;
-  densGroup.rotation.x=rotX; densGroup.rotation.y=rotY;
-
-  const dist=camBaseDist*zoom;
-  camera.position.set(dist*Math.sin(0.3)*Math.cos(0.2),dist*Math.sin(0.35),dist*Math.cos(0.3)*Math.cos(0.2));
-  camera.lookAt(0,0,0);
-  camera.updateMatrixWorld();
+  placeCamera(camBaseDist*zoom);
 
   // Billboard matrix subs and GTO shell cards so they face the camera
   if(matBlocksGroup.visible){
@@ -2752,6 +2788,8 @@ function animate(now){
 
   renderer.render(scene,camera);
 }
+let exporting=false;
+let exportCamDist=0; // >0 while a phone export frames the whole molecule
 animate(performance.now());
 
 // ═══════════════════════════════════════════
@@ -2786,6 +2824,7 @@ function resizeRenderer(){
   camera.updateProjectionMatrix();
   renderer.setPixelRatio(rendererPixelRatio());
   renderer.setSize(W,H);
+  if(atomMeshes.length) fitCamera();
   syncCompactLabels();
 }
 window.addEventListener('resize', resizeRenderer);
@@ -3086,7 +3125,39 @@ let exportBg='transparent';  // 'solid' | 'transparent'
 let exportBgColor='#ffffff';
 let exportLegend=false;      // append a legend column to every exported image
 let exportPad=40;            // px margin around the shared tight crop
-let exporting=false;
+
+function objectIsShown(obj){
+  for(let o=obj;o;o=o.parent) if(o.visible===false) return false;
+  return true;
+}
+const _fitBox=new THREE.Box3(), _fitMeshBox=new THREE.Box3();
+function worldRadiusOf(root){
+  if(!root||!root.visible) return 0;
+  _fitBox.makeEmpty();
+  root.updateWorldMatrix(true,true);
+  root.traverse(obj=>{
+    if(!obj.geometry||!objectIsShown(obj)) return;
+    obj.geometry.computeBoundingBox();
+    _fitMeshBox.copy(obj.geometry.boundingBox).applyMatrix4(obj.matrixWorld);
+    if(!isFinite(_fitMeshBox.min.x)||!isFinite(_fitMeshBox.max.x)) return;
+    _fitBox.union(_fitMeshBox);
+  });
+  if(_fitBox.isEmpty()) return 0;
+  let r=0;
+  const xs=[_fitBox.min.x,_fitBox.max.x], ys=[_fitBox.min.y,_fitBox.max.y], zs=[_fitBox.min.z,_fitBox.max.z];
+  xs.forEach(x=>ys.forEach(y=>zs.forEach(z=>{ r=Math.max(r, Math.hypot(x,y,z)); })));
+  return isFinite(r)?r:0;
+}
+function exportContentRadius(mode){
+  const prev=viewMode;
+  viewMode=mode;
+  let r=computeBoundingRadius();
+  viewMode=prev;
+  [molGroup,gnnGroup,gnnFeatGroup,matGroup,matBlocksGroup,shGroup,gtoGroup,gtoCardGroup,densGroup].forEach(g=>{
+    r=Math.max(r, worldRadiusOf(g));
+  });
+  return r;
+}
 
 // Render the currently visible groups at export resolution on a transparent background
 // and return a full-frame canvas copy (no cropping).
@@ -3094,7 +3165,8 @@ function renderFullFrameCanvas(){
   const scale=exportPixelScale(), ew=Math.max(2,Math.round(W*scale)), eh=Math.max(2,Math.round(H*scale));
   renderer.setClearColor(0x000000,0); scene.background=null;
   renderer.setSize(ew,eh); renderer.setPixelRatio(1);
-  camera.aspect=W/H; camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+  camera.aspect=W/H; camera.updateProjectionMatrix();
+  placeCamera(exportCamDist>0?exportCamDist:camBaseDist*zoom);
 
   // Update matrix and GTO billboards at export resolution
   if(matBlocksGroup.visible){
@@ -3323,6 +3395,22 @@ async function exportViews(opts){
 
     if(only){ views=views.filter(v=>v.mode===only); if(!views.length) throw new Error('View not available for export: '+only); }
 
+    // Freeze the gesture the user just finished, then on a phone pull the camera
+    // back until every atom and lobe fits. The on-screen pinch zoom is restored afterwards.
+    rotX=targetRotX; rotY=targetRotY; zoom=targetZoom;
+    applyGroupRotation();
+    exportCamDist=0;
+    if(exportFramesWhole()){
+      let fitR=0;
+      for(const v of views){
+        if(v.mode==='sh'||v.mode==='gto') ensureHeavy(v.mode);
+        setOnlyVisible(v.spec);
+        applyGroupRotation();
+        fitR=Math.max(fitR, exportContentRadius(v.mode));
+      }
+      exportCamDist=framedDistance(Math.max(fitR, 0.5));
+    }
+
     // 1) render every view full-frame (same camera, rotation and size)
     for(const v of views){
       if(MOBILE_GPU) await densYield();
@@ -3415,6 +3503,7 @@ async function exportViews(opts){
     }
     btn.textContent=label;
     exporting=false;
+    exportCamDist=0;
     compactLabelLock=false;
     resizeRenderer();
   }
