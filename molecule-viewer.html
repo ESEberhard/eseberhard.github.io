@@ -2,16 +2,22 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <title>Molecule Viewer</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #f8f7f4; font-family: 'DM Mono', monospace; overflow: hidden; height: 100vh; width: 100vw; }
-  #canvas-container { width: 100vw; height: 100vh; position: relative; }
-  canvas { display: block; }
+  html, body {
+    background: #f8f7f4; font-family: 'DM Mono', monospace;
+    overflow: hidden; position: fixed; inset: 0;
+    width: 100%; height: 100%; height: 100dvh;
+    overscroll-behavior: none; -webkit-text-size-adjust: 100%;
+    touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  }
+  #canvas-container { width: 100%; height: 100%; height: 100dvh; position: relative; overflow: hidden; }
+  #canvas-container > canvas { display: block; position: absolute; inset: 0; z-index: 0; width: 100% !important; height: 100% !important; touch-action: none; }
   .top-left { position: absolute; top: 24px; left: 28px; z-index: 20; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
   .top-left-buttons { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .label-overlay { color: #2a2a2a; pointer-events: none; text-align: right; }
@@ -33,7 +39,7 @@
   .view-toggle button.active { background: #222; color: #f8f7f4; }
   .view-toggle button:not(.active):hover { background: #d0cfcc; }
   .bottom-bar { position: absolute; bottom: 20px; right: 28px; z-index: 10; display: flex; gap: 8px; }
-  .side-panel { position: absolute; top: 0; left: 0; width: 400px; max-width: 90vw; height: 100vh; background: rgba(34,34,34,0.96); color: #ddd; z-index: 25; transform: translateX(-100%); transition: transform 0.28s ease; display: flex; flex-direction: column; padding: 24px; overflow-y: auto; box-shadow: 4px 0 24px rgba(0,0,0,0.18); }
+  .side-panel { position: absolute; top: 0; left: 0; width: 400px; max-width: 90vw; height: 100%; height: 100dvh; background: rgba(34,34,34,0.96); color: #ddd; z-index: 25; transform: translateX(-100%); transition: transform 0.28s ease; display: flex; flex-direction: column; padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom)); overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; box-shadow: 4px 0 24px rgba(0,0,0,0.18); }
   .side-panel.open { transform: translateX(0); }
   .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
   .panel-header h2 { font-size: 11px; font-weight: 400; letter-spacing: 3px; text-transform: uppercase; color: #ccc; margin: 0; }
@@ -93,6 +99,41 @@
   .panel-select { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #ddd; font-family: 'DM Mono', monospace; font-size: 12px; padding: 9px 28px 9px 12px; border-radius: 4px; margin-bottom: 16px; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23aaa' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
   .panel-select:focus { outline: none; border-color: rgba(255,255,255,0.3); }
   .panel-select option { background: #222; color: #ddd; }
+  .ios-save { position: absolute; inset: 0; z-index: 40; background: rgba(20,20,20,0.45); display: flex; align-items: flex-end; justify-content: center; padding: 12px; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  .ios-save[hidden] { display: none !important; }
+  .ios-save-card { width: min(440px, 100%); background: #2a2a2a; color: #eee; border-radius: 12px; padding: 16px; max-height: min(80vh, 80dvh); overflow: auto; touch-action: pan-y; -webkit-overflow-scrolling: touch; }
+  .ios-save-title { font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: #ccc; margin-bottom: 8px; word-break: break-all; }
+  .ios-save-card img { width: 100%; height: auto; max-height: min(42vh, 42dvh); object-fit: contain; background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 16px 16px; border-radius: 6px; margin: 8px 0 12px; -webkit-touch-callout: default; -webkit-user-select: auto; user-select: auto; }
+  .ios-save-card .panel-actions { position: sticky; bottom: 0; background: #2a2a2a; padding-top: 8px; }
+  .side-panel textarea, .side-panel .text-input { -webkit-user-select: text; user-select: text; }
+  .ios-save-note { font-size: 12px; color: #aaa; margin-bottom: 12px; line-height: 1.45; }
+  .gl-lost { position: absolute; left: 50%; bottom: max(72px, calc(64px + env(safe-area-inset-bottom))); transform: translateX(-50%); z-index: 30; background: #222; color: #fff; padding: 8px 12px; font-size: 11px; letter-spacing: 0.3px; border-radius: 4px; max-width: 90vw; text-align: center; }
+  .gl-lost[hidden] { display: none !important; }
+  @media (pointer: coarse) {
+    .btn, .view-toggle button, .sub-toggle button, .panel-seg button { min-height: 36px; touch-action: manipulation; }
+    .range-row input[type=range] { -webkit-appearance: none; appearance: none; height: 28px; background: transparent; }
+    .range-row input[type=range]::-webkit-slider-runnable-track { height: 4px; background: rgba(255,255,255,0.28); border-radius: 2px; }
+    .range-row input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; margin-top: -9px; border-radius: 50%; background: #f4f1ea; border: 1px solid rgba(0,0,0,0.2); }
+  }
+  @media (max-width: 820px) {
+    .top-left { top: max(8px, env(safe-area-inset-top)); left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); gap: 8px; }
+    .top-left-buttons, .sub-controls.visible { flex-wrap: nowrap; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; touch-action: pan-x; }
+    .top-left-buttons::-webkit-scrollbar, .sub-controls::-webkit-scrollbar { display: none; }
+    .view-toggle, .preset-select, .top-left .btn, .sub-toggle { flex-shrink: 0; }
+    .preset-select { max-width: 46vw; font-size: 16px; }
+    .view-toggle button { padding: 8px 10px; }
+    .top-right { top: auto; bottom: max(10px, env(safe-area-inset-bottom)); left: max(10px, env(safe-area-inset-left)); right: auto; align-items: flex-start; max-width: 42vw; max-height: 34vh; overflow: hidden; }
+    .label-overlay { text-align: left; }
+    .label-overlay h1 { font-size: 10px; letter-spacing: 1.2px; }
+    .label-overlay .formula { font-size: 16px; }
+    .legend { align-items: flex-start; }
+    .legend-item { font-size: 9px; letter-spacing: 0.4px; }
+    .bottom-bar { left: auto; right: max(8px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom)); max-width: 54vw; }
+    .bottom-bar .btn { padding: 10px 12px; }
+    .controls-hint { display: none; }
+    .side-panel { width: 100%; max-width: 100%; height: 100%; height: 100dvh; padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); touch-action: pan-y; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+    .side-panel textarea, .side-panel .text-input, .panel-select { font-size: 16px; }
+  }
 </style>
 </head>
 <body>
@@ -151,10 +192,22 @@
     </div>
     <div id="legend" class="legend"></div>
   </div>
-  <div class="controls-hint">drag to rotate · scroll to zoom</div>
+  <div class="controls-hint" id="controlsHint">drag to rotate · scroll to zoom</div>
   <div class="bottom-bar">
     <button class="btn" id="copyViewBtn" title="Render only the current view with the export settings and copy it to the clipboard">Copy Current View</button>
     <button class="btn" id="exportBtn">Export All PNGs</button>
+  </div>
+  <div id="glLost" class="gl-lost" hidden>Graphics reset. Reload the page if the molecule disappears.</div>
+  <div id="iosSaveSheet" class="ios-save" hidden>
+    <div class="ios-save-card">
+      <div class="ios-save-title" id="iosSaveTitle">Ready to save</div>
+      <img id="iosSavePreview" alt="Rendered molecule" hidden>
+      <p class="ios-save-note" id="iosSaveNote"></p>
+      <div class="panel-actions">
+        <button type="button" class="btn btn-light" id="iosSaveClose">Close</button>
+        <button type="button" class="btn" id="iosSaveBtn">Save</button>
+      </div>
+    </div>
   </div>
 
   <!-- Global Settings & Molecule Geometry Panel -->
@@ -345,6 +398,19 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="molecule-examples.js"></script>
 <script>
+// iPadOS reports as a Mac, so touch points are part of the check. Phone-sized iOS
+// devices get the reduced GPU path; iPad keeps desktop-quality meshes.
+const IS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+// iPhones have a short screen side under ~430 CSS px. iPads start at 744, so they keep desktop mesh quality.
+const PHONE=Math.min(window.screen.width||1200, window.screen.height||1200)<600;
+const MOBILE_GPU=IS_IOS&&PHONE;
+const MAX_DPR=MOBILE_GPU?1.5:2;
+function rendererPixelRatio(){ return Math.min(window.devicePixelRatio||1, MAX_DPR); }
+function exportPixelScale(){
+  const cap=MOBILE_GPU?1400:4096;
+  const want=MOBILE_GPU?2:3;
+  return Math.max(1, Math.min(want, cap/Math.max(W,H,1)));
+}
 // ═══════════════════════════════════════════
 // Elements & Basis Sets (STO-3G and def2-SVP)
 // ═══════════════════════════════════════════
@@ -905,7 +971,7 @@ let densIso=0.02;           // e/a0^3
 let densNested=true;
 let densOpacity=0.55;
 let densRes='medium';       // 'coarse' | 'medium' | 'fine'
-const DENS_RES_POINTS={coarse:120000, medium:350000, fine:900000};
+const DENS_RES_POINTS=MOBILE_GPU?{coarse:40000, medium:90000, fine:160000}:{coarse:120000, medium:350000, fine:900000};
 const DENS_LEVEL_COLORS=[0x4a90d9,0x47b068,0xd9602e];
 let densGrid=null, densGridKey='', densBusyKey='', densToken=null, densStatus='', densError='', densMaxR=0;
 let densMeshes=[];
@@ -935,19 +1001,30 @@ const MATRIX_LINE_COLOR=0x333333;
 // Scene
 // ═══════════════════════════════════════════
 const container=document.getElementById('canvas-container');
-let W=container.clientWidth, H=container.clientHeight;
-const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});
-renderer.setSize(W,H); renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+let W=Math.max(container.clientWidth,1), H=Math.max(container.clientHeight,1);
+let renderer;
+try{
+  // Antialiasing plus a 2048 soft shadow map is a common reason iOS Safari
+  // drops the WebGL context before the first frame.
+  renderer=new THREE.WebGLRenderer({antialias:!MOBILE_GPU,alpha:true,preserveDrawingBuffer:true});
+}catch(err){
+  const n=document.getElementById('glLost');
+  if(n){ n.hidden=false; n.textContent='This browser could not start WebGL, so the molecule cannot be shown.'; }
+  throw err;
+}
+renderer.setSize(W,H); renderer.setPixelRatio(rendererPixelRatio());
 renderer.setClearColor(BG_COLOR,1); renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap; renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.shadowMap.type=MOBILE_GPU?THREE.PCFShadowMap:THREE.PCFSoftShadowMap; renderer.toneMapping=THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=1.1; container.appendChild(renderer.domElement);
+renderer.domElement.addEventListener('webglcontextlost', e=>{ e.preventDefault(); const n=document.getElementById('glLost'); if(n) n.hidden=false; });
+renderer.domElement.addEventListener('webglcontextrestored', ()=>{ const n=document.getElementById('glLost'); if(n) n.hidden=true; });
 const scene=new THREE.Scene(); scene.background=new THREE.Color(BG_COLOR);
 const camera=new THREE.PerspectiveCamera(32,W/H,0.1,100);
 
 scene.add(new THREE.AmbientLight(0xffffff,0.55));
 const keyLight=new THREE.DirectionalLight(0xffffff,0.85);
 keyLight.position.set(5,8,6); keyLight.castShadow=true;
-keyLight.shadow.mapSize.set(2048,2048); keyLight.shadow.camera.near=1; keyLight.shadow.camera.far=30;
+keyLight.shadow.mapSize.set(MOBILE_GPU?1024:2048, MOBILE_GPU?1024:2048); keyLight.shadow.camera.near=1; keyLight.shadow.camera.far=30;
 keyLight.shadow.camera.left=-5; keyLight.shadow.camera.right=5;
 keyLight.shadow.camera.top=5; keyLight.shadow.camera.bottom=-5; keyLight.shadow.bias=-0.001;
 scene.add(keyLight);
@@ -959,10 +1036,27 @@ const floor=new THREE.Mesh(new THREE.PlaneGeometry(40,40),floorMat);
 floor.rotation.x=-Math.PI/2; floor.position.y=-2; floor.receiveShadow=true; scene.add(floor);
 let floorCustomY=null; // null = automatic rotation-safe floor placement
 
-const sphereGeo=new THREE.SphereGeometry(1,64,48);
+const sphereGeo=new THREE.SphereGeometry(1,MOBILE_GPU?32:64,MOBILE_GPU?24:48);
 const cylGeo=new THREE.CylinderGeometry(1,1,1,16,1,true);
 const boxGeo=new THREE.BoxGeometry(1,1,1);
 const coneGeo=new THREE.ConeGeometry(1,1,12);
+const SHARED_GEOS=new Set([sphereGeo,cylGeo,boxGeo,coneGeo]);
+function disposeNode(root){
+  if(!root) return;
+  const seen=new Set();
+  root.traverse(obj=>{
+    if(obj.geometry && !SHARED_GEOS.has(obj.geometry)) obj.geometry.dispose();
+    if(obj.material){
+      const mats=Array.isArray(obj.material)?obj.material:[obj.material];
+      mats.forEach(m=>{ if(m && !seen.has(m)){ seen.add(m); m.dispose(); } });
+    }
+  });
+}
+function dropGroup(group){
+  if(!group) return;
+  scene.remove(group);
+  disposeNode(group);
+}
 
 // ═══════════════════════════════════════════
 // State
@@ -1060,8 +1154,35 @@ function makeCurvedArrow(from,to,color,opacity,parent,edgeRadius){
 // ═══════════════════════════════════════════
 // Build Molecule
 // ═══════════════════════════════════════════
+let shReady=false, gtoReady=false;
+function resetSH(){
+  dropGroup(shGroup);
+  shGroup=new THREE.Group(); scene.add(shGroup); shGroup.visible=false;
+  shCoeffs=[]; shPosMeshes=[]; shNegMeshes=[]; shAtomPositions=[];
+  shReady=false;
+}
+function resetGTO(){
+  dropGroup(gtoGroup); dropGroup(gtoCardGroup);
+  gtoGroup=new THREE.Group(); gtoCardGroup=new THREE.Group();
+  scene.add(gtoGroup); scene.add(gtoCardGroup);
+  gtoGroup.visible=false; gtoCardGroup.visible=false;
+  gtoLobeMeshes=[]; gtoCardSubs=[];
+  gtoReady=false;
+}
+function ensureHeavy(mode){
+  if(!currentAtomZ.length) return;
+  const [cx,cy,cz]=currentCenter;
+  if(mode==='sh' && !shReady) buildSH(currentAtomZ,currentPositions,cx,cy,cz);
+  if(mode==='gto' && !gtoReady) buildGTO(currentAtomZ,currentPositions,cx,cy,cz);
+}
+function lobeResolution(){
+  const n=currentAtomZ.length||1;
+  if(!MOBILE_GPU) return {sh:64, gto:(gtoMode==='all_m')?64:88};
+  const scale=n>80?0.5:(n>40?0.7:1);
+  return {sh:Math.max(18,Math.round(32*scale)), gto:Math.max(16,Math.round(((gtoMode==='all_m')?28:40)*scale))};
+}
 function buildMolecule(az,pos){
-  scene.remove(molGroup); molGroup=new THREE.Group();
+  dropGroup(molGroup); molGroup=new THREE.Group();
   atomMeshes=[]; bondMeshes=[]; currentAtomZ=az; currentPositions=pos;
   let cx=0,cy=0,cz=0;
   pos.forEach(p=>{cx+=p[0];cy+=p[1];cz+=p[2];}); cx/=pos.length;cy/=pos.length;cz/=pos.length;
@@ -1081,9 +1202,12 @@ function buildMolecule(az,pos){
   setBondVisibility(showBonds); scene.add(molGroup);
   buildGNN(az,pos,cx,cy,cz);
   buildMatrix(az,pos,cx,cy,cz);
-  buildSH(az,pos,cx,cy,cz);
-  buildGTO(az,pos,cx,cy,cz);
   buildDensityBase(az,pos,cx,cy,cz);
+  // Harmonics and GTO lobes are the meshes that blow the iOS memory budget.
+  // Build them when that view is opened; desktop still builds them up front.
+  shReady=false; gtoReady=false;
+  if(!MOBILE_GPU || viewMode==='sh') buildSH(az,pos,cx,cy,cz); else resetSH();
+  if(!MOBILE_GPU || viewMode==='gto') buildGTO(az,pos,cx,cy,cz); else resetGTO();
   drawRadialPlot();
   setView(viewMode);
   updateLegend(); updateLabel(az); fitCamera();
@@ -1094,7 +1218,7 @@ function setBondVisibility(v){bondMeshes.forEach(m=>{m.visible=v;});}
 // Build GNN
 // ═══════════════════════════════════════════
 function buildGNN(az,pos,cx,cy,cz){
-  scene.remove(gnnGroup); scene.remove(gnnFeatGroup);
+  dropGroup(gnnGroup); dropGroup(gnnFeatGroup);
   gnnGroup=new THREE.Group(); gnnFeatGroup=new THREE.Group();
   gnnNodes=[]; gnnEdges=[]; gnnFeatSubs=[];
   gnnStraightEdgeGroup=new THREE.Group(); gnnGroup.add(gnnStraightEdgeGroup);
@@ -1182,7 +1306,7 @@ function buildGNN(az,pos,cx,cy,cz){
 // Build Matrix view
 // ═══════════════════════════════════════════
 function buildMatrix(az,pos,cx,cy,cz){
-  scene.remove(matGroup); scene.remove(matBlocksGroup);
+  dropGroup(matGroup); dropGroup(matBlocksGroup);
   matGroup=new THREE.Group(); matBlocksGroup=new THREE.Group(); matFeatSubs=[];
   const npos=pos.map(p=>new THREE.Vector3(p[0]-cx,p[1]-cy,p[2]-cz));
 
@@ -1358,7 +1482,7 @@ function realSH(l,m,theta,phi){
 }
 
 function buildSH(az,pos,cx,cy,cz){
-  scene.remove(shGroup); shGroup=new THREE.Group();
+  dropGroup(shGroup); shGroup=new THREE.Group();
   shCoeffs=[]; shPosMeshes=[]; shNegMeshes=[]; shAtomPositions=[];
   const npos=pos.map(p=>new THREE.Vector3(p[0]-cx,p[1]-cy,p[2]-cz));
   shAtomPositions=npos;
@@ -1369,7 +1493,7 @@ function buildSH(az,pos,cx,cy,cz){
       new THREE.MeshStandardMaterial({color:0xbbbbbb,roughness:0.5,transparent:true,opacity:0.3}),shGroup);
   });
 
-  const shRes=64;
+  const shRes=lobeResolution().sh;
 
   // Precompute a unit sphere template (directions + angles)
   const templateGeo=new THREE.SphereGeometry(1,shRes,shRes);
@@ -1412,7 +1536,7 @@ function buildSH(az,pos,cx,cy,cz){
       transparent:true, opacity:0.82, side:THREE.DoubleSide
     }));
     posMesh.position.copy(atomPos);
-    posMesh.castShadow=true; posMesh.receiveShadow=true;
+    posMesh.castShadow=!MOBILE_GPU; posMesh.receiveShadow=!MOBILE_GPU;
     posMesh.userData={shVals,dirs};
     shGroup.add(posMesh);
     shPosMeshes.push(posMesh);
@@ -1425,7 +1549,7 @@ function buildSH(az,pos,cx,cy,cz){
       transparent:true, opacity:0.82, side:THREE.DoubleSide
     }));
     negMesh.position.copy(atomPos);
-    negMesh.castShadow=true; negMesh.receiveShadow=true;
+    negMesh.castShadow=!MOBILE_GPU; negMesh.receiveShadow=!MOBILE_GPU;
     negMesh.userData={shVals,dirs};
     shGroup.add(negMesh);
     shNegMeshes.push(negMesh);
@@ -1442,6 +1566,8 @@ function buildSH(az,pos,cx,cy,cz){
   });
 
   scene.add(shGroup);
+  shGroup.visible=(viewMode==='sh');
+  shReady=true;
 }
 
 // Cast shadows on all GTO and SH isosurface meshes so the floor shadow is visible in every view mode
@@ -1684,7 +1810,9 @@ function gtoLobeGeometry(item,iso){
   const geo=new THREE.BufferGeometry();
   if(pos.length===0){ pos.push(0,0,0); }
   geo.setAttribute('position',new THREE.BufferAttribute(Float32Array.from(pos),3));
-  geo.setIndex(new THREE.BufferAttribute(Uint32Array.from(idx),1));
+  const vertCount=pos.length/3;
+  const IndexArray=vertCount>65535?Uint32Array:Uint16Array;
+  geo.setIndex(new THREE.BufferAttribute(IndexArray.from(idx),1));
   geo.computeVertexNormals();
   geo.userData.maxR=maxR;
   return geo;
@@ -1741,7 +1869,7 @@ function computeAtomLocalFrames(az,npos,bonds){
 }
 
 function buildGTO(az,pos,cx,cy,cz){
-  scene.remove(gtoGroup); scene.remove(gtoCardGroup);
+  dropGroup(gtoGroup); dropGroup(gtoCardGroup);
   gtoGroup=new THREE.Group(); gtoCardGroup=new THREE.Group();
   gtoLobeMeshes=[]; gtoCardSubs=[];
   const npos=pos.map(p=>new THREE.Vector3(p[0]-cx,p[1]-cy,p[2]-cz));
@@ -1754,7 +1882,7 @@ function buildGTO(az,pos,cx,cy,cz){
   });
 
   // Welded sphere template (no seam/pole duplicates) used for clipped lobe surfaces
-  const gtoRes=(gtoMode==='all_m')?64:88;
+  const gtoRes=lobeResolution().gto;
   const tpl=makeSphereTemplate(gtoRes);
   const baseDirs=tpl.dirs;
 
@@ -1824,7 +1952,7 @@ function buildGTO(az,pos,cx,cy,cz){
           transparent:true, opacity:gtoOpacity, side:THREE.DoubleSide, depthWrite:false
         }));
         mesh.position.copy(atomPos);
-        mesh.castShadow=true;
+        mesh.castShadow=!MOBILE_GPU;
         mesh.renderOrder=2;
         gtoGroup.add(mesh);
         gtoLobeMeshes.push({mesh,...lobeItem});
@@ -1873,7 +2001,7 @@ function buildGTO(az,pos,cx,cy,cz){
               depthWrite:false
             }));
             mesh.position.copy(atomPos);
-            mesh.castShadow=true;
+            mesh.castShadow=!MOBILE_GPU;
             mesh.renderOrder=(sh.l>0?5:1)+orderIdx;
             gtoGroup.add(mesh);
             gtoLobeMeshes.push({mesh,...lobeItem});
@@ -1940,6 +2068,9 @@ function buildGTO(az,pos,cx,cy,cz){
   });
 
   scene.add(gtoGroup); scene.add(gtoCardGroup);
+  gtoGroup.visible=(viewMode==='gto');
+  gtoCardGroup.visible=(viewMode==='gto'&&showGtoCards);
+  gtoReady=true;
 }
 
 function updateGTOIsosurfaces(){
@@ -2063,7 +2194,7 @@ function buildDensityBase(az,pos,cx,cy,cz){
   if(densToken) densToken.cancelled=true;
   densToken=null; densBusyKey=''; densGrid=null; densGridKey=''; densError=''; densStatus='';
   densMeshes=[]; densMaxR=0;
-  scene.remove(densGroup); densGroup=new THREE.Group();
+  dropGroup(densGroup); densGroup=new THREE.Group();
   const npos=pos.map(p=>new THREE.Vector3(p[0]-cx,p[1]-cy,p[2]-cz));
   detectBonds(az,pos).forEach(([i,j])=>{
     makeCylinder(npos[i],npos[j],0.03,
@@ -2235,6 +2366,7 @@ function syncVizPanelSection(mode){
 }
 
 function setView(mode){
+  ensureHeavy(mode);
   viewMode=mode;
   molGroup.visible=(mode==='molecule');
   gnnGroup.visible=(mode==='gnn');
@@ -2498,9 +2630,48 @@ renderer.domElement.addEventListener('mousemove',e=>{if(!isDragging)return;targe
 renderer.domElement.addEventListener('mouseup',()=>{isDragging=false;});
 renderer.domElement.addEventListener('mouseleave',()=>{isDragging=false;});
 renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();targetZoom*=e.deltaY>0?1.08:0.92;targetZoom=Math.max(0.3,Math.min(3,targetZoom));},{passive:false});
-renderer.domElement.addEventListener('touchstart',e=>{if(e.touches.length===1){isDragging=true;autoRotate=false;document.getElementById('autoRotateToggle').checked=false;prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};}});
-renderer.domElement.addEventListener('touchmove',e=>{e.preventDefault();if(!isDragging||e.touches.length!==1)return;targetRotY+=(e.touches[0].clientX-prevMouse.x)*0.008;targetRotX+=(e.touches[0].clientY-prevMouse.y)*0.008;targetRotX=Math.max(-Math.PI/2,Math.min(Math.PI/2,targetRotX));prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:false});
-renderer.domElement.addEventListener('touchend',()=>{isDragging=false;});
+let pinchDist=0;
+function touchSpan(e){
+  const dx=e.touches[0].clientX-e.touches[1].clientX, dy=e.touches[0].clientY-e.touches[1].clientY;
+  return Math.hypot(dx,dy);
+}
+function stopAutoRotate(){
+  autoRotate=false;
+  const t=document.getElementById('autoRotateToggle');
+  if(t) t.checked=false;
+}
+renderer.domElement.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  if(e.touches.length===1){
+    isDragging=true; pinchDist=0; stopAutoRotate();
+    prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};
+  }else if(e.touches.length>=2){
+    isDragging=false; stopAutoRotate();
+    pinchDist=touchSpan(e);
+  }
+},{passive:false});
+renderer.domElement.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(e.touches.length>=2 && pinchDist>0){
+    const d=touchSpan(e);
+    if(d>0){ targetZoom=Math.max(0.3,Math.min(3,targetZoom*(pinchDist/d))); pinchDist=d; }
+    return;
+  }
+  if(!isDragging||e.touches.length!==1) return;
+  targetRotY+=(e.touches[0].clientX-prevMouse.x)*0.008;
+  targetRotX+=(e.touches[0].clientY-prevMouse.y)*0.008;
+  targetRotX=Math.max(-Math.PI/2,Math.min(Math.PI/2,targetRotX));
+  prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};
+},{passive:false});
+renderer.domElement.addEventListener('touchend',e=>{
+  if(e.touches.length>=2){ pinchDist=touchSpan(e); isDragging=false; }
+  else if(e.touches.length===1){ pinchDist=0; isDragging=true; prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY}; }
+  else { isDragging=false; pinchDist=0; }
+},{passive:false});
+renderer.domElement.addEventListener('touchcancel',()=>{ isDragging=false; pinchDist=0; });
+['gesturestart','gesturechange','gestureend'].forEach(type=>{
+  document.addEventListener(type, e=>e.preventDefault(), {passive:false});
+});
 
 // ═══════════════════════════════════════════
 // Billboard update for matrix sub-groups
@@ -2586,7 +2757,40 @@ animate(performance.now());
 // ═══════════════════════════════════════════
 // Resize
 // ═══════════════════════════════════════════
-window.addEventListener('resize',()=>{W=container.clientWidth;H=container.clientHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);});
+let compactLabelLock=false;
+function syncCompactLabels(){
+  if(compactLabelLock) return;
+  const compact=window.matchMedia('(max-width: 820px)').matches;
+  const map={
+    copyViewBtn: compact?'Copy':'Copy Current View',
+    exportBtn: compact?'Export':'Export All PNGs',
+    panelBtn: compact?'Edit':'Edit Molecule',
+    vizPanelBtn: compact?'Options':'View Options'
+  };
+  Object.entries(map).forEach(([id,text])=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent=text;
+  });
+  const hint=document.getElementById('controlsHint');
+  if(hint) hint.textContent=(IS_IOS||PHONE||window.matchMedia('(pointer: coarse)').matches)
+    ? 'drag to rotate · pinch to zoom'
+    : 'drag to rotate · scroll to zoom';
+}
+function resizeRenderer(){
+  if(compactLabelLock) return;
+  const w=container.clientWidth||window.innerWidth;
+  const h=container.clientHeight||window.innerHeight;
+  if(w<2||h<2) return;
+  W=w; H=h;
+  camera.aspect=W/H;
+  camera.updateProjectionMatrix();
+  renderer.setPixelRatio(rendererPixelRatio());
+  renderer.setSize(W,H);
+  syncCompactLabels();
+}
+window.addEventListener('resize', resizeRenderer);
+window.addEventListener('orientationchange', ()=>setTimeout(resizeRenderer, 280));
+if(window.visualViewport) window.visualViewport.addEventListener('resize', resizeRenderer);
 
 // ═══════════════════════════════════════════
 // UI
@@ -2746,7 +2950,8 @@ function rebuildBasisViews(){
   if(!currentAtomZ.length) return;
   const [cx,cy,cz]=currentCenter;
   buildMatrix(currentAtomZ,currentPositions,cx,cy,cz);
-  buildGTO(currentAtomZ,currentPositions,cx,cy,cz);
+  if(viewMode==='gto' || !MOBILE_GPU) buildGTO(currentAtomZ,currentPositions,cx,cy,cz);
+  else resetGTO();
   gtoGroup.visible=(viewMode==='gto');
   gtoCardGroup.visible=(viewMode==='gto'&&showGtoCards);
   matGroup.visible=(viewMode==='matrix');
@@ -2886,7 +3091,7 @@ let exporting=false;
 // Render the currently visible groups at export resolution on a transparent background
 // and return a full-frame canvas copy (no cropping).
 function renderFullFrameCanvas(){
-  const scale=3,ew=W*scale,eh=H*scale;
+  const scale=exportPixelScale(), ew=Math.max(2,Math.round(W*scale)), eh=Math.max(2,Math.round(H*scale));
   renderer.setClearColor(0x000000,0); scene.background=null;
   renderer.setSize(ew,eh); renderer.setPixelRatio(1);
   camera.aspect=W/H; camera.updateProjectionMatrix(); camera.updateMatrixWorld();
@@ -3068,23 +3273,30 @@ async function exportViews(opts){
   opts=opts||{};
   if(exporting) return;
   exporting=true;
+  compactLabelLock=true;
   const only=opts.only||null;
   const btn=document.getElementById(opts.clipboard?'copyViewBtn':'exportBtn');
   const label=btn.textContent;
   const prev=viewMode;
   // The clipboard write must start inside the click gesture, so hand it a promise that resolves once the render is done
   let resolveBlob=null, rejectBlob=null, clipPromise=null;
-  if(opts.clipboard){
+  if(opts.clipboard && !IS_IOS){
     const blobPromise=new Promise((res,rej)=>{resolveBlob=res;rejectBlob=rej;});
     try{ clipPromise=navigator.clipboard.write([new ClipboardItem({'image/png':blobPromise})]); clipPromise.catch(()=>{}); }catch(e){ clipPromise=Promise.reject(e); clipPromise.catch(()=>{}); }
   }
   const needDens=(!only||only==='density');
-  // Every user setting is exported as is, except fidelity: the density is always exported at the finest grid with core refinement
+  // Every user setting is exported as is, except fidelity: desktop exports density on the finest grid. Phones stay on medium or coarser so the export does not exhaust WebGL memory.
   const savedDensRes=densRes, savedDensGrid=densGrid, savedDensKey=densGridKey;
   try{
     if(needDens){
-    btn.textContent='Computing density (fine)…';
-    densRes='fine'; syncBasisUI();
+    if(MOBILE_GPU){
+      if(densRes==='fine') densRes='medium';
+      btn.textContent='Computing density…';
+    } else {
+      btn.textContent='Computing density (fine)…';
+      densRes='fine';
+    }
+    syncBasisUI();
     setView('density');
     {
       const t0=performance.now();
@@ -3112,7 +3324,12 @@ async function exportViews(opts){
     if(only){ views=views.filter(v=>v.mode===only); if(!views.length) throw new Error('View not available for export: '+only); }
 
     // 1) render every view full-frame (same camera, rotation and size)
-    views.forEach(v=>{ setOnlyVisible(v.spec); v.canvas=renderFullFrameCanvas(); });
+    for(const v of views){
+      if(MOBILE_GPU) await densYield();
+      if(v.mode==='sh'||v.mode==='gto') ensureHeavy(v.mode);
+      setOnlyVisible(v.spec);
+      v.canvas=renderFullFrameCanvas();
+    }
 
     // 2) one shared tight crop: union of all non-transparent bounds plus margin
     let U=null;
@@ -3128,7 +3345,7 @@ async function exportViews(opts){
     const cW=x1-x0+1, cH=y1-y0+1;
 
     // 3) compose with the chosen background (optionally with a legend column of identical size on every image)
-    const S=3;
+    const S=exportPixelScale();
     let legW=0, outW=cW, outH=cH;
     if(exportLegend){
       try{ await document.fonts.load('11px "DM Mono"'); }catch(e){}
@@ -3150,21 +3367,30 @@ async function exportViews(opts){
       ctx.drawImage(v.canvas,x0,y0,cW,cH,0,Math.round((outH-cH)/2),cW,cH);
       if(exportLegend) layoutLegend(ctx,v.legend,S,cW,exportPad,true);
       v.url=out.toDataURL('image/png');
-      v.canvas=null;
+      v.canvas.width=0; v.canvas.height=0; v.canvas=null;
+      out.width=0; out.height=0;
     });
 
     // Restore the interactive renderer
     renderer.setClearColor(BG_COLOR,1); scene.background=new THREE.Color(BG_COLOR);
-    renderer.setSize(W,H); renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    renderer.setSize(W,H); renderer.setPixelRatio(rendererPixelRatio());
     setView(prev);
-    if(opts.clipboard){
+    const folder=('molecule_'+(currentPresetKey||'custom')).replace(/[^A-Za-z0-9_.-]+/g,'_')+'_views';
+    if(opts.clipboard && IS_IOS){
+      const png=new Blob([dataURLToBytes(views[0].url)],{type:'image/png'});
+      offerIOSSave(png, views[0].name, views[0].url);
+      btn.textContent='Ready to save';
+      await new Promise(r=>setTimeout(r,600));
+    } else if(opts.clipboard){
       const png=new Blob([dataURLToBytes(views[0].url)],{type:'image/png'});
       resolveBlob(png);
       try{ await clipPromise; btn.textContent='Copied ✓'; await new Promise(r=>setTimeout(r,1400)); }
       catch(e){ console.warn('Clipboard unavailable, downloading instead',e); dlURL(views[0].url,views[0].name); btn.textContent='Saved (no clipboard)'; await new Promise(r=>setTimeout(r,1800)); }
+    } else if(IS_IOS){
+      const zip=makeZip(views.map(v=>({name:folder+'/'+v.name,data:dataURLToBytes(v.url)})));
+      offerIOSSave(zip, folder+'.zip', null);
     } else {
     // Pack all images into one folder inside a single ZIP download
-    const folder=('molecule_'+(currentPresetKey||'custom')).replace(/[^A-Za-z0-9_.-]+/g,'_')+'_views';
     const zip=makeZip(views.map(v=>({name:folder+'/'+v.name,data:dataURLToBytes(v.url)})));
     const zurl=URL.createObjectURL(zip);
     dlURL(zurl,folder+'.zip');
@@ -3174,7 +3400,7 @@ async function exportViews(opts){
     console.error(err);
     if(rejectBlob) rejectBlob(err);
     renderer.setClearColor(BG_COLOR,1); scene.background=new THREE.Color(BG_COLOR);
-    renderer.setSize(W,H); renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    renderer.setSize(W,H); renderer.setPixelRatio(rendererPixelRatio());
     setView(prev);
   }finally{
     // restore the user's grid resolution and the grid computed for it
@@ -3189,7 +3415,44 @@ async function exportViews(opts){
     }
     btn.textContent=label;
     exporting=false;
+    compactLabelLock=false;
+    resizeRenderer();
   }
+}
+
+let pendingSave=null;
+function offerIOSSave(blob, filename, previewURL){
+  pendingSave={blob, filename};
+  document.getElementById('sidePanel').classList.remove('open');
+  document.getElementById('vizPanel').classList.remove('open');
+  const sheet=document.getElementById('iosSaveSheet');
+  document.getElementById('iosSaveTitle').textContent=filename;
+  const img=document.getElementById('iosSavePreview');
+  const note=document.getElementById('iosSaveNote');
+  if(previewURL){
+    img.src=previewURL; img.hidden=false;
+    note.textContent='Long-press the picture to save it, or tap Save and choose Save Image.';
+  } else {
+    img.removeAttribute('src'); img.hidden=true;
+    note.textContent='Tap Save, then choose Save to Files. Safari on iOS ignores a direct download.';
+  }
+  sheet.hidden=false;
+}
+async function iosSaveNow(){
+  if(!pendingSave) return;
+  const file=new File([pendingSave.blob], pendingSave.filename, {type:pendingSave.blob.type||'application/octet-stream'});
+  if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+    try{
+      await navigator.share({files:[file], title:pendingSave.filename});
+      document.getElementById('iosSaveSheet').hidden=true;
+    }catch(e){ if(!e || e.name!=='AbortError') console.warn(e); }
+    return;
+  }
+  const url=URL.createObjectURL(pendingSave.blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=pendingSave.filename; a.rel='noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 30000);
 }
 
 const exportAllViews=()=>exportViews({});
@@ -3250,8 +3513,14 @@ function selectPresetMolecule(key){
 populatePresetDropdowns();
 document.getElementById('presetSelect').addEventListener('change',e=>selectPresetMolecule(e.target.value));
 document.getElementById('panelPresetSelect').addEventListener('change',e=>selectPresetMolecule(e.target.value));
+document.getElementById('iosSaveBtn').addEventListener('click', ()=>{ iosSaveNow(); });
+document.getElementById('iosSaveClose').addEventListener('click', ()=>{
+  document.getElementById('iosSaveSheet').hidden=true;
+  pendingSave=null;
+});
 
-// Load default
+// Size the canvas before the first molecule so fitCamera uses the real viewport.
+resizeRenderer();
 selectPresetMolecule('ethanol');
 </script>
 </body>
